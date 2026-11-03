@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-cream: #FFF8EC;
+    --text-ink: #3A2E26;
+    --primary-teal: #1F6F6B;
+    --accent-orange: #F2994A;
+    --state-correct-bg: #DDF1EE;
+    --state-try-again-bg: #FDE8D4;
+  }
+
+  body {
+    font-family: 'Atkinson Hyperlegible', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #FFF8EC;
+    color: #3A2E26;
+    line-height: 1.5;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, .font-child {
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+}
+
+/* High-visibility keyboard focus indicator meeting WCAG 2.2 AA */
+*:focus-visible {
+  outline: 3px solid #1F6F6B !important;
+  outline-offset: 3px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

@@ -1,0 +1,8 @@
+{
+  "name": "KareBEAR V0 — Cast Care & Hospital Story Prototype",
+  "description": "A clickable child and caregiver educational prototype with Kare the bear for hospital cast-fitting preparation and non-waterproof cast home-care comprehension checks.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
