@@ -1,0 +1,158 @@
+﻿Technical Consultation: TC1
+
+
+General Information
+
+
+Client Team # and Section: 2 in Tuesday Section 
+
+
+Advisees (sections A/B/D): Albert Xian, Alexandra Roszczenko, Chiara Alcantara
+
+
+Technical Consultants (sections C/E): Melvin Mokhtari, Sofiia Tkach, Ellen Huang
+
+
+A. Problem Description (by Advisees)
+{Describe your team’s project title, high-level problem, and current solution. Include links to prototypes and screenshots if any.}
+
+
+Children who undergo emergency surgery or are suddenly exposed to an unfamiliar healthcare environment can feel overwhelmed and anxious, especially when preparation and communication regarding procedures is limited. Parents of sick children are left to navigate difficult situations, trying to understand their child’s condition and make sense of the medical details well enough to relieve their worried child. 
+One of the main challenges is the lack of accessible, child-friendly resources and the time needed to properly prepare children for surgery and recovery. While medical staff are responsible for providing quality patient care, their existing workloads can limit their capacity to adequately prepare children and support their post-operative recovery.
+KareBEAR aims to address this gap by helping children and their caregivers better understand and navigate their medical recovery journeys through accessible, child-friendly education and post-operative care.
+KareBEAR would use AI to adapt clinician-approved procedure and recovery instructions into short, child-friendly stories or comics featuring a bear companion. The content would explain what children may see, feel, and need to do, with additional explanations available for caregivers.
+For the first prototype, we are considering one complete procedure or recovery scenario. The bear would present the information in short sections and ask a few questions to check understanding. A caregiver-assisted teach-back activity could invite children to explain an important instruction in their own words. Optional narration could support children with limited reading ability. Speech input, multilingual support, and generated video remain options to evaluate against our development timeline.
+The application would provide educational support rather than medical advice. Essential instructions and warnings would need to remain consistent with the approved source material, and generated content would require review before use. Questions about symptoms, treatment decisions, or recovery outcomes would be directed to the care team. The bear would avoid promises such as “you’ll get better soon.
+
+
+
+
+B. Technical Question (by Advisees)
+{List at least 3 specific technical questions your project is facing.}
+1. Given our course timeline, what features should we prioritize for a first prototype, and what tools would you recommend?
+2. What do you believe would be a good balance between keeping the medical information accurate and also child-friendly/digestible?
+3. Given the severity of certain health conditions, how can we develop a model that doesn’t border too closely between offering encouragement and false reassurance? For example, phrases like “you’ll get better soon” might do more harm to families than good. 
+
+
+C. Recommendation (by Consultants)
+{Each TCT member must enter 2-3 unique technical recommendations, with your name in brackets next to your bulleted items.}
+
+
+[Sofiia] Q1. What to prioritize for the first prototype + tools?
+
+
+Pick one common procedure (for example, getting an IV or a tonsil surgery) and build the full flow for it: upload a clinician-approved instruction, turn it into a short comic or story with the bear then ask 2–3 teach-back questions. One complete scenario will show the idea better than many half-finished ones. For the MVP, I would skip speech-to-text, because children’s speech is still hard for most engines to recognize reliable and testing that properly would take a lot of your time. Simple answer buttons with pictures work well for teach-back questions. Text-to-speech (the bear reading the story out loud) is much easier to add and still helps kids who can’t read yet. For generation, I would keep it for MVP, since it is the core idea of your app, but limit it to the story text and comic images ( generating a video can be more complex). 
+
+
+[Sofiia]  Q2. Balance between medical accuracy and child-friendly language?
+
+
+I had one idea in my mind, you can have 2 reading levels (for example, ages 3–6 with mostly pictures, and ages 7–12 with short sentences) instead of trying to make one version that works for everyone.
+
+
+[Sofiia]  Q3. Encouragement without false reassurance?
+
+
+I would suggest, focus on describing what will happen and how the child might feel, not on promising outcomes. For example, say “The doctors will take good care of you and it’s okay to feel scared” instead of “You’ll get better soon.” I’m not sure how good this suggestion is - but it’s one of the possible suggestions I had.
+
+
+[Melvin] Q1. Make the stories ahead of time, not live.
+ 
+I’d use AI as a writing tool for your team rather than something the child talks to. Generate the story for your one scenario with any major LLM (GPT, Claude or Gemini), fix anything that’s off, then save it as a JSON file that a simple React web app displays. Kids never see unchecked AI output, and you save time and tokens. For the bear, make a small set of poses once and reuse them, since generated images often change how the bear looks from panel to panel. For narration, the browser’s built-in text-to-speech works for free.
+ 
+[Melvin] Q2. Keep the key facts separate from the story.
+ 
+Before generating, pull the must-know instructions out of the clinician’s document into a short checklist (like when to stop eating, keeping the bandage dry, or telling a grown-up if it hurts more). The bear can explain them in its own words, but the checklist stays word for word in a small “for grown-ups” box. Also ask the AI to label which checklist item each part of the story covers, so you can quickly spot anything it left out.
+ 
+[Melvin] Q3. Back up the prompt with a phrase filter.
+ 
+Telling the model “don’t give false hope” won’t be enough on its own. Add a few good and bad example sentences to the prompt, plus a simple filter that flags promise-like phrases such as “you’ll get better soon,” “it won’t hurt,” or “everything will be fine.” Anything flagged gets rewritten or reviewed by a person. I’d especially ban “it won’t hurt,” because if it does hurt, kids stop trusting the bear.
+
+
+[Ellen] R1. Consider how children’s varying literacy levels and speech patterns may affect their ability to interact with your application. The system should support age-appropriate explanations using simplified language, visual aids, and potentially voice-based interactions. If speech recognition is incorporated, evaluate its ability to accurately interpret children’s speech, particularly given differences in pronunciation, vocabulary, and speech development across age groups. However, to directly address your Q1, given the course’s time constraints, I recommend prioritizing touch-based interactions that have been shown to improve learning outcomes in children.
+
+
+[Ellen] R2. I appreciate your emphasis on providing educational support rather than medical advice. To address your concerns in Q3 about potentially blurring the line between an educational tool and a therapy-like tool, I would recommend that your team first establish clear boundaries between these two purposes, perhaps by developing a codebook of rules outlining what the application should and should not do. Having these boundaries explicitly defined would not only help align your team’s understanding of the application’s intended purpose, but also guide the development of your AI system. For example, these rules could inform the system’s behaviour to ensure it focuses on helping children understand unfamiliar healthcare environments, procedures, and experiences, rather than providing diagnoses, treatment recommendations, or other forms of medical advice.
+
+
+
+
+D. Summary of Consultation Meeting (by Advisees)
+{Write down a few important discussion points from the consultation meeting, and describe which recommendations you found to be most useful; list the students who attended the consultation meeting}
+
+
+Alexandra:
+Melvin Mokhtari, Sofiia Tkach, and Ellen Huang all attended the consultation meeting alongside Albert and myself [Alexandra].
+This was a very helpful discussion. Ellen brought up a point that I hadn’t considered before which was that children's reading proficiency might be a challenge for our solution. This brings up the debate of whether the solution needs to be straight forward enough for very young kids to comprehend or if it would be best to have varying levels of language proficiency available; making the application inclusive of a wider age range, possibly toddler all the way to pre-teens.
+
+
+A proper meeting summary generated by Calendly is included below for everyone's ease and review.
+Calendly Meeting Summary:
+Summary
+
+
+Alexandra and Albert presented Care Bear, a proposed child-focused app intended to reduce anxiety around medical procedures and recovery while helping caregivers understand care instructions and easing educational demands on healthcare staff. They clarified that the MVP would prioritize children rather than a proposed parent-community app, and that it would translate clinician-approved instructions or hospital documents into accessible stories, cartoons, games, or AI-generated videos featuring a bear companion—not provide medical advice. Proposed safeguards included preserving essential medical information and a teach-back feature to identify misunderstandings. Discussion also covered multilingual support and speech-to-text for children’s responses; voice-recognition accuracy remained an unresolved concern requiring research, and Ellen recommended examining benchmarks specifically for children’s speech and vocabulary. Given the four-week development timeline, Albert suggested narrowing the prototype to one complete disease or procedure scenario and generating a comic rather than video to reduce time and token costs; final feature prioritization remained open. With meeting time exhausted, the group agreed to put remaining technical questions in the shared document for asynchronous feedback from Sofiia and Melvin, notify them in chat when ready today or tomorrow, and complete the submission document by Monday.
+
+
+Discussion
+Care Bear’s Purpose Reducing Children’s Anxiety and Supporting Recovery
+* Alexandra described Care Bear as a child-friendly educational app addressing anxiety around emergency surgery, unfamiliar healthcare environments, and recovery. Parents must understand medical instructions while reassuring their children, but clinicians’ workloads limit preparation and support. A nurse consulted by the team linked children’s comfort with procedures to recovery success. The proposed bear companion would explain experiences through interactive games, stories, or videos.
+Primary Audience, Severity Levels, and Optional Parent Community
+* The team clarified that children, rather than parents, are the primary audience for the MVP. Alexandra highlighted the challenge of making information useful yet simple enough for children while adapting to situations ranging from a prolonged emergency-room wait to pneumonia. A separate parent companion app or question-and-answer community was discussed as a possible extension, not the central prototype priority.
+Clinician-Approved Content, AI Adaptation, and Teach-Back Safeguards
+* Albert proposed transforming clinician-approved explanations into engaging cartoons, stories, and animations. Alexandra stressed that Care Bear should not provide medical advice; source material could include a doctor’s recovery plan or hospital documents. A proposed teach-back feature would ask children or caregivers to explain instructions in their own words to flag misunderstandings. The team stressed preserving important information and avoiding unapproved content.
+Multilingual Voice Interaction and Children’s Speech Recognition
+* Albert considered multilingual support important for children from diverse backgrounds, particularly before school age, and proposed voice feedback to bridge language differences. Melvin questioned speech engines’ ability to interpret users reliably. Albert viewed transcription accuracy as the main unresolved issue and cited approximately 98% accuracy for some engines, while acknowledging the need for research. Ellen recommended investigating benchmarks specifically covering children’s speech and vocabulary.
+
+
+Four-Week Prototype Feasibility and Narrower MVP Scope
+* Melvin questioned whether an app combining speech recognition and generated videos was feasible within four weeks. Albert said feature prioritization was already a question for the advisers. He proposed assembling a smaller prototype around one complete disease or operation scenario, potentially generating a comic rather than video to reduce time and token consumption, instead of covering many medical situations.
+Albert: 
+My main takeaway was to prioritize one complete, clinician-approved educational scenario for the first prototype. A short illustrated story with a few questions to check understanding seems more manageable than combining generated videos, multilingual support, and voice interaction immediately. I found Ellen’s suggestion to investigate children’s speech-recognition benchmarks particularly useful, since general accuracy claims may not apply to our intended users. Reading ability also needs consideration when choosing the initial age group. These points will help us narrow the prototype while preserving essential medical information and checking understanding separately from enjoyment.
+
+
+E. Reflection on Consultation Process (by Consultants)
+{As a TCT team, reflect on the consultation process: Which recommendations were you most confident about and least confident about? Why? What else would you like to find out about your client team’s problem if you had more time?}
+
+
+[Sofiia] I felt most sure about skipping speech-to-text for the first prototype. Kids’ speech is pretty hard for these tools to understand and testing it properly would eat up a lot of their time. I was least sure about how to balance medical accuracy with simple language, since I’m not a medical person and don’t really know which details are the most important to keep. If I had more time, I’d be curious to find out how kids get prepared for surgery right now, like whether nurses just explain things to them or if there are books or videos. I’d also want to check if there are already any apps or tech out there doing something similar.
+
+
+[Melvin] I was most confident about making the stories ahead of time instead of generating them live. It removes the biggest risk, an anxious kid seeing something wrong or scary, and it saves time too. I was least confident about the phrase filter, because false reassurance can be subtle (something like “this will be quick”), so a person still has to read everything. With more time, I’d want to know who would actually review the stories in a real hospital, since the whole problem is that staff are already short on time.
+
+
+[Ellen] Ultimately, you guys did a great job presenting your problem statement and idea, and I can really see the benefit and need for something like this in the community. Although most of my recommendations were centred around your team’s need for a stronger implementation plan to personalize your application to children, this at the same time shows you guys are headed in the right direction, as rather than having to broad of a focus on the general low-health literacy population, having children as your target patient audience significantly narrows down your project’s focus to specific behaviour, research methods and frameworks to follow, and datasets to use.
+________________
+Technical Consultation: TC2
+
+
+General Information
+
+
+Client Team # and Section: {Team Number} in {Tues / Thur} Section 
+
+
+Advisees (sections A/B/D): {Names of Students Representing Client Team}
+
+
+Technical Consultants (sections C/E): {Names of Students}
+
+
+A. Problem Description (by Advisees)
+{Describe your team’s project title, high-level problem and current solution. Include links to prototypes/screenshots if any.}
+
+
+B. Technical Question (by Advisees)
+{List at least 3 specific technical questions your project is facing.}
+
+
+C. Recommendation (by Consultants)
+{Each TCT member must enter 2-3 unique technical recommendations, with your name in brackets next to your bulleted items.}
+
+
+D. Summary of Consultation Meeting (by Advisees)
+{Write down a few important discussion points from the consultation meeting, and describe which recommendations you found to be most useful.}
+
+
+E. Reflection on Consultation Process (by Consultants)
+{As a TCT team, reflect on the consultation process: which recommendations were you most confident about and least confident about? Why? What else would you like to find out about your client team’s problem if you had more time?}

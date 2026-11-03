@@ -14,8 +14,45 @@ import {
   openRetryLearnPage,
   advanceAfterComprehensionCheck,
   calculateCaregiverSummary,
+  appendExplainObservationTurn,
+  navigateToPointExplanation,
 } from './demoState';
-import { RECOVERY_POINTS, STORY_PAGES } from '../data/demoContent';
+import {
+  FIXED_OUT_OF_SCOPE_MESSAGE,
+  RECOVERY_POINTS,
+  STORY_PAGES,
+} from '../data/demoContent';
+import {
+  buildExplainKareSystemInstruction,
+  detectCoveredPointsFromText,
+  generateLocalExplainResponse,
+  isInputOutOfScope,
+} from './explainKareLogic';
+import {
+  resolveMascotState,
+  rmsToMouthOpen,
+} from '../mascot/mascotStateArbiter';
+import {
+  clampMouthOpen,
+  resolveKareAccessories,
+} from '../mascot/kareArtwork';
+import {
+  buildGroundedStoryDraftFromSummary,
+  INITIAL_POSTOP_TASKS,
+  INITIAL_SUMMARY_DRAFT,
+  INITIAL_UNCERTAINTY_FLAGS,
+  PRE_OP_LESSONS,
+} from '../data/surgeryContent';
+import {
+  awardRewardForOccurrence,
+  calculateTotalPoints,
+  detectDisallowedReassurancePhrases,
+  isItemBlockedByUncertainty,
+  propagateSummaryEditStaleness,
+  propagateTranscriptEditStaleness,
+  revokeRewardOccurrence,
+  type RewardLedgerState,
+} from './surgeryDataModel';
 
 test('Journey 1: advances through all 5 story pages to S3 and navigates Back cleanly', () => {
   let state = createInitialDemoState();
@@ -185,20 +222,6 @@ test('Back preserves attempt history and starting a new recovery session clears 
   assert.equal(state.pointAttempts[p1.id].eventuallyCorrect, false);
 });
 
-import {
-  FIXED_OUT_OF_SCOPE_MESSAGE,
-} from '../data/demoContent';
-import {
-  buildExplainKareSystemInstruction,
-  detectCoveredPointsFromText,
-  generateLocalExplainResponse,
-  isInputOutOfScope,
-} from './explainKareLogic';
-import {
-  appendExplainObservationTurn,
-  navigateToPointExplanation,
-} from './demoState';
-
 test('Explain it to Kare: detects out-of-scope questions and returns fixed redirect message', () => {
   const p1 = RECOVERY_POINTS[0];
 
@@ -278,15 +301,6 @@ test('Explain it to Kare: tracks covered vs unclear learning points and supports
   assert.ok(sysPrompt.includes(FIXED_OUT_OF_SCOPE_MESSAGE));
 });
 
-import {
-  resolveMascotState,
-  rmsToMouthOpen,
-} from '../mascot/mascotStateArbiter';
-import {
-  clampMouthOpen,
-  resolveKareAccessories,
-} from '../mascot/kareArtwork';
-
 test('Mascot Kit Arbiter: enforces speaking > listening > gesture > idle priority and accessory resolution', () => {
   // 1. speaking overrides listening and gestures
   assert.equal(
@@ -350,3 +364,173 @@ test('Mascot Kit Arbiter: enforces speaking > listening > gesture > idle priorit
   assert.equal(checklistWithCast.clipboard, true);
   assert.equal(checklistWithCast.cast, true);
 });
+
+test('Pre-Op Lessons: 8 bilingual age-adapted lessons with French review flags and zero false reassurance promises', () => {
+  assert.equal(PRE_OP_LESSONS.length, 8);
+
+  for (const lesson of PRE_OP_LESSONS) {
+    assert.equal(lesson.reviewStatus.en, 'reviewed-demo');
+    assert.equal(lesson.reviewStatus.fr, 'needs-clinical-review');
+
+    for (const lang of ['en', 'fr'] as const) {
+      const variant = lesson.variants[lang];
+      assert.ok(variant.title.length > 0);
+      for (const band of ['3-6', '7-9', '10-12'] as const) {
+        assert.ok(variant.whatItIs[band].length > 10);
+        assert.ok(variant.whatYouMaySeeOrFeel[band].length > 10);
+        assert.ok(variant.sourceGroundedExplanation[band].length > 10);
+
+        const combined = `${variant.whatItIs[band]} ${variant.whatYouMaySeeOrFeel[band]} ${variant.sourceGroundedExplanation[band]}`;
+        assert.deepEqual(
+          detectDisallowedReassurancePhrases(combined),
+          [],
+          `Lesson ${lesson.id} (${lang}, ${band}) must not contain false reassurance phrases`
+        );
+      }
+    }
+  }
+});
+
+test('Post-Op Staleness Propagation: editing transcript or summary marks downstream story and confirmed tasks stale', () => {
+  const initialSummary = {
+    ...INITIAL_SUMMARY_DRAFT,
+    reviewStatus: 'reviewed' as const,
+  };
+  const releasedStory = {
+    ...buildGroundedStoryDraftFromSummary(initialSummary, 'en', '7-9', 'simple', 1),
+    status: 'released' as const,
+    releasedAt: 12345,
+  };
+  const tasks = INITIAL_POSTOP_TASKS.map((t) =>
+    t.id === 'task-sips-water'
+      ? { ...t, approvalState: 'confirmed-for-child' as const }
+      : t
+  );
+
+  // 1. Transcript edit marks summary, story, and confirmed tasks as 'stale'
+  const afterTranscriptEdit = propagateTranscriptEditStaleness(
+    initialSummary,
+    releasedStory,
+    tasks
+  );
+  assert.equal(afterTranscriptEdit.summary.reviewStatus, 'stale');
+  assert.equal(afterTranscriptEdit.story?.status, 'stale');
+  const sipTaskAfterTranscriptEdit = afterTranscriptEdit.tasks.find(
+    (t) => t.id === 'task-sips-water'
+  )!;
+  assert.equal(sipTaskAfterTranscriptEdit.approvalState, 'stale');
+
+  // 2. Summary edit marks released story and confirmed tasks as 'stale'
+  const afterSummaryEdit = propagateSummaryEditStaleness(releasedStory, tasks);
+  assert.equal(afterSummaryEdit.story?.status, 'stale');
+  const sipTaskAfterSummaryEdit = afterSummaryEdit.tasks.find(
+    (t) => t.id === 'task-sips-water'
+  )!;
+  assert.equal(sipTaskAfterSummaryEdit.approvalState, 'stale');
+});
+
+test('Post-Op Tasks & Uncertainties: blocks unresolved tasks and never invents missing doses or clock times', () => {
+  const flags = INITIAL_UNCERTAINTY_FLAGS.map((f) => ({ ...f }));
+
+  // Acetaminophen and Amoxicillin tasks are initially blocked by unresolved uncertainty flags
+  assert.equal(
+    isItemBlockedByUncertainty('task-acetaminophen', flags),
+    true
+  );
+  assert.equal(
+    isItemBlockedByUncertainty('task-amoxicillin', flags),
+    true
+  );
+  assert.equal(isItemBlockedByUncertainty('task-sips-water', flags), false);
+
+  // Verify Amoxicillin "Twice daily" preserves frequencySupplied='Twice daily' but clockTimesSupplied=null and doseSupplied=null
+  const amoxTask = INITIAL_POSTOP_TASKS.find(
+    (t) => t.id === 'task-amoxicillin'
+  )!;
+  assert.equal(amoxTask.suppliedFields.doseSupplied, null);
+  assert.equal(amoxTask.suppliedFields.frequencySupplied, 'Twice daily');
+  assert.equal(amoxTask.suppliedFields.clockTimesSupplied, null);
+
+  // Verify Acetaminophen preserves missing doseSupplied=null
+  const acetTask = INITIAL_POSTOP_TASKS.find(
+    (t) => t.id === 'task-acetaminophen'
+  )!;
+  assert.equal(acetTask.suppliedFields.doseSupplied, null);
+
+  // Resolving flags unblocks the tasks
+  const resolvedFlags = flags.map((f) => ({ ...f, resolvedByCaregiver: true }));
+  assert.equal(
+    isItemBlockedByUncertainty(
+      'task-acetaminophen',
+      resolvedFlags
+    ),
+    false
+  );
+});
+
+test('Idempotent Positive Reward Ledger & Phrase Filter: awards once per occurrenceId and supports record correction', () => {
+  let ledger: RewardLedgerState = {
+    entries: {},
+    unlockedCosmeticIds: [],
+    equippedCosmeticId: null,
+  };
+
+  assert.equal(calculateTotalPoints(ledger), 0);
+
+  // Award 10 points for occurrence-1
+  ledger = awardRewardForOccurrence(
+    ledger,
+    'occ-postop-1-fluids',
+    10,
+    'Sip clear fluids'
+  );
+  assert.equal(calculateTotalPoints(ledger), 10);
+
+  // Repeated taps with same occurrenceId are idempotent no-ops (never multiply points)
+  ledger = awardRewardForOccurrence(
+    ledger,
+    'occ-postop-1-fluids',
+    10,
+    'Sip clear fluids'
+  );
+  ledger = awardRewardForOccurrence(
+    ledger,
+    'occ-postop-1-fluids',
+    10,
+    'Sip clear fluids'
+  );
+  assert.equal(calculateTotalPoints(ledger), 10);
+
+  // Award second distinct occurrence
+  ledger = awardRewardForOccurrence(
+    ledger,
+    'occ-postop-2-rest',
+    10,
+    'Quiet play and rest'
+  );
+  assert.equal(calculateTotalPoints(ledger), 20);
+
+  // Revoke first occurrence as a caregiver record correction
+  ledger = revokeRewardOccurrence(ledger, 'occ-postop-1-fluids');
+  assert.equal(calculateTotalPoints(ledger), 10);
+  assert.equal(
+    ledger.entries['occ-postop-1-fluids'].status,
+    'corrected-revoked'
+  );
+
+  // Re-confirming after correction restores active status cleanly
+  ledger = awardRewardForOccurrence(
+    ledger,
+    'occ-postop-1-fluids',
+    10,
+    'Sip clear fluids'
+  );
+  assert.equal(calculateTotalPoints(ledger), 20);
+
+  // Phrase filter catches false reassurance promises
+  const badWarnings = detectDisallowedReassurancePhrases(
+    "Don't worry, it won't hurt and you'll get better soon!"
+  );
+  assert.equal(badWarnings.length, 2);
+});
+

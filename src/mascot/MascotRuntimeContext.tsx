@@ -28,23 +28,31 @@ import {
 interface MascotRuntimeContextValue {
   /** Resolved state after applying priority (speaking > listening > gesture > idle). */
   resolvedState: KareMascotState;
+  /** Alias for resolvedState used by Pre-Op and Post-Op screens. */
+  mascotState: KareMascotState;
   /** True only while browser narration or model audio is actively playing. */
   isSpeakingAudioPlaying: boolean;
+  /** Alias for isSpeakingAudioPlaying. */
+  isSpeaking: boolean;
   /** True only while microphone permission is granted and capture is active. */
   isMicrophoneListening: boolean;
   /** Active transient gesture, if any. */
   activeGesture: KareTransientGesture | null;
   /** Optional dynamic mouthOpen (0..1) driven by live audio amplitude when available. */
   liveMouthOpen: number | undefined;
+  /** Alias for liveMouthOpen. */
+  mouthOpen: number | undefined;
   /** App-wide render mode ('svg' default or 'png-fallback'). */
   renderMode: KareRenderMode;
   setRenderMode: (mode: KareRenderMode) => void;
   /** Set browser narration speaking state (from ListenButton). */
-  setNarrationSpeaking: (speaking: boolean) => void;
+  setNarrationSpeaking: (speaking: boolean, mouthOpen?: number) => void;
   /** Set model voice audio speaking state + optional amplitude mouthOpen (0..1). */
   setModelAudioSpeaking: (speaking: boolean, mouthOpen?: number) => void;
   /** Set microphone listening state (only after permission granted & capture active). */
   setMicrophoneListening: (listening: boolean) => void;
+  /** Alias for setMicrophoneListening. */
+  setListening: (listening: boolean) => void;
   /** Trigger a short gesture ('waving', 'encouraging', 'celebrating') that auto-returns to idle. */
   triggerTransientGesture: (
     gesture: KareTransientGesture,
@@ -102,9 +110,13 @@ export const MascotRuntimeProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, [triggerTransientGesture, clearGestureTimer]);
 
-  const setNarrationSpeaking = useCallback((speaking: boolean) => {
-    setIsNarrationSpeaking(speaking);
-  }, []);
+  const setNarrationSpeaking = useCallback(
+    (speaking: boolean, mouthOpen?: number) => {
+      setIsNarrationSpeaking(speaking);
+      setLiveMouthOpen(speaking ? mouthOpen : undefined);
+    },
+    []
+  );
 
   const setModelAudioSpeaking = useCallback(
     (speaking: boolean, mouthOpen?: number) => {
@@ -154,15 +166,19 @@ export const MascotRuntimeProvider: React.FC<{ children: React.ReactNode }> = ({
   const value = useMemo<MascotRuntimeContextValue>(
     () => ({
       resolvedState,
+      mascotState: resolvedState,
       isSpeakingAudioPlaying,
+      isSpeaking: isSpeakingAudioPlaying,
       isMicrophoneListening,
       activeGesture,
       liveMouthOpen,
+      mouthOpen: liveMouthOpen,
       renderMode,
       setRenderMode,
       setNarrationSpeaking,
       setModelAudioSpeaking,
       setMicrophoneListening,
+      setListening: setMicrophoneListening,
       triggerTransientGesture,
       stopAllMascotMedia,
     }),
@@ -194,15 +210,19 @@ export function useMascotRuntime(): MascotRuntimeContextValue {
     // Safe fallback if rendered outside provider in isolated unit tests
     return {
       resolvedState: 'idle',
+      mascotState: 'idle',
       isSpeakingAudioPlaying: false,
+      isSpeaking: false,
       isMicrophoneListening: false,
       activeGesture: null,
       liveMouthOpen: undefined,
+      mouthOpen: undefined,
       renderMode: 'svg',
       setRenderMode: () => {},
       setNarrationSpeaking: () => {},
       setModelAudioSpeaking: () => {},
       setMicrophoneListening: () => {},
+      setListening: () => {},
       triggerTransientGesture: () => {},
       stopAllMascotMedia: () => {},
     };

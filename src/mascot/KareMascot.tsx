@@ -39,6 +39,8 @@ export interface KareMascotProps {
    * only while audio/speech is active.
    */
   mouthOpen?: number;
+  /** Optional explicit speaking flag when driven by audio playback. */
+  speaking?: boolean;
   /** Accessible label for screen readers. Omit or set decorative=true when decorative. */
   label?: string;
   /** Marks the mascot as decorative (aria-hidden="true"). */

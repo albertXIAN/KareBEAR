@@ -1,0 +1,1245 @@
+﻿CS497/HLTH480/MTHEL498/CS698 - Team Notebook 
+General Instruction
+
+
+Welcome to the team notebook!  This is where your team will document the entire design process for your project, including team contract, preparation and documentation activities, links to your final deliverables, record of team meetings, etc.  
+
+
+The instructions for each week’s writeup is described in the to-dos instructions, which you can find on the “Schedule” page of the course website.  Each deliverable section consists of placeholders and templates.  There is flexibility on how you use the placeholders -- for example, if you do not have any images to include, then you can delete the image placeholders; on the other hand, If you have multiple images to include, you can duplicate the image placeholders. Make sure you update the contents inside the double curly brackets.    
+
+
+Unless otherwise stated, your deliverables are due at 5pm the day before your next class, and instructors and TAs will provide comments/feedback so that you can improve your design process, plans, and writing.  Do not delete or click resolve on the comments; simply improve your writeup based on the feedback.  It is expected that your final blog (PO3) will be based on an improved summary of the content from your team notebook, with all of our feedback addressed.
+Team Information
+Team Name: {{ KareBEAR }}
+Kids' App for Recovery & Education - Building Experience, Awareness & Reassurance
+
+
+Team Members
+* {{Chiara Alcantara }} / {{ccaalcan@uwaterloo.ca}}
+* {{Isabelle Lee}} / {{i9lee@uwaterloo.ca}}
+* {{Lisa Rambrich }} / {{lrambric@uwaterloo.ca}}
+* {{Giordana Staudohar }} / {{gstaudoh@uwaterloo.ca}}
+* {{Alexandra Roszczenko }} / {{aroszcze@uwaterloo.ca}}
+* {{Albert Xian }} / {{y3xian@uwaterloo.cal}}
+
+
+Target Problem 
+* Poor outcomes for children when surgery is abrupt due to poor communication
+
+
+Your Team’s Weekly Check-In Time: 
+* Friday’s 10:00 - 11:00 AM EDT
+Week 3 - Structuring the Team and Project
+Grade (Used by TA, Do not edit): 
+* D2: 10/10
+* T1
+________________
+
+
+D2: Contextual Inquiry Plan
+
+
+Writeup
+(1) the target problem your team will work on
+
+
+Our team is aiming to create a tool that improves pre- and post- operative surgical experiences for children, parents/guardians, and healthcare staff. In speaking with a community partner, we discovered that outcomes are better for all involved parties when children are involved in their care and feel prepared to undergo procedures. [a]However, for procedures that are not routine or emergent, healthcare staff often do not have the time or resources to help the child prepare in the same way (i.e. have separate pre-op visits, spend 1-2hrs helping child feel comfortable with needles, anaesthesia, etc).
+
+
+(2) the people relevant to your target problem; these can be direct stakeholders (i.e., target users who will be adopting your solution) or indirect stakeholders (i.e., people who are not direct users of your solution, but are nonetheless affected by your solution). Be specific, e.g., instead of "physicians", identify the type of physicians, e.g., "physicians managing chronic pain", or "emergency room doctors".
+Alexandra
+
+
+Successful execution of this project will require us to consider the goals, expectations, and pain points of pediatricians, emergency room doctors and nurses, families with young children, and other hospital staff working in emergent situations that involve providing care to children. 
+
+
+(3) which contextual inquiry method(s) -- interviews, observations and literature research -- you will use to find out more about your target problem. You are encouraged to choose more than one method, since this would allow you to triangulate your findings to understand real user needs.
+
+
+We will use a mix of interviews and literature research to learn more about our target issue. We hope to interview pediatric doctors, nurses, and other health care providers who work with children along with parents and families.  
+
+
+(4) which team member is responsible for carrying out which methods.
+
+
+Isabelle, Lisa and Albert will be responsible for conducting interviews. Chiara, Giordana and Alexandra will be responsible for conducting literature reviews.[b][c]
+
+
+(5) your plan on carrying out each method that your team chose by answering the following questions:
+
+
+Option (A): Interviews
+What are 5 assumptions that you are making about the direct/indirect stakeholders and 5 things you might need/want to know about them / their work process. Based on this brainstorming, come up with 3 high-level questions. For each high-level question, come up with at least 5 specific interview questions. In total, you should have 3 high-level questions, and 15 specific questions. Explain how you avoided "bad" questions as explained in the lecture. Finally, describe your plan for recruiting interviewees, obtaining their consent, how many people you plan to interview, and when/where these interviews will be conducted.
+
+
+5 Assumptions About Stakeholders 
+1. Healthcare providers do not have enough time to effectively[d] prepare each child for surgical procedures 
+2. Children who understand their surgical process and treatment will experience less fear and anxiety 
+3. Parents play a large role in preparing and reassuring children before surgery 
+4. Different children require different levels of preparation based on age, prior experience and maturity. 
+5. Existing resources do not adequately prepare children for every type of procedure and are not accessible to all families. 
+
+
+5 Things We Want to Learn
+1. How healthcare providers currently prepare children for surgery/treatment 
+2. What parts of the experience are most involved in increasing anxiety for children 
+3. How effective are the current processes used to inform families of their child’s treatment plan [e]
+4. What barriers prevent healthcare providers from providing a more extensive preparation or education 
+5. What features could realistically support children, parents and healthcare providers without creating additional workload requiring more resources. 
+
+
+3 High Level Questions 
+1. How are families currently prepared for their child’s treatment process? 
+* Can you walk us through what typically happens from when a child is diagnosed until the day of their procedure? 
+* On the day of their procedure, what reinforcements[f] are put into place to continue to help children prepare for the process? 
+* What resources are provided to families post-procedure to continue ongoing care for their child? [g]
+* Which healthcare professionals are typically responsible for preparing children and families for the procedure? 
+* What factors influence how much preparation/what kind of preparation a child receives for surgery? [h]
+2. What challenges do children, families and healthcare providers experience during the pre and post operative process? 
+* What parts of the surgical process tend to be the most challenging for children? 
+* Can you describe a situation where a child seemed particularly unprepared for their procedure and what the consequences of that were? [i]
+* What challenges do parents commonly experience when preparing their child for surgery? [j]
+* After surgery, what questions or concerns do children and families most commonly have? 
+* What prevents healthcare providers from spending more time preparing children for procedures? 
+3. What would make pediatric surgical preparation more effective? 
+* What types of resources have you seen work well in preparing children for medical procedures? 
+* What types of resources have not worked well in preparing children for medical procedures? [k]
+* How do preparation needs differ for children with different levels of maturity? 
+* What information do you think is key for children to understand prior to their procedure? 
+* How would you quantify the effectiveness of a preparation tool for families? 
+
+
+How We Avoided Bad Questions
+We designed our interview questions to avoid leading, closed-ended, hypothetical or broad questions. As opposed to asking participants whether they believe a solution would be useful, we focused on learning about the current processes, experiences and consequences of the system. We specifically ask participants to describe how children are currently prepared, what strategies have been working and which ones have not been effective. 
+
+
+We avoid questions that assume our initial assumptions which allows participants to identify the constraints, limitations, and barriers they experience that we may not have considered. Most questions are open-ended and encourage participants to discuss real experiences. 
+
+
+Recruiting Interviewees 
+We plan to recruit approximately 5 interview participants representing multiple stakeholder perspectives. Ideally this would include pediatric nurses, doctors and any other healthcare professionals involved in surgical care. Additionally we will recruit families who have previously supported a child through a surgical procedure. [l]Healthcare professionals and families will be recruited within our team's network. 
+
+
+Before each interview, participants will be informed of the explicit purpose of this project, the expected length of the interview and that participation is entirely voluntary. We will obtain informed consent before beginning the interview. Participants will also be told they may decline to answer any question or exit the interview at any given point. All identifying information will be excluded from our notes and final project materials unless provided explicit permission otherwise. 
+
+
+Interviews will take approximately 15 minutes[m] and will be conducted virtually over the phone. Interviews will be completed during the contextual inquiry stage of the project so that findings may inform the development of our solution. 
+
+
+Option (C): Literature Research
+Describe your target problem and identify keywords you will use to search for literature on this topic. When brainstorming keywords, consider who is affected by the problem, what barriers exist (cost, time, access, trust, policy, etc.), and when, where, or how the problem occurs. Starting with a simple search (e.g. [keyword 1] AND [keyword 2]), search for literature in two of the recommended library databases (Pitchbook, Scopus, and/or Statista). Describe 2 ways that you would improve your search strategy for a future search.
+
+
+
+
+Our target problem is the lack of consistent and effective preparation for children and their families during medical treatment. Children may experience fear, anxiety and uncertainty while parents may feel unprepared to support their child. Healthcare providers could help reduce this uncertainty, but time and resources constraints seem to limit the effectiveness of the current individualized support systems in place. Our literature research will focus on understanding how pediatric patients are currently prepared for surgery, the barriers healthcare providers face when providing support and what systems could be implemented to improve children and family experiences. 
+
+
+Potential keywords include: pediatric surgery, pediatric patients, children, preoperative preparation, postoperative care, surgical anxiety, preoperative anxiety, patient education, family education, parental anxiety, child-life interventions, procedural preparation, healthcare communication, time constraints, healthcare resources, digital health tools, educational interventions, surgical experience, and patient engagement.
+
+
+After conducting our initial search, there are two main ways we could improve our search strategy. First, refine and expand our keywords based on terminology found in relevant articles. For example including both pediatric surgery OR pediatric surgical care. This would hel;p us identify literature that discusses the same concepts using different terminology. 
+
+
+Secondly, we could apply more specific search filters. For example, we could limit the results to peer-reviewed articles published within the last 10 years with pediatric populations and hospital settings. We could narrow the search further by age group or type of intervention to further identify more directly relevant articles. This would make the literature more targeted to the users of our design. 
+
+
+
+
+
+
+
+
+
+
+Contribution / Task Division
+* Isabelle Lee contributed by participating in discussion and revising the contextual inquiry plan
+* Lisa Rambrich contributed by participating in discussion
+* Albert Xian contributed by participating in the discussion and providing feedback
+* Chiara Alcantara contributed by participating in group discussion and assisting with filling out sections of the team contract and contextual inquiry plan. 
+* Giordana Staudohar contributed by participating in group discussion and identifying/explaining target problem
+* Alexandra Roszczenko contributed by taking meeting notes, participating in discussion and revising the contextual inquiry plan. 
+
+
+Declaration of AI Use
+{{ If you do use AI to generate your solution, please give a detailed explanation, including the rationale and necessity behind the use of AI, the input and prompt given to the AI system }} 
+
+
+________________
+
+
+________________
+T-1: Team Contract 
+
+
+Goals 
+
+
+Individual Goals. (What does each member of the team want to get out of working on this project? Is everyone here to accomplish the same thing?  )
+
+
+Chiara - I want to learn more about the issues seen in healthcare and what pain points can be solved with AI versus where a non technical solution would be more effective. Given that I come from a technical background I’d like to learn about how people approach challenges and solutions from a non-technical perspective. 
+
+
+Isabelle -My goal for this project is to help develop a product that improves healthcare outcomes for kids while also minimizing future fear of healthcare contact. Furthermore, I would like to ease burdens and stress that parents face in caring for their child after procedures occur. 
+
+
+Alexandra - Through this project I hope to create a project that genuinely helps bridge the barrier of poor communication between providers and children receiving operative care. I hope that we can all work collaboratively on this project and maintain a clear vision of how we want to support children and families.
+
+
+Giordana - I want to help develop a tool that makes healthcare environments less scary to children. I hope that we can help them become active participants in their care, leading to increased satisfaction and better outcomes.
+
+
+Lisa - I want to help children and families with children going into surgery by making the process easier for them and less scary for the children. I also want to help the healthcare providers like the nurses and doctors by helping children and families prepare better for surgery and improve care after surgery. 
+
+
+Albert- Through this project, I want to learn how to translate the needs of children and their families into practical, user-friendly designs. I hope to contribute to prototyping and usability testing, and learn from my teammates’ different perspectives. My goal is to help make communication around surgery clearer so that children and parents feel more informed and prepared.
+
+
+
+
+Collective Goals. (As a team, what are your collective goals?)
+
+
+* Frequent & reliable communication
+* Better adherence to pre and post-operative treatment plans
+* Creating a genuinely fun and impactful project for our target audience
+* Making children's treatment journeys less overwhelming for families
+* Provide assistance to providers in making operations appear less stressful to children. Hopefully minimizing reinjury post-op.
+
+
+Team Roles and Responsibilities
+
+
+Team Roles.  (What team roles -- see the list of possible team roles in Group Work: Assignment of Roles -- do you think are necessary for the success of your project? Who will be assigned which team role? Consider each team member’s strengths and weaknesses, and how team roles can help everyone learn or capitalize on their strengths.)
+All of the following roles are necessary for the success of our project. The following individuals will be assigned to each team role:
+* Leader/Facilitator: Giordana & Isabelle
+* Arbitrator/Monitor: Lisa
+* Notetaker/Timekeeper: Albert
+* Devil’s Advocate: Alexandra and Chiara
+
+
+Assignment of Responsibilities. (In this course, each team member must contribute to every deliverable, and each person’s contribution must be clearly stated in the “Contribution / Task Division” section for that deliverable.  What is your process for dividing up the work for each deliverable?)
+
+
+We will have weekly Friday meetings at 10am EST where we will discuss progress and expectations for next week's deliverables. Work will be divided to give group members an opportunity to explore the different requirements of the project such as research, write-ups for deliverables, and app development.
+
+
+Deliverable Submission.  (How will the deliverables be submitted? Do you expect all members of the team to have a chance to vet the submission before it goes out? When should the deliverable writeup be ready for everyone to review?)
+
+
+Submission will vary depending on the specific deliverable, however we want to get a full team sign off before anything is submitted. This will be done during our weekly meetings (Fridays at 10am) to ensure we can have a synchronous discussion.
+
+
+
+
+Communication
+Team Meeting. (What are your expectations regarding (a) preparation for and attendance at team meetings, (b) frequency and duration of meetings, (c) preferred communication channels, (d) how turn-taking is managed to ensure equal contribution from everyone?}
+1. Everyone is expected to attend our team meetings on Fridays at 10am and share what they’ve worked on in the past week.
+2. Weekly 1 hour long meetings
+3. iMessage and Slack
+4. Round table of progress updates and meeting facilitator that runs everyone through the meeting’s agenda.
+
+
+Timeliness of Response. (How will you communicate? What are your expectations regarding the timeliness of responses to emails / slack messages?)
+We will communicate primarily using imessage and slack to ensure timely communication between members. We hope to have responses ASAP, with all asynchronous communications acknowledged or responded to by our Friday weekly meetings.
+
+
+Dealing with the Unexpected
+
+
+Surprises.  (How will you deal with surprises? What should an individual do when he/she has a hard time delivering on something they promised either because it was harder than expected or because of an unexpected life event? How will the team respond?)
+
+
+To deal with any unexpected circumstances, it is the individual’s responsibility to notify the team as early as possible to ensure we can resolve any issues that arise. This person should communicate their circumstances and what kind of help they require and we will discuss in a team meeting how we can redistribute any tasks to ensure we still meet our required deadlines. Our team will respond with active communication and understanding as unexpected life circumstances may occur to anyone at any time. 
+
+
+Conflict. (How will you handle conflict? If any member on the team feels that something is not going right on the team, how would they signal it? How will the team respond?)
+
+
+Open floor policy to voice any concerns we have with the project or team members performance. We are all very passionate about this idea and trust that no conflicts will arise within the group. In the unfortunate circumstance where they do we will do our best to deescalate the situation fairly and reach out to staffing support if needed.
+
+
+
+
+Contribution / Task ‘Division
+* Alexandra Roszczenko contributed by joining the meeting and contributing to the open discussion. Worked on the write up for some of the contract pieces.
+* Giordana contributed by joining the meeting and participating in open discussion. Helped to type out verbal responses in notebook
+* Lisa Rambrich contributed by participating in the discussion
+* Albert contributed by attending the weekly meeting, participating in discussion, pivoting the ideas, and providing feedback.
+* Isabelle contributed by joining the meeting and participating in discussion, helped to prompt discussion topics 
+* Chiara Alcantara contributed by joining the team meeting and providing insight into formatting the team contract along with typing out sections of the contract. 
+
+
+Declaration of AI Use
+N/A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+We agree to follow the team contract.
+  
+  
+  
+
+  
+
+  
+  
+________________
+
+Week 4 - Leveraging AI: Algorithms & Apps
+Grade (Used by TA, Do not edit): 
+* D3: 7.5/10
+
+
+________________
+
+
+D3: Aims and Candidate Solutions
+
+
+
+
+(1) describe the problem statement your team came up with during Aakanksha's tutorial.
+
+
+Problem Statement 1: I am Lucy (age 35), the mother of a 5 year old girl who has been taken into an emergency appendectomy. I am worried about caring for her when she is out of surgery. She is scared of needles and doesn’t handle doctor visits and check-ups well. I anticipate having trouble convincing her to take her medications because she really doesn’t like the taste or texture. I wish I was able to prep her before her surgery but I come from a finance background and don’t know much about healthcare. 
+[n]
+
+
+Problem Statement 2: I am a pediatric physician who is treating a child of 9 years old with brain cancer. It has been difficult to prepare the children for the treatment process, which has led to worsened health outcomes. Patients haven’t been following post-op procedures. Patients must process a large amount of medical information while dealing with stress and fear and I do not have the time or resources to explain post-operative care as clearly as I’d like to. It can be difficult to understand how much information is understood from patient to patient. I would like a solution that can better help patients and their families prepare for procedures and inform them of post-op care. 
+
+
+(2) based on this problem statement, each student is asked to individually and independently repeat the same "Mapping AI Capabilities" exercise that you did with the fake problem, but this time using your team's problem statement. Complete the front and back of the use case card by mapping AI capabilities, assessing the use case along the 6 dimensions (i.e., impact, effort, expertise, performance, value and risk), and coming up with 3 contextual factors that matter. Each student should include a screenshot of the front and back of your completed use case card in the notebook, along with a writeup describing your thought process. Together, you should have 5-6 use case cards (screenshots and writeup), one from each team member. 
+
+
+
+
+
+
+
+
+
+
+Problem Statement 1 AI use cases:
+
+
+  
+  
+[o]
+
+
+Isabelle:
+I took the perspective of the mother of a young child who is about to undergo an emergency appendectomy. To determine a value that a parent would have, I put myself in their shoes by drawing on personal experiences as a caregiver in my own family. As a family member, you feel a strong sense of responsibility and care for your loved ones, leading me to list compassionate care as the parents value. This value also led to the general “want” of ensuring that her daughter recovers safely from the procedure, although the mother would also most likely want the child to feel comfortable, unafraid, as well as to have clear instructions on how to care for her after the surgery. To answer the prompt related to AI, I brainstormed solutions that were relatable, usable and fun for a child. An app that includes these characteristics would lead to greater adherence and a higher chance of safe recovery for the child, fulfilling the main “want” that the mother had.
+
+
+I reflected on the feasibility of the app as I moved to the back of the card. The gamified app would have a high impact as it would lead to a deeper understanding of the procedure and less fear going into the surgery. In addition the app would facilitate increased medication adherence, care guidance for the parent and better outcomes when the surgery is complete. Although some effort would be needed to train the AI model and get the app running logistically, effort is minimal for the physician and parent, as the AI would use the provided post op instructions and create the story/game for the child all by itself. Required expertise are minimal as well because this tool primarily serves as a method of encouraging and providing supplemental information to the parents/children about the surgery, rather than providing novel medical information. Finally, risks are also minimal due to the goals related to education and encouragement, with value remaining high due to the ability of the app to improve outcomes significantly.
+
+
+Some contextual factors that I considered were related to the children’s interest and parent’s trust in the app that could hinder its effectiveness. These are factors we should ask our community partners/interviewee’s about when designing the app, to understand how to most effectively combat these downsides. Finally, another factor to consider would be a lack of app engagement and therefore medication adherence while the child is in school. Coming up with a work around for this would be helpful to post op treatment.
+  
+[p]  [q]
+Alexandra - I took the perspective of the mother, from Problem Statement 1, whose daughter has just been taken in for an emergency appendectomy. In my use case card I identified as being “a parent to a sick child who is undergoing surgery” and commented that “I value the health of my child and a speedy recovery for them”. I tried to empathize and reflect back to the worry my mom would feel when she made ER visits for me when I was younger, all she wanted was for her kids to be safe, healthy, and happy. Placing myself in this mother’s perspective I said “I want to alleviate the worries my child has before and post-surgery with AI that involves identifying ways to compare and communicate the situation in ways my child understands”. I was concerned from the conversations we had with health practitioners during one of our workshop classes that children’s post-op condition and recovery is tied to their awareness, comfortability, and stature prior to the surgery. They expressed that when kids don’t know what is going on, they worry, which leads to poorer health outcomes. Thus, I thought that by “using child friendly generated content to interactively inform [the] child of the procedure to make it less scary” we could relieve some of this post-operative stress.
+impact, effort, expertise, performance, value and risk
+On the back side of the page, I said that implementing Kare Bear, a post-operative companion to inform children of their procedures to improve comfortability and post-operative care, would have high impact and take medium effort. I say medium effort because AI tools are very helpful when building projects in the modern day. I personally feel like an MVP of this project is entirely feasible in a weekend. The risk with implementing this project comes with the consideration of people sensitive healthcare data and needing to handle it properly, which is why I valued the effort at medium.
+I said the expertise required is medium and the performance would be relatively high. Since AI tools can be used to generate child friendly content the expertise level of the AI is based on whatever knowledge we train the model on.
+Finally, this solution is of high value and low risk. Since the app is not a substitute for quality health care but simply an additional tool parents can provide for their kids to keep them entertained and informed about their condition there is little risk of delivering inaccurate medical information. On the flip side, this has the potential to help a lot of families as they navigate the already stressful environment of the ER and caring for a sick child.
+The contextual factors I considered when brainstorming this use case card were to make the solution something a child actually wants to engage with, ensuring the data is properly sourced and fact-checked, and understanding the tools limits to handling challenging and serious patient conditions. I thought that this tool would be extremely helpful for the persona assumed in the first problem statement but if a family is dealing with a sick child with cancer, the app will need to adjust its tone and approach to informing the child of their post operative care.
+
+
+  
+[r]  
+
+
+Giordana - I took the perspective of a parent of a 5-year-old child. I considered how a parent might value preparedness for the procedure so that they can answer any questions their child might have and help them be less afraid going into it and afterwards. Additionally, I would want any tool or information source to be easily accessible, by explaining terms in child-friendly language and being readily available such as on a mobile device. I’d also want my child to adhere to their post-op regimen, so that they avoid any complications and have optimal results from their procedure. AI could feasibly help explain this to my child and provide encouragement to take their medication, if given the post-op note and instructions from the healthcare team. This tool wouldn’t need to be complex, but it could have a significant impact on the outcomes for my child. As well, the tool doesn’t need to provide any additional medical expertise or diagnose, it just needs to perform well as an encouragement tool and simplify the given information. Finally, the risk of this tool is low as it would not give its own medical advice, and the value of it working successfully would be high, if resulting in improved outcomes. 
+
+
+Some contextual factors that matter from this perspective include that the tool would only be helpful if compatible post-op instructions are given by the provided. Next, my child would have to be interested in using and listening to the tool otherwise it would be ineffective. Finally, I’d have to consider the possibility of AI getting information wrong, or leaving out important details through simplification of the provider information.
+
+
+Problem Statement 2 AI use cases:
+
+
+  
+[s]  
+
+
+Lisa - From the perspective of a pediatric physician, I believe they would value providing quality care for patients. This value would make it important to them to help patients better prepare for treatment and help them better adhere to post-op instructions which can improve health outcomes for patients. As mentioned in the problem statement, creating a way to make medical information easier to understand would help patients follow their instructions. I believe the doctor would think it is important that AI use the preparation and post-op instructions given by the doctor to ensure the patients are receiving accurate information. I believe our solution is one that would make a great impact on patients because it can improve adherence to medical instructions and therefore improve health outcomes. Additionally, I believe it is low effort because the information the AI needs is already provided by the doctor, the AI just needs to simplify the information. I think the AI needs to perform well to be beneficial for users, because if it makes mistakes, it could be threatening to the patients and lead to adverse health effects. It also requires high expertise because it is providing medical advice. It is important that the information given to the patient by the AI is still accurate to the doctor’s medical advice. There is a high risk involved. If the AI makes a mistake it could have negative health effects for the patient. But it is also a high value solution because if it works properly, it could drastically improve patients health. Some contextual factors include patient confusion about care procedures. The goal of the app is to make care instructions easy for users to understand, therefore our app would need to be effective in simplifying these instructions and ensuring the instructions it provides are aligned with medical guidance. If not, it could create or worsen patient confusion. Another contextual factor is that patients may not have someone to care for them after surgery, as many parents or guardians work. Therefore, the app would need to make care instructions easy for young children to understand, as they may have to prepare for treatment or post-op care themselves. Finally, patients' fear of medicine, needles, etc. is another contextual factor to consider. Even if the app can provide simplified instructions to patients and caregivers, patients refusing to take medications may make adhering to pre and post-op care difficult. 
+ Albert Xian - AI Teach-Back Companion (Problem Statement 2)
+  
+[t]  
+I took the perspective of a pediatric physician treating a nine-year-old child with brain cancer.[u] I focused on patient understanding and safety, especially the difficulty of knowing whether children and families understand their care instructions. My AI Teach-Back Companion would use physician-approved information to generate age-appropriate explanations, then ask children and caregivers to explain key steps in their own words. The main AI capabilities are Generate and Detect, which support clearer explanations and help identify possible misunderstandings.
+I considered the impact and value to be high because better understanding could help families prepare for treatment and follow post-op instructions, while reducing some repetitive explanations for clinicians. The effort would be moderate for an initial prototype, although reviewing medical content and fitting the tool into clinical workflows would require more work. Expertise and performance requirements would be high because the explanations need to preserve important medical details. I placed risk around the middle because approved information limits the tool’s scope, but incorrect explanations or missed misunderstandings could still cause harm.
+The three contextual factors I considered were children’s limited understanding, caregiver involvement, and the complexity of post-op instructions. These affect how information should be explained and how much support a family may need. The tool should use simple language, involve caregivers where appropriate, and refer unresolved questions to the care team.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Chiara: 
+  
+  
+
+
+
+From the perspective of a pediatric physician, I feel they would value helping children and families feel informed and supported through treatment. For this reason, I would suggest an AI tool that explains treatment and post operative care instructions in age-appropriate language providing checks in understanding as opposed to assuming patient understanding immediately. This could help flag common misconceptions and fix them before they evolve into a further issue. The AI would use the physician’s preparation and post-operative instructions as its source of information, adapting how those instructions are explained while preserving their meaning.
+
+
+I believe this solution has high potential for impact because it could help families feel more prepared and provide a care team with a clearer picture of the patient’s understanding of their condition and treatment. I assess this effort as high because developing a tool that consistently simplifies information without losing important details would require careful design, clinical review and testing. This solution also requires high expertise because communicating medical information to children requires both a background in education and clinical knowledge. The required performance would be high, particularly when explaining important restrictions or care steps. When AI cannot answer a question using the approved information, it should direct the family to a care team. I would also consider the value and risk high as the tool could provide ongoing support between appointments but an inaccurate explanation could cause a family to misunderstand what needs to be done. 
+
+
+One contextual factor I would consider is the emotional state of the child and caregiver. A large reason why it is difficult to relay information about medical treatment to families is the stress and fear it may involve. The tool should allow families to therefore revisit short explanations at their own pace. Furthermore, there is a large difference between the child and caregiver’s information needs hence the tool should support both audiences while keeping responsibility for care with adults. Lastly, care instructions may alter over time depending on changes in progress and treatment results. The tool would then need to use the most recent approved instructions so that families do not rely on outdated information. These factors led me to view the solution as a way to support communication and reveal gaps in understanding, with the physician remaining responsible for medical guidance. 
+
+
+(3) write down (a) the 2-4 ideas that your team has identified during Justin's ideation session and (b) a list of questions that your team anticipate asking the community partners during the upcoming co-creation session in order to populate the GPS tool (see slides). 
+
+
+1. Ideas:
+* Reminders in app and linked to Google Home/Alexa[v]
+* Parent observability of the app, oversee controls and children’s view
+* Rewards for children when they complete tasks in the app, ex. additional customizable characters
+* A tab specifically for parents where they can learn about strategies that worked for other parents when caring for their child
+
+
+2. Questions:
+Questions for the pediatric nurse
+* In your experience, what are the most common surgeries that children are under prepared for? What current strategies are available to improve their outcomes for these rapid onset surgeries?
+* How do parents usually learn about their child’s surgery and how to care for them afterwards? What are some common feelings they experience after their child’s surgery?
+* How do you provide care to patients who may be afraid of doctors/treatments/medications?
+* What are the main deterents to medication adherence among children and what are some solutions that have been used to combat these issues?
+* Have you heard of parental opinions on AI use in healthcare? What are some things they have mentioned about this topic, and what are their main concerns?
+
+
+(4) include any photos that you took (e.g., of the artefacts you produced while brainstorming) during Aakanksha's and Justin's session, along with captions explaining what are in those photos. These photos will help you tell a story during your demo day presentation.
+  
+ 
+
+
+One side of the paper discusses problem statement 1 while the other half discusses problem statement 2. This is a photo of Alexandra’’s ideas during Justin’s brainstorming session. The second row discussed possible non tech solutions (such as getting volunteers to help families and creating support groups for families). The third row discussed AI solutions to the problems (such as an interactive video/game to show children what the procedure is like). In the fourth row, another one of our group members picked their favourite ideas and built onto them. They built onto the video/game idea by suggesting that patients watch it at the doctor’s office before the procedure. They added onto the support group idea by suggesting that hospitals organize the support groups.   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[w]
+
+
+
+
+
+
+
+
+This paper contains each person's best idea from Justin’s second ideation session. We used panel 2 - 6 ideas to build on the initial idea in panel 1 (top left) and brainstormed how they could be integrated into the app. 
+
+
+Contribution / Task Division
+* Isabelle Lee contributed by participating in class activities and stimulating in class discussions. Helped create the first problem statement (parent perspective) as well, and help lead discussions about the solution and contextual factors surrounding its implementation.
+* Albert Xian contributed by working on the second problem statement from the physician’s perspective, brainstorming an AI teach-back solution to help children and families understand treatment and post-op care, and completing the use case card and write-up, including the AI capabilities, six assessment dimensions, and contextual factors.
+* Lisa Rambrich contributed by participating in class activities and group discussions (e.g. mapping AI capabilities, use cases, brainstorming solutions to problem statements, etc.), working on the second problem statement, and brainstorming questions to ask community partners
+* Alexandra Roszczenko contributed during the class discussion and in person activities as well as to complete the week’s deliverable. Helped to create the first problem statement and brainstorm how we can combine some of the ideas that came from Justin’s brainstorming session into our solution design. For example, having a parent companion app to the original targeted solution for children. All my write-up photos from the class have been uploaded and expanded on.
+* Giordana Staudohar contributed by engaging in class discussion and facilitating the brainstorming activities. Helped to create the first problem statement. Considered feasibility of brainstorming ideas for implementation into solution design, helping narrow down top 6.
+* Chiara Alcantara contributed by adding to class discussions and participating in brainstorming activities. Helped develop the initial problem statement and assessed the feasibility of proposed ideas for the solution design by asking questions about the problem statement and narrowing the team’s focus. 
+
+
+________________
+
+
+Week 5 - Evaluating AI+Health Outcomes
+Grade (Used by TA, Do not edit): 
+* P3
+________________
+
+
+P3: Prepare for Co-Creation
+Artifacts (add as many images as you want)
+
+
+
+
+
+
+
+
+{ image }
+
+
+
+
+
+
+	Figure n. {{ Description of the image. It should be descriptive enough for readers to know what the image is about without looking at it. }}
+	
+
+Writeup
+Using what you learned in the Ideation sessions and AI tutorials, each group should prepare the following:
+
+
+1.  Problem overview (under 1 minute). Write a short, focused description of your group’s problem space in the team notebook. At the beginning of the co-creation session, one member in your team will present the problem statement to the entire class in under 1 minute before partners move to tables. Select the team member who will present. (Alex)
+
+
+Children who undergo emergency surgery or are suddenly exposed to an unfamiliar healthcare environment can feel overwhelmed and anxious, especially when preparation and communication regarding procedures is limited. Parents of sick children are left to navigate difficult situations, trying to understand their child’s condition and make sense of the medical details well enough to relieve their worried child. 
+One of the main challenges is the lack of accessible, child-friendly resources and the time needed to properly prepare children for surgery and recovery. While medical staff are responsible for providing quality patient care, their existing workloads can limit their capacity to adequately prepare children and support their post-operative recovery.
+KareBEAR aims to address this gap by helping children and their caregivers better understand and navigate their medical recovery journeys through accessible, child-friendly education, and post-operative care.
+
+
+
+
+
+
+2.  Idea slides (under 3 minutes). Prepare up to 5 slides (total) covering one tech (i.e., AI) idea and one non-tech idea, and how each solves your problem. Provide a link to your slide deck in the team notebook. The tech and non-tech ideas can be very different. At the co-creation session, two students will stay at your table to present and get feedback, while other group members will visit other tables to give feedback. Listen more than you talk, and stay open to partner ideas. (Isabelle, Giordana)
+https://docs.google.com/presentation/d/1OtjzFWMA3n3XaeEcC3PpOIrG4mBC8A2Od1TrrC_4m0M/edit?usp=sharing
+
+
+3.  GPS questions. Using the tool Justin Chan recommended, prepare questions for partners to answer under each heading. Type them directly in your team notebook. (Chiara)
+    ● Good: praise and positives
+* What aspects of our proposed solutions do you see being the most beneficial for children undergoing medical treatment and their families? 
+* Which features of our app do you think would be the most effective in engaging children and benefiting their mental state during medical treatment? 
+* How might our solution assist in combating existing gaps in communication between healthcare providers, children and their families? 
+* What benefits do you see in using interactive, age-appropriate educational materials or guided play to prepare children for medical procedures? 
+* Which characteristics of our technical and non-technical solutions would be the most practical in integrating into the existing pediatric healthcare practices? . 
+    ● Problematic: concerns or potential problems
+* What challenges might arise when implementing either a solution in a healthcare system particularly with limited medical staff, time and resources? 
+* What concerns would you have about using AI to simplify medical information for children, especially regarding accuracy, patient safety and data privacy? 
+* How do the differences in children’s ages, maturity, medical conditions, treatment progress and anxiety levels affect the effectiveness of our proposed solutions? 
+* What barriers would prevent children and caregivers from accessing or consistently engaging with either the app or in-person preparation activities? 
+* Are there any features of our proposed solutions that you see unintentionally having the opposite effect and increasing stress, confusion, or responsibilities for children, caregivers or healthcare providers?
+    ● Step-ups: improvements, or ways to reduce problems
+* What modifications would you recommend to make our solutions more accessible and effective for children with different needs and levels of understanding? 
+* How could we improve our application to ensure that medical information remains accurate and consistent with healthcare providers’ instructions? 
+* What additional features or strategies could help caregivers better support their children during treatment and recovery? 
+* How could we adapt our solutions to better support children undergoing complex care where treatment is constantly changing and may be extremely specialized? 
+* How could we evaluate whether our solutions genuinely improve children’s understanding, reduce anxiety and support adherence to post-operative instructions? 
+
+
+
+
+
+
+4.  Ongoing research. Keep gathering evidence through observations, interviews, and literature on the problem and possible solutions. Add it to your team notebook. (Lisa, Albert)
+
+
+
+
+Lööf, G., & Lönnqvist, P. A. (2022). Role of information and preparation for improvement of pediatric perioperative care. Paediatric anaesthesia, 32(5), 600–608. https://doi.org/10.1111/pan.14419
+
+
+* Large amounts of evidence indicating that preparation can improve anxiety, cooperation and recovery during pre-, intra-, and post-operative procedures 
+* Many children say they feel underprepared for pre-, intra- and post-operative procedures 
+* Individual temperament and parent’s anxiety increase risk for anxiety during pre-, intra-, and post-op procedures
+* Current methods of preparation should be re-evaluated 
+   * Methods of preparation should move away from only providing information and focus on helping children understand the information 
+* Recommended Interventions:
+   * Recommends interactive, age-specific, web based technology to help children prepare for pre-, intra- and post-operative procedures 
+   * Pharmacological interventions:
+      * Pharmacological interventions were relied on in the past 
+      * Reduced stress, controlled reflexes, counteracted side effects of anesthesia
+      * The development of distraction and preparation interventions have reduced the need for pharmacological interventions
+      * Non-pharmacological interventions have become increasingly important
+         * Reduce negative side effects
+         * Helps children learn to cope with situation 
+         * Non pharmacological interventions are equally effective as pharmacological solutions in reducing anxiety 
+   * Social Interventions:
+      * Parents should have the option to be with children when receiving anesthesia
+         * Anesthesia is a stressful situation for the child > parent presence could be helpful 
+         * Presence of caregiver could provide psychological support 
+            * Helps child adapt to situation
+         * Parents can provide insight into children’s coping strategies and responses
+         * Parents can help children regulate their stress 
+   * Behavioural interventions
+      * Behaviour of healthcare providers can impact children’s anxiety 
+         * distracting/unrelated/humourous discussions reduce children’s anxiety 
+         * Emotional responses (like reassurance and empathy) is associated with increased stress
+   * Environmental interventions
+      * Anesthesia and entering operating room are most stressful part of medical procedures for children 
+      * Transporting children to operating room in toy car linked to reduced anxiety 
+      * Providing anesthesia in a different room (separate from the operating room) 
+   * Psychological interventions
+      * Distraction effective in reducing anxiety 
+         * Focused on relaxing or entertaining material rather than the procedure 
+      * Distractions include: clowns, video games, apps, videos, virtual reality, hypnosis, guided imagery
+      * Difference between distraction and education materials
+         * Distraction reduces stress by distracting children from what they are afraid of 
+         * Educational materials reduces stress by helping children understand the procedure and be more prepared 
+   * Educational interventions
+      * educational preparation initiatives reduce stress, improve recovery and coping 
+      * Educational materials reduce anxiety compared to distracting materials 
+      * Most effective way to help children learn to cope in similar situations 
+   * Educational preparation
+      * How children view the procedure will impact how they act in response to the procedure 
+      * Providing accurate information helps children will reduce fears
+      * Preparation helps build trust in the medical system 
+      * Preparation helps children know what to expect regarding the procedure 
+      * Preparation should include the following:
+         * Providing information
+         * Help children cope 
+         * Modelling
+            * Behaviours can be learned by watching others
+            * Teach children how to act 
+            * Most effective when the child identifies with the model (e.g. are the same age)
+      * Important to consider how the children understand the information 
+         * Children’s ability to learn and understand information differs depending on age
+            * Information given to patients needs to take this into consideration 
+      * Stress can also impact children's ability to understand the information
+      * Information provided should discuss the procedure and what they child will feel 
+      * Children emphasize importance of receiving information in different formats 
+         * Important to be exposed to the information repeatedly 
+      * Helpful to receive information before the procedure 
+         * Gives children time to understand the information 
+   * Current preparation methods include:
+      * Books and booklets
+         * Effectiveness is unclear 
+      * Therapeutic play/theatre 
+         * Effectiveness is also unclear
+   * Multicomponent prep
+      * reduces anxiety in children and parents 
+      * No evidence has been found on if/how if affects patient adherence to post-op instructions 
+   * Audiovisual and interactive methods:
+      * Reduces anxiety and increased adherence during pre-, intra- and post-op procedures 
+      * Results are most consistent when using handheld devices (but all technology is shown to reduce anxiety) 
+      * Games provide information to the patient in a way that is less scary 
+         * Games must prepare children for the procedure 
+      * Distraction games also help reduce anxiety 
+      * Education videos reduce parental anxiety and increase parental knowledge about the procedures
+
+
+Lööf, G., Liljeberg, C., Eksborg, S., & Lönnqvist, P.-A. (2017). Interactive web-based format vs conventional brochure material for information transfer to children and parents: A randomized controlled trial regarding preoperative information. Paediatric Anaesthesia, 27(6), 657–664. https://doi.org/10.1111/pan.13142
+
+
+* Compared an interactive preparation website with brochures before outpatient surgery
+   * Children were aged 3–12; 125 were recruited and 103 were included in the final analysis
+   * Children and parents answered six knowledge questions on the day of surgery
+* Children using the website had higher knowledge scores
+   * Median scores were 27/36 for the website and 19.5/36 for brochures
+   * Older children scored higher in both groups, so the same material may not suit every age
+* Relevance to KareBEAR
+   * Include a few questions to check what children understand after each story
+   * Measure understanding separately from enjoyment or anxiety
+* The study did not test AI, long-term recall, or preparation during emergency surgery
+
+
+Fortier, M. A., Bunzli, E., Walthall, J., Olshansky, E., Saadat, H., Santistevan, R., Mayes, L., & Kain, Z. N. (2015). Web-based tailored intervention for preparation of parents and children for outpatient surgery (WebTIPS): Formative evaluation and randomized controlled trial. Anesthesia & Analgesia, 120(4), 915–922. https://doi.org/10.1213/ANE.0000000000000632
+
+
+* WebTIPS provided separate preparation websites for children and parents
+   * Combined animations, information about surgery, coping strategies, and interactive games
+   * The randomized phase enrolled 82 children aged 2–7 undergoing elective outpatient surgery
+* Children receiving WebTIPS showed less anxiety than those receiving standard care
+   * Differences were found at operating-room entry and introduction of the anesthesia mask
+   * Parents also reported less anxiety in the preoperative holding area
+* Relevance to KareBEAR
+   * Give caregivers guidance alongside the child’s story so they can help explain unfamiliar steps
+   * Include what children may see and feel, plus simple ways to cope
+* The study tested a package of activities, so it does not show which feature caused the improvement
+   * It also does not show that AI would improve the results
+
+
+Carroll, A. R., Johnson, J. A., Stassun, J. C., Greevy, R. A., Mixon, A. S., & Williams, D. J. (2024). Health literacy–informed communication to reduce discharge medication errors in hospitalized children: A randomized clinical trial. JAMA Network Open, 7(1), e2350969. https://doi.org/10.1001/jamanetworkopen.2023.50969
+
+
+* Studied 198 caregivers of children aged six or younger who were prescribed a new liquid medication
+   * Compared standard counseling with picture-based instructions, teach-back, a dosing demonstration, and show-back
+      * Teach-back asks the caregiver to explain an instruction in their own words
+      * Show-back asks the caregiver to demonstrate how they would carry it out
+* Among 151 caregivers with follow-up dosing data, incorrect doses occurred in 30.4% of the intervention group versus 54.2% of the standard-counseling group
+* Relevance to KareBEAR
+   * Giving information is not enough; we should check whether families can use it
+   * A caregiver-assisted question such as “Can you tell me what happens next?” could help reveal misunderstandings
+* The findings concern caregiver medication dosing, not children’s use of an app
+   * The study cannot separate teach-back from the other activities or validate automated AI feedback
+
+
+Li, H. C. W., Lopez, V., & Lee, T. L. I. (2007). Effects of preoperative therapeutic play on outcomes of school-age children undergoing day surgery. Research in Nursing & Health, 30(3), 320–332. https://doi.org/10.1002/nur.20191
+
+
+* Compared therapeutic play with routine information before day surgery
+   * 203 school-age children were invited to participate in the randomized trial
+* Children receiving therapeutic play reported lower anxiety before and after surgery
+   * They also showed fewer negative emotions when anesthesia was introduced
+   * Postoperative pain did not differ significantly between the groups
+* Relevance to our non-tech solution
+   * Explore guided play and equipment demonstrations in the proposed community preparation sessions
+   * This would give children a chance to become familiar with the procedure and ask questions
+* The study was conducted around hospital day surgery, so it does not establish that community sessions would have the same effects
+
+
+
+
+Contribution / Task Division
+* Alexandra contributed by writing up the problem overview, organized the technical consultant team meetings and assisted in the completion of additional TC1&2 components.
+* Lisa contributed by participating in team meetings and helping conduct literature review and note taking for ongoing research section 
+* Isabelle contributed by participating in team meetings and helping create the 5 slide presentation 
+* Giordana contributed by helping develop a non-tech solution, participating in team meeting and co-creating 5-slide presentation
+* Albert contributed by participating in the weekly meeting, helping with the literature review, adding research notes and design ideas to the ongoing research section, and completing TC1 sections as an advisee for Team 2 and a consultant for Team 3.
+* Chiara contributed by assisted in completing GPS questions, literature review and organizing asynchronous communication. 
+
+
+Declaration of AI Use
+{{ If you do use AI to generate your solution, please give a detailed explanation, including the rationale and necessity behind the use of AI, the input and prompt given to the AI system }} 
+
+
+AI was used to create the bear icons that are found in the 5 slide presentation! It was used as we could not find available images that had the necessary components (healthcare related, and kid-friendly) needed for our app.
+________________
+
+
+Week 6 - CEC: Co-Creation
+Grade (Used by TA, Do not edit): 
+* D4
+
+
+________________
+
+
+D4: Findings from Co-Creation
+
+
+Writeup
+(1) Summarize the feedback you received during the co-creation session in point form
+
+
+Community Partner 1: Adrian
+* Biggest obstacle is language 
+   * Include translation/lay language
+   * Ai summary of transcription to explain medical jargon.
+* He repeatedly stressed keeping the app and language simple and clear. Explain medical terms using familiar, everyday words.
+* Distraction is helpful in medical contexts
+   * App could have distraction (e.g. humor, colouring etc.) built in
+* Choose jokes and activities around what the person likes. Give quick feedback or small rewards after an interaction.
+* App could be helpful for adults with lower cognitive ages. Consider cognitive age when developing the app and the non-ai option and develop different versions (in terms of language, type of distraction etc.) that suit the target audience 
+* Check who can help the person use the app, including a caregiver or legal guardian where needed.
+* Gamified reward system would be helpful for medicine adherence
+* Things that could deter him from using the app as a parent
+   * Complicated language
+   * Being completely left out of the care, so, including parental control in some portions of the app would be beneficial (kids shouldn’t take medication by themselves, if it’s a potentially traumatizing surgery they would want to have conversation with parent)
+   * In favour of approving what the child see
+   * In favour of access to support (list of links they can access for different needs)
+      * Local support
+   * Community emphasis
+
+
+Community Partner 2: Kaitlyn
+* Also mentioned importance of tailoring it to age (so maybe first page for the parent is enter child age) and keeping info on the actual surgery tailored to the age
+* Would parents download and set up the app? Are we focusing on one age group or several?
+* ERAS - best practices post surgery. They are creating an app for this 
+* Have to consider where the information is coming from while keeping in mind that you want less burden on the parents and providers. 
+* Clarify which information comes from the care team and which details parents would enter.
+* Provide them with the option to go into more detail, do not include all at the start to avoid overwhelming them.
+
+
+Community Partner 3: Amanda
+* Consequences for the bear if they don’t adhere
+* She suggested a virtual pet idea where the bear responds to completed or missed tasks, for example by looking happy or crying.
+* Also mentioned that this could work for adults with intellectual disabilities
+* They don’t have a standard paper for post op instructions at REN, especially for niche procedures. For tonsillitis they have print out since it’s a more common surgery
+* AI transcript would be helpful because there isn’t really someone you can call in case you forget post op instructions
+* Pre-op - mask, vitals, thermometer, stethoscope, height and weight, health history questions, surgical pyjamas
+* They only see the IV when they wake up
+* Fun things we could add in
+   * Mason Power Poles
+   * Popsicles, slushies, ice cream
+   * Nintendo Switch
+* Let children change the bear into a hospital gown and play with bubbles.
+* Paper book is the only option that a mennonite family could use
+* Most common childhood surgery
+   * Tosillectomy ← only focusing on this would be totally fine too
+   * Ortho
+   * Appendectomy
+
+
+Team idea during the discussion
+* A short introduction, like an airline safety video, could show the basic steps and help children know what to expect.
+
+
+(2) Describe how you will integrate this feedback into your prototype development (1 paragraph, 100 words max)
+
+
+We will include various recommendations into our prototype. We will use AI to simplify medical information provided to parents to make it easier to understand. We will allow users to choose their age range and use AI to tailor the information and the display depending on age and cognitive abilities. Additionally, our app will include ways to distract children from stressful medical procedures (like getting needles). Distractions can include jokes, colouring, or games.In our non-tech solution we will give children and families a paper booklet that includes basic information about surgeries and preparation methods. There will also be community learning groups as part of our non-tech solution, which will be run by volunteers. 
+
+
+(3) Considering your tech (i.e., AI) and non-tech solution -- are they each a standalone solution that can by itself adequately address the target problem? 
+    ● If so, provide your reasoning. Which solution (tech vs non-tech) do you feel to be stronger and why?
+    ● If the solutions are not standalone solutions, provide your reasoning. Can these solutions be combined to address different aspects of the target problem? 
+
+
+If we want to address a wider population of children and improve post-operative care across the board, a combination of both our AI and non-technical solutions would be ideal. One of the community partners we spoke with brought up a great point that not every family is comfortable giving their child access to technology and might opt for the non-tech solution over a catered AI one. This gives families both virtual and physical spaces where they can build trust and comfortability within the healthcare space for their kids.
+
+
+(4) As a team, decide and describe the revised/refined tech and non-tech solution you plan to move forward with. 
+
+
+Revised AI solution
+We will be creating an app that aims to provide educational material and post-op instructions to kids, parents, and adults with intellectual disabilities, in an easily understandable manner. The pre-op portion of the app will contain basic knowledge about common surgical experiences (administration of the BP cuff, taking vitals, getting anesthesia, listening through the stethoscope and wearing a hospital gown), as well as a very basic summary of their specific procedure, with the option to learn more. There will also be ways to distract the kids during stressful situations (e.g. getting a needle) built into the app.
+
+
+The post-op portion of the app will contain medicine adherence and surgery specific instructions that the child can follow after surgery. These instructions would be integrated through an AI transcription feature within the app, which presents the added benefit of having a concrete place where the information can live, in case a parent forgets. The bear would be “experiencing” these events alongside the child, and encouraging them to adhere. The child would receive “points” for adhering as well and would be able to use these points to purchase fun things within the app. This gamification will encourage adherence. Finally, there would be an information section containing links to local support options and care information for parents.
+
+
+In general, the AI will allow the app to be compatible with different languages and easily understandable for lay audiences. Furthermore, parents will have the ability to see and release all of the information to the kids, before they get to see it. This will ensure that all of the information is accurate, and that parents feel a part of the care process as well.
+
+
+Revised Non-AI solution
+
+
+We will aim to launch community engagement sessions to educate kids about what to expect at the hospital when undergoing surgical procedures. There will be demos of common equipment and games to prepare them and form positive associations with the hospital environment. Kids/families will leave with a KareBEAR book in their preferred language (i.e. Pennsylvania Dutch for Mennonite communities) that will include stickers and games to help adhere to the post-op regimen, as well as a section to write down post-op instructions from providers. 
+
+
+The sessions will be run by volunteers and/or medical students, to reduce the burden of providing the education from direct providers (i.e. surgeons, nurses), and make the solution cost-effective. 
+
+
+Contribution / Task Division
+* Isabelle contributed by presenting the AI and non-AI solutions to the community partners, typing out feedback during the co-creation session, engaging in discussion, and writing out the revised AI solution.
+* Lisa contributed by taking notes on feedback, asking questions to community partners, participating in group discussion, writing about how we will integrate feedback into prototype
+* Alexandra contributed by delivering the problem summary at the start of class, asking questions to the community partners, and completing the third portion of this week’s deliverable
+* Albert contributed by taking notes,asking questions and providing feedback during the co-creation session and added missing feedback from the three community partners to our notebook.
+* Giordana contributed by presenting the AI and non-AI solutions to the community partners,  facilitating group discussion, and summarizing the non-AI group discussion.
+* {{ member6 }} contributed by {{ doing }}
+
+
+Declaration of AI Use
+{{ If you do use AI to generate your solution, please give a detailed explanation, including the rationale and necessity behind the use of AI, the input and prompt given to the AI system }} 
+
+
+________________
+
+
+Week 7 - Prototype V.0
+Grade (Used by TA, Do not edit): 
+* D5
+* P4
+
+
+________________
+
+
+D5: V.0 Prototype Design
+Artifacts (add as many images as you want)
+
+
+Figure 1 - 5: Pages in the first prototype of our AI solution:
+  
+
+  
+
+
+
+  
+  
+  
+
+
+
+Figure 6: Sticky notes containing feedback from prototyping session
+  
+
+	Figure n. {{ Description of the image. It should be descriptive enough for readers to know what the image is about without looking at it. }}
+	
+
+Writeup
+* What non-tech and tech solution did you test? 
+We tested our tech AI KareBEAR 
+
+
+Although we didn’t have time during the session to prototype our non-AI solution, we decided to create a mix of an infographic and experiential prototype for demo day. This will involve providing an overview of the goals, process and  
+
+
+* What feedback did you get when you tested the prototype idea? 
+
+
+Some feedback we received was focused on including audio for children to hear the instructions. We also received feedback regarding navigation issues for parents and children. Another piece of feedback we received was to incorporate 
+
+
+* What surprised you about the feedback? 
+* What changes do you plan to make to the non-tech and tech solutions?
+
+
+Contribution / Task Division
+* {{ member1 }} contributed by {{ doing }}
+* {{ member2 }} contributed by {{ doing }}
+* {{ member3 }} contributed by {{ doing }}
+* {{ member4 }} contributed by {{ doing }}
+* {{ member5 }} contributed by {{ doing }}
+* {{ member6 }} contributed by {{ doing }}
+
+
+Declaration of AI Use
+{{ If you do use AI to generate your solution, please give a detailed explanation, including the rationale and necessity behind the use of AI, the input and prompt given to the AI system }} 
+
+
+________________
+
+
+P4: Prepare for Peer Evaluation
+
+
+Writeup
+(1) Describe your goals for the peer evaluation. What type of information do you expect to get and why do you need it? What high-level questions do you want to answer through this evaluation? 
+
+
+(2) Write down 2 high-level, scenario-based tasks for cognitive walkthrough and explain why you chose to evaluate these tasks. Select tasks that are the unique/non-standard functionalities of your technical solution (e.g., login, registration, user profiles are standard functionalities that are uninteresting to test). 
+
+
+Examples of scenario-based tasks: (a) Imagine you are a physician using this tool to decide on whom to discharge first from the hospital, show me how you would leverage our tool to make that decision; (b) Imagine you are a parent, show us how you would use this pamphlet/guide to decide on the next steps for your child's rehabilitation plan; (c) Here is the education program we developed to help caretakers of dementia patients, tell us what you understand about the program, what you think are missing, how you might feel if you are the caretaker given this information.
+Scenario 1:
+Put yourself in the position of a 
+
+
+Scenario 2
+(3) Write down the action sequence for each of the scenario-based tasks (i.e., what you would expect the participant to do with your prototype). During the evaluation, you will give the evaluator a task without any explicit instructions, observe the evaluator doing that task, and compare your list of detailed steps for completing the task to how the evaluator is doing it. Record observations of when the evaluator failed at or skipped particular steps. 
+
+
+(4) Write down specific questions you would like to ask the evaluators at the end of the evaluation round.
+
+
+Contribution / Task Division
+* {{ member1 }} contributed by {{ doing }}
+* {{ member2 }} contributed by {{ doing }}
+* {{ member3 }} contributed by {{ doing }}
+* {{ member4 }} contributed by {{ doing }}
+* {{ member5 }} contributed by {{ doing }}
+* {{ member6 }} contributed by {{ doing }}
+
+
+Declaration of AI Use
+{{ If you do use AI to generate your solution, please give a detailed explanation, including the rationale and necessity behind the use of AI, the input and prompt given to the AI system }} 
+
+
+________________
+
+
+Week 8 - Cognitive Walkthrough and Probing Questions
+
+
+Grade (Used by TA, Do not edit): 
+* D6:
+
+
+
+
+________________
+
+
+D6: Findings from Peer Evaluation 
+Artifacts (add as many images as you want)
+
+
+
+
+
+
+
+
+{ image }
+
+
+
+
+
+
+	Figure n. {{ Description of the image. It should be descriptive enough for readers to know what the image is about without looking at it. }}
+	
+
+Writeup
+{{ your writeup here }} 
+
+
+Contribution / Task Division
+* {{ member1 }} contributed by {{ doing }}
+* {{ member2 }} contributed by {{ doing }}
+* {{ member3 }} contributed by {{ doing }}
+* {{ member4 }} contributed by {{ doing }}
+* {{ member5 }} contributed by {{ doing }}
+* {{ member6 }} contributed by {{ doing }}
+
+
+Declaration of AI Use
+{{ If you do use AI to generate your solution, please give a detailed explanation, including the rationale and necessity behind the use of AI, the input and prompt given to the AI system }} 
+________________
+
+
+Week 9 - Prototype V.1
+Grade (Used by TA, Do not edit): 
+* D7:
+* P5:
+* PO1:
+
+
+
+
+________________
+
+
+D7: V.1 Prototype Design
+Artifacts (add as many images as you want)
+
+
+
+
+
+
+
+
+{ image }
+
+
+
+
+
+
+	Figure n. {{ Description of the image. It should be descriptive enough for readers to know what the image is about without looking at it. }}
+	
+
+Writeup
+{{ your writeup here }} 
+
+
+Contribution / Task Division
+* {{ member1 }} contributed by {{ doing }}
+* {{ member2 }} contributed by {{ doing }}
+* {{ member3 }} contributed by {{ doing }}
+* {{ member4 }} contributed by {{ doing }}
+* {{ member5 }} contributed by {{ doing }}
+* {{ member6 }} contributed by {{ doing }}
+
+
+Declaration of AI Use
+{{ If you do use AI to generate your solution, please give a detailed explanation, including the rationale and necessity behind the use of AI, the input and prompt given to the AI system }} 
+
+
+
+
+
+
+
+
+
+
+________________
+P5: Prepare for Demo Day
+Artifacts (add as many images as you want)
+
+
+
+
+
+
+
+
+{ image }
+
+
+
+
+
+
+	Figure n. {{ Description of the image. It should be descriptive enough for readers to know what the image is about without looking at it. }}
+	
+
+Writeup
+{{ your writeup here }} 
+
+
+Contribution / Task Division
+* {{ member1 }} contributed by {{ doing }}
+* {{ member2 }} contributed by {{ doing }}
+* {{ member3 }} contributed by {{ doing }}
+* {{ member4 }} contributed by {{ doing }}
+* {{ member5 }} contributed by {{ doing }}
+* {{ member6 }} contributed by {{ doing }}
+
+
+Declaration of AI Use
+{{ If you do use AI to generate your solution, please give a detailed explanation, including the rationale and necessity behind the use of AI, the input and prompt given to the AI system }} 
+________________
+
+
+PO1: Demo Day Presentation 
+{{ URL to your poster}}
+
+
+Contribution / Task Division
+* {{ member1 }} contributed by {{ doing }}
+* {{ member2 }} contributed by {{ doing }}
+* {{ member3 }} contributed by {{ doing }}
+* {{ member4 }} contributed by {{ doing }}
+* {{ member5 }} contributed by {{ doing }}
+* {{ member6 }} contributed by {{ doing }}
+
+
+Declaration of AI Use
+{{ If you do use AI to generate your solution, please give a detailed explanation, including the rationale and necessity behind the use of AI, the input and prompt given to the AI system }} 
+________________
+
+
+Week 10 - CEC: Demo Day
+Grade (Used by TA, Do not edit): 
+* D8:
+
+
+
+
+________________
+
+
+D8: Findings from Demo Day 
+Artifacts (add as many images as you want)
+
+
+
+
+
+
+
+
+{ image }
+
+
+
+
+
+
+	Figure n. {{ Description of the image. It should be descriptive enough for readers to know what the image is about without looking at it. }}
+	
+
+Writeup
+{{ your writeup here }} 
+
+
+Contribution / Task Division
+* {{ member1 }} contributed by {{ doing }}
+* {{ member2 }} contributed by {{ doing }}
+* {{ member3 }} contributed by {{ doing }}
+* {{ member4 }} contributed by {{ doing }}
+* {{ member5 }} contributed by {{ doing }}
+* {{ member6 }} contributed by {{ doing }}
+
+
+Declaration of AI Use
+{{ If you do use AI to generate your solution, please give a detailed explanation, including the rationale and necessity behind the use of AI, the input and prompt given to the AI system }} 
+________________
+
+
+Week 11/12 - Wrap-Up
+Grade (Used by TA, Do not edit): 
+* PO2: 
+* PO3:
+________________
+
+
+PO2: Solution / Prototype 
+{{ url of your interactive prototype }}
+{{ url of your video }}
+
+
+Contribution / Task Division
+* {{ member1 }} contributed by {{ doing }}
+* {{ member2 }} contributed by {{ doing }}
+* {{ member3 }} contributed by {{ doing }}
+* {{ member4 }} contributed by {{ doing }}
+* {{ member5 }} contributed by {{ doing }}
+* {{ member6 }} contributed by {{ doing }}
+
+
+Declaration of AI Use
+{{ If you do use AI to generate your solution, please give a detailed explanation, including the rationale and necessity behind the use of AI, the input and prompt given to the AI system }} 
+________________
+
+
+PO3: Problem Analysis & Design Evolution Blog Post 
+{{ URL to your blog or interactive website }}
+
+
+Contribution / Task Division
+* {{ member1 }} contributed by {{ doing }}
+* {{ member2 }} contributed by {{ doing }}
+* {{ member3 }} contributed by {{ doing }}
+* {{ member4 }} contributed by {{ doing }}
+* {{ member5 }} contributed by {{ doing }}
+* {{ member6 }} contributed by {{ doing }}
+
+
+Declaration of AI Use
+{{ If you do use AI to generate your solution, please give a detailed explanation, including the rationale and necessity behind the use of AI, the input and prompt given to the AI system }} 
+
+
+[a]super interesting problem! I recommend finding a focus point here and specify the part of the 'experience' you want to improve. It is already really specific, but think about where the experience is suboptimal and pick one of those areas that technology could address (remembering that many issues tend to be structural, which technology cannot address).
+[b]interviews are a bit more work in terms of coming up with questions/note taking and then analyzing findings, so I would instead recommend 4 people for interviews and 2 people for literature review.
+[c]I would also recommend trying to use observation as an inquiry method. Something like just sitting in the ER and observing the amount of children coming in, etc.
+[d]'effectively' seems really broad... what does that mean? Do you have any examples of what that looks like?
+[e]again, I'd think more about how you would measure effectiveness.
+[f]I'd use a different (more accessible) word, this seems hard to understand
+[g]I would ask questions that focus on their first-hand experience rather than third-person questions. So instead, ask 'what resources do you provide to families post-procedure?'. This helps prevent people from going off on tangents about things they know about but don't experience/do themselves
+[h]make sure that you are asking questions that are asking for the interview participant's own experiences/knowledge. This sort of question is better answered via literature review.
+[i]good question!
+[j]I would ask this sort of question to parents of children rather than the medical professionals (but if that isn't possible, totally fair to ask this to ER staff)
+[k]too broad. 'work well' can mean lots of different things
+[l]I would categorize the questions based on which type of participant would be best suited to answer it (focusing on asking about their experiences). Many of your questions can apply to both families and healthcare professionals, but you should change the perspective you approach it from.
+[m]I would do interviews for longer, around 30 minutes to 1 hour. 15 minutes would not be enough to get through your questions - probably only let you get through 2-4 questions.
+[n]really great problem statement! Specific, feels authentic, and speaks about the persona's values/feelings
+[o]could be potentially high risk if the video has incorrect information about the procedure
+[p]it is a bit unclear which ai capabilities are being used here. Is it identify or compare? And what are the differences? I would think deeper about what my goal is and how exactly identify and/or compare helps achieve that goal
+[q]these seem like factors associated with the AI, rathe than contextual factors which should be more about the health system and how easy/hard it would be to integrate the AI in this process
+[r]unclear which ai capability is being used here. generate?
+[s]that is a very broad AI use case. which specific capability is being used here? identify? detect? generate?
+[t]good, specific AI capabilities used!
+[u]the ai use case card makes it sound like the doctor has brain cancer, but this makes more sense!
+[v]what types of reminders? More details on each idea would be helpful. It is unclear what the context of each idea is, and some of them feel too high level.
+[w]what about the other team members storyboards?
