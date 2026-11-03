@@ -184,3 +184,97 @@ test('Back preserves attempt history and starting a new recovery session clears 
   assert.equal(state.pointAttempts[p1.id].completed, false);
   assert.equal(state.pointAttempts[p1.id].eventuallyCorrect, false);
 });
+
+import {
+  FIXED_OUT_OF_SCOPE_MESSAGE,
+} from '../data/demoContent';
+import {
+  buildExplainKareSystemInstruction,
+  detectCoveredPointsFromText,
+  generateLocalExplainResponse,
+  isInputOutOfScope,
+} from './explainKareLogic';
+import {
+  appendExplainObservationTurn,
+  navigateToPointExplanation,
+} from './demoState';
+
+test('Explain it to Kare: detects out-of-scope questions and returns fixed redirect message', () => {
+  const p1 = RECOVERY_POINTS[0];
+
+  assert.equal(isInputOutOfScope('How much ibuprofen or Tylenol should I take?'), true);
+  assert.equal(isInputOutOfScope('When can I cut the cast off at home?'), true);
+  assert.equal(isInputOutOfScope('Is my bone still broken or do I need surgery?'), true);
+  assert.equal(isInputOutOfScope('I will keep my cast dry at bath time with a cover.'), false);
+
+  const outOfScopeResult = generateLocalExplainResponse(
+    p1,
+    'What dose of pain medicine should Sam take?',
+    'respond',
+    []
+  );
+  assert.equal(outOfScopeResult.isOutOfScope, true);
+  assert.equal(outOfScopeResult.reply, FIXED_OUT_OF_SCOPE_MESSAGE);
+  assert.equal(outOfScopeResult.allCoveredPointIds.length, 0);
+});
+
+test('Explain it to Kare: tracks covered vs unclear learning points and supports review navigation', () => {
+  const p1 = RECOVERY_POINTS[0]; // care-1-keep-dry (lp-1-keep-dry, lp-1-protect-skin)
+
+  // Partial explanation covering keeping cast dry, leaving skin/padding unclear
+  const turn1 = generateLocalExplainResponse(
+    p1,
+    'I will keep my cast out of the water and away from the sprinkler.',
+    'respond',
+    []
+  );
+  assert.equal(turn1.isOutOfScope, false);
+  assert.ok(turn1.allCoveredPointIds.includes('lp-1-keep-dry'));
+  assert.equal(turn1.unclearLearningPoints.length, 1);
+  assert.equal(turn1.unclearLearningPoints[0].id, 'lp-1-protect-skin');
+
+  // Second turn covering why wet padding hurts skin
+  const turn2 = generateLocalExplainResponse(
+    p1,
+    'Because wet padding inside can hurt my skin, so my grown-up helps wrap it.',
+    'respond',
+    turn1.allCoveredPointIds
+  );
+  assert.equal(turn2.unclearLearningPoints.length, 0);
+  assert.equal(turn2.allCoveredPointIds.length, 2);
+
+  // Verify shared state persistence and navigateToPointExplanation
+  let state = createInitialDemoState();
+  state = appendExplainObservationTurn(
+    state,
+    p1.id,
+    [
+      {
+        id: 'm1',
+        role: 'child',
+        text: 'Keep my cast dry',
+        source: 'typed',
+        timestamp: 100,
+      },
+    ],
+    turn1.allCoveredPointIds
+  );
+  assert.deepEqual(
+    state.explainObservationsByPointId[p1.id].coveredLearningPointIds,
+    ['lp-1-keep-dry']
+  );
+
+  // Jump from S8 Summary back to Step 2's explanation on S6
+  state = { ...state, currentScreen: 'S8' };
+  state = navigateToPointExplanation(state, 'care-2-nothing-inside');
+  assert.equal(state.currentScreen, 'S6');
+  assert.equal(state.activeRecoveryIndex, 1);
+  assert.equal(state.expandedLearnMoreByPointId['care-2-nothing-inside'], true);
+
+  // Verify system instruction includes lesson, SickKids source, and expected learning points
+  const sysPrompt = buildExplainKareSystemInstruction(p1, ['lp-1-keep-dry'], []);
+  assert.ok(sysPrompt.includes(p1.childInstruction));
+  assert.ok(sysPrompt.includes(p1.originalSourceWording));
+  assert.ok(sysPrompt.includes(FIXED_OUT_OF_SCOPE_MESSAGE));
+});
+

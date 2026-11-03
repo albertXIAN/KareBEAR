@@ -11,6 +11,10 @@ import {
   STORY_PAGES,
   type RecoveryPointContent,
 } from '../data/demoContent';
+import type {
+  ExplainMessage,
+  PointExplainObservation,
+} from './explainKareLogic';
 
 export type ScreenId = 'S1' | 'S2' | 'S3' | 'S4' | 'S5' | 'S6' | 'S7' | 'S8';
 
@@ -53,6 +57,7 @@ export interface DemoState {
   activeRecoveryIndex: number;
   isRetryLearnMode: boolean;
   pointAttempts: Record<string, PointAttemptState>;
+  explainObservationsByPointId: Record<string, PointExplainObservation>;
   selectedRecoveryEnjoymentId: string | null;
 }
 
@@ -102,6 +107,29 @@ export function createInitialCaregiverPreferences(
   };
 }
 
+export function createInitialExplainObservations(
+  points: RecoveryPointContent[] = RECOVERY_POINTS
+): Record<string, PointExplainObservation> {
+  const map: Record<string, PointExplainObservation> = {};
+  for (const point of points) {
+    map[point.id] = {
+      pointId: point.id,
+      coveredLearningPointIds: [],
+      messages: [
+        {
+          id: `init-${point.id}`,
+          role: 'kare',
+          text: `Hi! Let's practice Step ${point.stepNumber} together. ${point.explainToCaregiverPrompt}`,
+          source: 'typed',
+          timestamp: 0,
+        },
+      ],
+      lastUpdated: null,
+    };
+  }
+  return map;
+}
+
 export function createInitialDemoState(): DemoState {
   return {
     currentScreen: 'S1',
@@ -116,6 +144,7 @@ export function createInitialDemoState(): DemoState {
     activeRecoveryIndex: 0,
     isRetryLearnMode: false,
     pointAttempts: createInitialPointAttempts(),
+    explainObservationsByPointId: createInitialExplainObservations(),
     selectedRecoveryEnjoymentId: null,
   };
 }
@@ -146,7 +175,66 @@ export function startNewRecoverySession(state: DemoState): DemoState {
     activeRecoveryIndex: 0,
     isRetryLearnMode: false,
     pointAttempts: createInitialPointAttempts(),
+    explainObservationsByPointId: createInitialExplainObservations(),
     selectedRecoveryEnjoymentId: null,
+  };
+}
+
+/**
+ * Jumps directly to a specific recovery point's Learn page (S6) and expands its
+ * supplemental explanation so the child and caregiver can review the relevant material.
+ */
+export function navigateToPointExplanation(
+  state: DemoState,
+  pointId: string
+): DemoState {
+  const index = RECOVERY_POINTS.findIndex((p) => p.id === pointId);
+  if (index === -1) return state;
+
+  return {
+    ...state,
+    currentScreen: 'S6',
+    activeRecoveryIndex: index,
+    isRetryLearnMode: false,
+    expandedLearnMoreByPointId: {
+      ...state.expandedLearnMoreByPointId,
+      [pointId]: true,
+    },
+  };
+}
+
+/**
+ * Appends messages and updates covered learning points for a recovery step in the shared
+ * "Explain it to Kare" state.
+ */
+export function appendExplainObservationTurn(
+  state: DemoState,
+  pointId: string,
+  newMessages: ExplainMessage[],
+  coveredLearningPointIds: string[]
+): DemoState {
+  const existing = state.explainObservationsByPointId[pointId] ?? {
+    pointId,
+    coveredLearningPointIds: [],
+    messages: [],
+    lastUpdated: null,
+  };
+
+  const mergedCovered = Array.from(
+    new Set([...existing.coveredLearningPointIds, ...coveredLearningPointIds])
+  );
+
+  return {
+    ...state,
+    explainObservationsByPointId: {
+      ...state.explainObservationsByPointId,
+      [pointId]: {
+        pointId,
+        coveredLearningPointIds: mergedCovered,
+        messages: [...existing.messages, ...newMessages],
+        lastUpdated: Date.now(),
+      },
+    },
   };
 }
 

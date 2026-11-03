@@ -63,6 +63,16 @@ export interface ComprehensionChoice {
   iconType: 'water' | 'play-dry' | 'remove-cast' | 'pencil' | 'tell-adult' | 'wait' | 'shake';
 }
 
+export interface ExpectedLearningPoint {
+  id: string;
+  label: string;
+  childFriendlyHint: string;
+  keywords: string[];
+}
+
+export const FIXED_OUT_OF_SCOPE_MESSAGE =
+  'I can only help with the cast care steps in our lesson today. Please ask your grown-up, nurse, or doctor about that!';
+
 export interface RecoveryPointContent {
   id: string;
   stepNumber: number;
@@ -76,6 +86,7 @@ export interface RecoveryPointContent {
   sourceCitationLabel: string;
   sourceUrl: string;
   explainToCaregiverPrompt: string;
+  expectedLearningPoints: ExpectedLearningPoint[];
   kareLearnExpression: KareExpression;
   sceneProp: RecoverySceneProp;
   comprehensionCheck: {
@@ -286,6 +297,20 @@ export const RECOVERY_POINTS: RecoveryPointContent[] = [
     sourceUrl: 'https://www.aboutkidshealth.ca/cast-care-arm-or-leg-cast',
     explainToCaregiverPrompt:
       'Tell your grown-up in your own words why water should not get inside your cast.',
+    expectedLearningPoints: [
+      {
+        id: 'lp-1-keep-dry',
+        label: 'Keep the cast away from water (bath, shower, sprinkler, or pool)',
+        childFriendlyHint: 'Mention keeping your cast out of water or staying dry.',
+        keywords: ['dry', 'water', 'wet', 'bath', 'sprinkler', 'shower', 'pool', 'rain', 'soak'],
+      },
+      {
+        id: 'lp-1-protect-skin',
+        label: 'Explain why or how to stay dry (wet padding can hurt skin; wrap it or play dry games)',
+        childFriendlyHint: 'Mention why wet padding is bad for your skin or how a grown-up helps cover it.',
+        keywords: ['skin', 'padding', 'soft', 'wrap', 'cover', 'bag', 'hurt', 'sore', 'inside', 'another way', 'grown-up'],
+      },
+    ],
     kareLearnExpression: 'calm',
     sceneProp: 'keep-cast-dry',
     comprehensionCheck: {
@@ -333,6 +358,20 @@ export const RECOVERY_POINTS: RecoveryPointContent[] = [
     sourceUrl: 'https://www.aboutkidshealth.ca/cast-care-arm-or-leg-cast',
     explainToCaregiverPrompt:
       'Tell your grown-up in your own words what you will do if your arm feels itchy under the cast.',
+    expectedLearningPoints: [
+      {
+        id: 'lp-2-no-objects',
+        label: 'Never put pencils, rulers, or other objects inside the cast to scratch',
+        childFriendlyHint: 'Mention not putting anything (like a pencil or ruler) inside the cast.',
+        keywords: ['nothing', 'never', 'don\'t put', 'do not put', 'pencil', 'ruler', 'pen', 'stick', 'object', 'inside', 'poke', 'scratch'],
+      },
+      {
+        id: 'lp-2-tell-grownup',
+        label: 'Tell a grown-up when the cast feels itchy so they can help safely',
+        childFriendlyHint: 'Mention telling a grown-up when your arm feels itchy.',
+        keywords: ['grown-up', 'grown up', 'parent', 'mom', 'dad', 'adult', 'tell', 'ask', 'safe', 'hurt skin'],
+      },
+    ],
     kareLearnExpression: 'encouraging',
     sceneProp: 'no-objects-inside',
     comprehensionCheck: {
@@ -375,6 +414,20 @@ export const RECOVERY_POINTS: RecoveryPointContent[] = [
     sourceUrl: 'https://www.aboutkidshealth.ca/cast-care-arm-or-leg-cast',
     explainToCaregiverPrompt:
       'Tell your grown-up in your own words what finger or arm feelings mean you should speak up right away.',
+    expectedLearningPoints: [
+      {
+        id: 'lp-3-finger-signs',
+        label: 'Watch for warning signs (tingly, numb, or cold fingers, colour change, or hurting more)',
+        childFriendlyHint: 'Mention warning signs like tingly, numb, cold, colour changes, or hurting more.',
+        keywords: ['tingly', 'tingle', 'numb', 'cold', 'colour', 'color', 'blue', 'pale', 'hurt', 'tight', 'finger', 'strange', 'pins'],
+      },
+      {
+        id: 'lp-3-tell-immediately',
+        label: 'Tell a grown-up right away instead of waiting',
+        childFriendlyHint: 'Mention telling a grown-up right away.',
+        keywords: ['right away', 'immediately', 'grown-up', 'grown up', 'parent', 'mom', 'dad', 'adult', 'tell', 'speak up'],
+      },
+    ],
     kareLearnExpression: 'encouraging',
     sceneProp: 'finger-warning-signs',
     comprehensionCheck: {

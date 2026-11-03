@@ -17,11 +17,13 @@ import {
 import {
   advanceAfterComprehensionCheck,
   advanceStoryPage,
+  appendExplainObservationTurn,
   approveCaregiverReview,
   createInitialDemoState,
   goToComprehensionCheckFromLearn,
   navigateBack,
   navigateHome,
+  navigateToPointExplanation,
   openRetryLearnPage,
   selectComprehensionChoice,
   startChildRecoverySteps,
@@ -295,6 +297,14 @@ export default function App() {
                 },
               }))
             }
+            onRecordExplainTurn={(pointId, newMessages, coveredIds) =>
+              setState((prev) =>
+                appendExplainObservationTurn(prev, pointId, newMessages, coveredIds)
+              )
+            }
+            onJumpToExplanation={(pointId) =>
+              setState((prev) => navigateToPointExplanation(prev, pointId))
+            }
             onBack={() => setState((prev) => navigateBack(prev))}
             onProceedToCheck={() =>
               setState((prev) => goToComprehensionCheckFromLearn(prev))
@@ -315,6 +325,14 @@ export default function App() {
               setState((prev) => advanceAfterComprehensionCheck(prev))
             }
             onBack={() => setState((prev) => navigateBack(prev))}
+            onRecordExplainTurn={(pointId, newMessages, coveredIds) =>
+              setState((prev) =>
+                appendExplainObservationTurn(prev, pointId, newMessages, coveredIds)
+              )
+            }
+            onJumpToExplanation={(pointId) =>
+              setState((prev) => navigateToPointExplanation(prev, pointId))
+            }
           />
         )}
 
@@ -323,6 +341,14 @@ export default function App() {
             state={state}
             onSelectEnjoyment={(id) =>
               setState((prev) => ({ ...prev, selectedRecoveryEnjoymentId: id }))
+            }
+            onRecordExplainTurn={(pointId, newMessages, coveredIds) =>
+              setState((prev) =>
+                appendExplainObservationTurn(prev, pointId, newMessages, coveredIds)
+              )
+            }
+            onJumpToExplanation={(pointId) =>
+              setState((prev) => navigateToPointExplanation(prev, pointId))
             }
             onBack={() => setState((prev) => navigateBack(prev))}
             onHome={() => setState((prev) => navigateHome(prev))}

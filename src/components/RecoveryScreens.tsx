@@ -7,7 +7,7 @@
  * S7 (Comprehension Check), and S8 (Finish & Caregiver Summary).
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -35,9 +35,11 @@ import {
   calculateCaregiverSummary,
   type DemoState,
 } from '../utils/demoState';
+import type { ExplainMessage } from '../utils/explainKareLogic';
 import { KareIllustration } from './KareIllustration';
 import { ListenButton } from './ListenButton';
 import { FaceSelector } from './FaceSelector';
+import { ExplainItToKarePanel } from './ExplainItToKarePanel';
 
 /* -------------------------------------------------------------------------- */
 /* S4: GROWN-UP REVIEW SCREEN                                                 */
@@ -371,6 +373,12 @@ export const S5HandoverScreen: React.FC<S5HandoverProps> = ({
 interface S6LearnPageProps {
   state: DemoState;
   onToggleLearnMore: (pointId: string) => void;
+  onRecordExplainTurn: (
+    pointId: string,
+    newMessages: ExplainMessage[],
+    coveredPointIds: string[]
+  ) => void;
+  onJumpToExplanation: (pointId: string) => void;
   onBack: () => void;
   onProceedToCheck: () => void;
 }
@@ -378,6 +386,8 @@ interface S6LearnPageProps {
 export const S6LearnPageScreen: React.FC<S6LearnPageProps> = ({
   state,
   onToggleLearnMore,
+  onRecordExplainTurn,
+  onJumpToExplanation,
   onBack,
   onProceedToCheck,
 }) => {
@@ -508,25 +518,22 @@ export const S6LearnPageScreen: React.FC<S6LearnPageProps> = ({
               </div>
             )}
 
-            {/* Specific Invitation to Explain to Caregiver in Own Words (Unrecorded) */}
+            {/* Shared "Explain it to Kare" Activity (Talk to Kare & Type to Kare) */}
             {state.caregiverPreferences.showExplainPrompts && (
-              <div className="rounded-2xl border-2 border-[#1F6F6B]/30 bg-[#DDF1EE]/55 p-4 flex items-start gap-3.5">
-                <MessageCircle
-                  className="h-7 w-7 shrink-0 text-[#1F6F6B] mt-1"
-                  aria-hidden="true"
-                />
-                <div className="space-y-1">
-                  <p className="font-child text-[20px] font-extrabold text-[#1F6F6B]">
-                    {UI_COPY.learn.explainBoxTitle}
-                  </p>
-                  <p className="font-child text-[22px] font-bold leading-[1.5] text-[#3A2E26]">
-                    {point.explainToCaregiverPrompt}
-                  </p>
-                  <p className="text-sm font-medium text-[#3A2E26]/80">
-                    {UI_COPY.learn.explainBoxNote}
-                  </p>
-                </div>
-              </div>
+              <ExplainItToKarePanel
+                point={point}
+                observation={
+                  state.explainObservationsByPointId[point.id] ?? {
+                    pointId: point.id,
+                    coveredLearningPointIds: [],
+                    messages: [],
+                    lastUpdated: null,
+                  }
+                }
+                onRecordTurn={onRecordExplainTurn}
+                onJumpToExplanation={onJumpToExplanation}
+                isOnLearnScreen={true}
+              />
             )}
           </div>
         </div>
@@ -570,6 +577,12 @@ interface S7ComprehensionCheckProps {
   onLookAgain: () => void;
   onNextStep: () => void;
   onBack: () => void;
+  onRecordExplainTurn: (
+    pointId: string,
+    newMessages: ExplainMessage[],
+    coveredPointIds: string[]
+  ) => void;
+  onJumpToExplanation: (pointId: string) => void;
 }
 
 export const S7ComprehensionCheckScreen: React.FC<S7ComprehensionCheckProps> = ({
@@ -578,6 +591,8 @@ export const S7ComprehensionCheckScreen: React.FC<S7ComprehensionCheckProps> = (
   onLookAgain,
   onNextStep,
   onBack,
+  onRecordExplainTurn,
+  onJumpToExplanation,
 }) => {
   const point =
     RECOVERY_POINTS[state.activeRecoveryIndex] ?? RECOVERY_POINTS[0];
@@ -796,6 +811,26 @@ export const S7ComprehensionCheckScreen: React.FC<S7ComprehensionCheckProps> = (
                 </div>
               </div>
             )}
+
+            {/* Shared "Explain it to Kare" panel available on S7 after answering */}
+            {state.caregiverPreferences.showExplainPrompts &&
+              (feedbackState === 'correct' ||
+                feedbackState === 'second-incorrect-explained') && (
+                <ExplainItToKarePanel
+                  point={point}
+                  observation={
+                    state.explainObservationsByPointId[point.id] ?? {
+                      pointId: point.id,
+                      coveredLearningPointIds: [],
+                      messages: [],
+                      lastUpdated: null,
+                    }
+                  }
+                  onRecordTurn={onRecordExplainTurn}
+                  onJumpToExplanation={onJumpToExplanation}
+                  isOnLearnScreen={false}
+                />
+              )}
           </div>
         </div>
       </div>
@@ -855,6 +890,12 @@ export const S7ComprehensionCheckScreen: React.FC<S7ComprehensionCheckProps> = (
 interface S8FinishSummaryProps {
   state: DemoState;
   onSelectEnjoyment: (id: string | null) => void;
+  onRecordExplainTurn: (
+    pointId: string,
+    newMessages: ExplainMessage[],
+    coveredPointIds: string[]
+  ) => void;
+  onJumpToExplanation: (pointId: string) => void;
   onBack: () => void;
   onHome: () => void;
 }
@@ -862,10 +903,18 @@ interface S8FinishSummaryProps {
 export const S8FinishSummaryScreen: React.FC<S8FinishSummaryProps> = ({
   state,
   onSelectEnjoyment,
+  onRecordExplainTurn,
+  onJumpToExplanation,
   onBack,
   onHome,
 }) => {
   const summary = calculateCaregiverSummary(state);
+  const [selectedSummaryPointId, setSelectedSummaryPointId] = useState<string>(
+    RECOVERY_POINTS[0].id
+  );
+  const activeSummaryPoint =
+    RECOVERY_POINTS.find((p) => p.id === selectedSummaryPointId) ??
+    RECOVERY_POINTS[0];
 
   const childSpeechText = `${UI_COPY.finishSummary.childCelebrationTitle} ${UI_COPY.finishSummary.childPrompt} ${UI_COPY.finishSummary.enjoymentQuestion}`;
 
@@ -905,23 +954,42 @@ export const S8FinishSummaryScreen: React.FC<S8FinishSummaryProps> = ({
               {UI_COPY.finishSummary.childCelebrationTitle}
             </h1>
 
-            {/* Specific Invitation to Explain to Caregiver in Child's Own Words */}
-            <div className="rounded-2xl border-2 border-[#1F6F6B] bg-[#DDF1EE]/65 p-5 space-y-2">
-              <div className="flex items-center gap-2.5">
-                <MessageCircle
-                  className="h-6 w-6 text-[#1F6F6B] shrink-0"
-                  aria-hidden="true"
-                />
-                <h2 className="font-child text-[22px] font-extrabold text-[#1F6F6B]">
-                  Share in your own words:
-                </h2>
+            {/* Shared "Explain it to Kare" Activity on S8 with step selector */}
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-bold text-[#1F6F6B]">
+                  Choose a step to explain to Kare:
+                </span>
+                {RECOVERY_POINTS.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setSelectedSummaryPointId(p.id)}
+                    className={`min-h-[40px] rounded-lg border px-3 py-1.5 text-sm font-bold cursor-pointer ${
+                      activeSummaryPoint.id === p.id
+                        ? 'border-[#1F6F6B] bg-[#1F6F6B] text-white'
+                        : 'border-[#3A2E26]/25 bg-[#FFFDF8] text-[#3A2E26] hover:border-[#1F6F6B]'
+                    }`}
+                  >
+                    Step {p.stepNumber}: {p.shortTitle}
+                  </button>
+                ))}
               </div>
-              <p className="font-child text-[24px] font-bold text-[#3A2E26]">
-                “{UI_COPY.finishSummary.childPrompt}”
-              </p>
-              <p className="text-sm font-medium text-[#3A2E26]/85">
-                {UI_COPY.finishSummary.childPromptNote}
-              </p>
+
+              <ExplainItToKarePanel
+                point={activeSummaryPoint}
+                observation={
+                  state.explainObservationsByPointId[activeSummaryPoint.id] ?? {
+                    pointId: activeSummaryPoint.id,
+                    coveredLearningPointIds: [],
+                    messages: [],
+                    lastUpdated: null,
+                  }
+                }
+                onRecordTurn={onRecordExplainTurn}
+                onJumpToExplanation={onJumpToExplanation}
+                isOnLearnScreen={false}
+              />
             </div>
 
             {/* Optional Enjoyment Question */}
@@ -1112,6 +1180,70 @@ export const S8FinishSummaryScreen: React.FC<S8FinishSummaryProps> = ({
               })}
             </tbody>
           </table>
+        </div>
+
+        {/* EXPLAIN IT TO KARE: SUGGESTED OBSERVATIONS FOR CAREGIVER REVIEW */}
+        <div className="rounded-xl border-2 border-[#1F6F6B]/30 bg-[#FFF8EC] p-5 space-y-4">
+          <div>
+            <span className="text-xs font-bold text-[#1F6F6B]">
+              Suggested Observations for Caregiver Review · Not a Validated Comprehension Score
+            </span>
+            <h3 className="font-child text-[22px] font-extrabold text-[#1F6F6B]">
+              “Explain it to Kare” Learning Point Observations
+            </h3>
+            <p className="text-base text-[#3A2E26]">
+              These observations summarize which expected learning points came up when your child talked or typed with Kare, and which points remain unclear to revisit together.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {RECOVERY_POINTS.map((point) => {
+              const obs = state.explainObservationsByPointId[point.id];
+              const coveredSet = new Set(obs?.coveredLearningPointIds ?? []);
+              return (
+                <div
+                  key={`obs-summary-${point.id}`}
+                  className="flex flex-col justify-between rounded-xl border border-[#3A2E26]/20 bg-[#FFFDF8] p-4 space-y-3"
+                >
+                  <div className="space-y-2">
+                    <h4 className="font-child text-lg font-extrabold text-[#3A2E26]">
+                      Step {point.stepNumber}: {point.shortTitle}
+                    </h4>
+
+                    <ul className="space-y-2 text-sm">
+                      {point.expectedLearningPoints.map((lp) => {
+                        const isCovered = coveredSet.has(lp.id);
+                        return (
+                          <li
+                            key={lp.id}
+                            className={`rounded-lg border p-2.5 ${
+                              isCovered
+                                ? 'border-[#1F6F6B] bg-[#DDF1EE]/60 text-[#3A2E26]'
+                                : 'border-[#3A2E26]/20 bg-[#FDE8D4]/55 text-[#3A2E26]'
+                            }`}
+                          >
+                            <span className="block font-bold">
+                              {isCovered ? '✓ Covered:' : '• Unclear / Not yet mentioned:'}
+                            </span>
+                            <span>{lp.label}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => onJumpToExplanation(point.id)}
+                    className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-lg border-2 border-[#1F6F6B] bg-[#FFF8EC] px-3 py-2 text-sm font-bold text-[#1F6F6B] hover:bg-[#DDF1EE] cursor-pointer"
+                  >
+                    <span>Review Step {point.stepNumber} explanation</span>
+                    <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         <p className="text-sm text-[#3A2E26]/80">
