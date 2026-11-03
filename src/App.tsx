@@ -8,7 +8,6 @@
 import React, { useEffect, useState } from 'react';
 import { Home as HomeIcon, RotateCcw, ExternalLink } from 'lucide-react';
 import {
-  BEAR_ASSETS,
   RECOVERY_POINTS,
   SICKKIDS_SOURCE_INFO,
   STORY_PAGES,
@@ -44,8 +43,20 @@ import {
   S8FinishSummaryScreen,
 } from './components/RecoveryScreens';
 import { FacilitatorModal } from './components/FacilitatorModal';
+import { MascotDevPreviewModal } from './components/MascotDevPreviewModal';
+import { KareMascot } from './mascot/KareMascot';
+import {
+  MascotRuntimeProvider,
+  useMascotRuntime,
+} from './mascot/MascotRuntimeContext';
 
-export default function App() {
+function AppShell() {
+  const {
+    renderMode,
+    triggerTransientGesture,
+    stopAllMascotMedia,
+  } = useMascotRuntime();
+
   const [state, setState] = useState<DemoState>(() => {
     const initial = createInitialDemoState();
     if (typeof window !== 'undefined') {
@@ -58,6 +69,15 @@ export default function App() {
   });
 
   const [isFacilitatorModalOpen, setIsFacilitatorModalOpen] = useState(false);
+  const [isMascotPreviewModalOpen, setIsMascotPreviewModalOpen] = useState(
+    () => {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('mascotPreview') === '1';
+      }
+      return false;
+    }
+  );
 
   // Stop any active speech synthesis and scroll to top when changing screens
   useEffect(() => {
@@ -74,18 +94,42 @@ export default function App() {
     state.isRetryLearnMode,
   ]);
 
+  const handleNavigateHome = () => {
+    stopAllMascotMedia('waving');
+    setState((prev) => navigateHome(prev));
+  };
+
+  const handleNavigateBack = () => {
+    stopAllMascotMedia(null);
+    setState((prev) => navigateBack(prev));
+  };
+
   const handleResetDemo = () => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
+    stopAllMascotMedia('waving');
     setState(createInitialDemoState());
   };
 
+  const handleStartStory = () => {
+    stopAllMascotMedia('waving');
+    setState((prev) => startStoryJourney(prev));
+  };
+
+  const handleAdvanceStoryPage = () => {
+    const isLastStoryPage = state.storyPageIndex >= STORY_PAGES.length - 1;
+    stopAllMascotMedia(isLastStoryPage ? 'celebrating' : null);
+    setState((prev) => advanceStoryPage(prev));
+  };
+
+  const handleStartNewRecovery = () => {
+    stopAllMascotMedia(null);
+    setState((prev) => startNewRecoverySession(prev));
+  };
+
   const handleResumeRecoverySession = () => {
-    // Resume at S8 if all points are completed, or at S6/S7 for the active point, or S4
     const allCompleted = RECOVERY_POINTS.every(
       (p) => state.pointAttempts[p.id]?.completed
     );
+    stopAllMascotMedia(allCompleted ? 'celebrating' : 'waving');
     if (allCompleted) {
       setState((prev) => ({ ...prev, currentScreen: 'S8' }));
     } else if (state.caregiverApproved) {
@@ -93,6 +137,30 @@ export default function App() {
     } else {
       setState((prev) => ({ ...prev, currentScreen: 'S4' }));
     }
+  };
+
+  const handleSelectChoice = (pointId: string, choiceId: string) => {
+    const point = RECOVERY_POINTS.find((p) => p.id === pointId);
+    const choice = point?.comprehensionCheck.choices.find(
+      (c) => c.id === choiceId
+    );
+    if (choice?.isCorrect) {
+      triggerTransientGesture('celebrating', 2600);
+    } else {
+      triggerTransientGesture('encouraging', 2600);
+    }
+    setState((prev) => selectComprehensionChoice(prev, pointId, choiceId));
+  };
+
+  const handleLookAgain = () => {
+    stopAllMascotMedia('encouraging');
+    setState((prev) => openRetryLearnPage(prev));
+  };
+
+  const handleNextRecoveryStep = () => {
+    const isFinalPoint = state.activeRecoveryIndex >= RECOVERY_POINTS.length - 1;
+    stopAllMascotMedia(isFinalPoint ? 'celebrating' : null);
+    setState((prev) => advanceAfterComprehensionCheck(prev));
   };
 
   // Compute progress label for the top bar
@@ -133,23 +201,27 @@ export default function App() {
           <div className="flex items-center gap-3 shrink-0">
             <button
               type="button"
-              onClick={() => setState((prev) => navigateHome(prev))}
+              onClick={handleNavigateHome}
               aria-label="KareBEAR Home"
               className="inline-flex items-center gap-2.5 font-child text-2xl font-extrabold tracking-tight text-[#1F6F6B] hover:underline whitespace-nowrap shrink-0 cursor-pointer"
             >
-              <img
-                src={BEAR_ASSETS.companion.src}
-                alt=""
-                aria-hidden="true"
-                className="h-9 w-9 rounded-full border border-[#1F6F6B]/30 bg-white object-contain p-0.5"
-              />
+              <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[#1F6F6B]/30 bg-white p-0.5">
+                <KareMascot
+                  size="xs"
+                  preset="neutral"
+                  state="idle"
+                  renderMode={renderMode}
+                  decorative={true}
+                  className="h-8 w-8"
+                />
+              </span>
               <span>{UI_COPY.appName}</span>
             </button>
 
             {state.currentScreen !== 'S1' && (
               <button
                 type="button"
-                onClick={() => setState((prev) => navigateHome(prev))}
+                onClick={handleNavigateHome}
                 className="inline-flex min-h-[48px] items-center gap-2 rounded-xl border-2 border-[#1F6F6B] bg-[#FFF8EC] px-4 py-2 text-base font-bold text-[#1F6F6B] hover:bg-[#DDF1EE] whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <HomeIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
@@ -185,12 +257,11 @@ export default function App() {
         {state.currentScreen === 'S1' && (
           <S1HomeScreen
             state={state}
-            onStartStory={() => setState((prev) => startStoryJourney(prev))}
-            onStartNewRecovery={() =>
-              setState((prev) => startNewRecoverySession(prev))
-            }
+            onStartStory={handleStartStory}
+            onStartNewRecovery={handleStartNewRecovery}
             onResumeRecovery={handleResumeRecoverySession}
             onOpenFacilitatorModal={() => setIsFacilitatorModalOpen(true)}
+            onOpenMascotPreviewModal={() => setIsMascotPreviewModalOpen(true)}
           />
         )}
 
@@ -206,8 +277,8 @@ export default function App() {
                 },
               }))
             }
-            onBack={() => setState((prev) => navigateBack(prev))}
-            onNext={() => setState((prev) => advanceStoryPage(prev))}
+            onBack={handleNavigateBack}
+            onNext={handleAdvanceStoryPage}
           />
         )}
 
@@ -220,8 +291,8 @@ export default function App() {
             onSelectEnjoyment={(id) =>
               setState((prev) => ({ ...prev, selectedStoryEnjoymentId: id }))
             }
-            onBack={() => setState((prev) => navigateBack(prev))}
-            onHome={() => setState((prev) => navigateHome(prev))}
+            onBack={handleNavigateBack}
+            onHome={handleNavigateHome}
           />
         )}
 
@@ -271,17 +342,21 @@ export default function App() {
                 },
               }))
             }
-            onBack={() => setState((prev) => navigateBack(prev))}
-            onApprove={() => setState((prev) => approveCaregiverReview(prev))}
+            onBack={handleNavigateBack}
+            onApprove={() => {
+              stopAllMascotMedia('waving');
+              setState((prev) => approveCaregiverReview(prev));
+            }}
           />
         )}
 
         {state.currentScreen === 'S5' && (
           <S5HandoverScreen
-            onBack={() => setState((prev) => navigateBack(prev))}
-            onStartWithKare={() =>
-              setState((prev) => startChildRecoverySteps(prev))
-            }
+            onBack={handleNavigateBack}
+            onStartWithKare={() => {
+              stopAllMascotMedia('waving');
+              setState((prev) => startChildRecoverySteps(prev));
+            }}
           />
         )}
 
@@ -299,40 +374,47 @@ export default function App() {
             }
             onRecordExplainTurn={(pointId, newMessages, coveredIds) =>
               setState((prev) =>
-                appendExplainObservationTurn(prev, pointId, newMessages, coveredIds)
+                appendExplainObservationTurn(
+                  prev,
+                  pointId,
+                  newMessages,
+                  coveredIds
+                )
               )
             }
-            onJumpToExplanation={(pointId) =>
-              setState((prev) => navigateToPointExplanation(prev, pointId))
-            }
-            onBack={() => setState((prev) => navigateBack(prev))}
-            onProceedToCheck={() =>
-              setState((prev) => goToComprehensionCheckFromLearn(prev))
-            }
+            onJumpToExplanation={(pointId) => {
+              stopAllMascotMedia(null);
+              setState((prev) => navigateToPointExplanation(prev, pointId));
+            }}
+            onBack={handleNavigateBack}
+            onProceedToCheck={() => {
+              stopAllMascotMedia(null);
+              setState((prev) => goToComprehensionCheckFromLearn(prev));
+            }}
           />
         )}
 
         {state.currentScreen === 'S7' && (
           <S7ComprehensionCheckScreen
             state={state}
-            onSelectChoice={(pointId, choiceId) =>
-              setState((prev) =>
-                selectComprehensionChoice(prev, pointId, choiceId)
-              )
-            }
-            onLookAgain={() => setState((prev) => openRetryLearnPage(prev))}
-            onNextStep={() =>
-              setState((prev) => advanceAfterComprehensionCheck(prev))
-            }
-            onBack={() => setState((prev) => navigateBack(prev))}
+            onSelectChoice={handleSelectChoice}
+            onLookAgain={handleLookAgain}
+            onNextStep={handleNextRecoveryStep}
+            onBack={handleNavigateBack}
             onRecordExplainTurn={(pointId, newMessages, coveredIds) =>
               setState((prev) =>
-                appendExplainObservationTurn(prev, pointId, newMessages, coveredIds)
+                appendExplainObservationTurn(
+                  prev,
+                  pointId,
+                  newMessages,
+                  coveredIds
+                )
               )
             }
-            onJumpToExplanation={(pointId) =>
-              setState((prev) => navigateToPointExplanation(prev, pointId))
-            }
+            onJumpToExplanation={(pointId) => {
+              stopAllMascotMedia(null);
+              setState((prev) => navigateToPointExplanation(prev, pointId));
+            }}
           />
         )}
 
@@ -344,14 +426,20 @@ export default function App() {
             }
             onRecordExplainTurn={(pointId, newMessages, coveredIds) =>
               setState((prev) =>
-                appendExplainObservationTurn(prev, pointId, newMessages, coveredIds)
+                appendExplainObservationTurn(
+                  prev,
+                  pointId,
+                  newMessages,
+                  coveredIds
+                )
               )
             }
-            onJumpToExplanation={(pointId) =>
-              setState((prev) => navigateToPointExplanation(prev, pointId))
-            }
-            onBack={() => setState((prev) => navigateBack(prev))}
-            onHome={() => setState((prev) => navigateHome(prev))}
+            onJumpToExplanation={(pointId) => {
+              stopAllMascotMedia(null);
+              setState((prev) => navigateToPointExplanation(prev, pointId));
+            }}
+            onBack={handleNavigateBack}
+            onHome={handleNavigateHome}
           />
         )}
       </main>
@@ -383,6 +471,20 @@ export default function App() {
         isOpen={isFacilitatorModalOpen}
         onClose={() => setIsFacilitatorModalOpen(false)}
       />
+
+      {/* Developer-Only Mascot Kit Preview Modal (Strictly outside child screens) */}
+      <MascotDevPreviewModal
+        isOpen={isMascotPreviewModalOpen}
+        onClose={() => setIsMascotPreviewModalOpen(false)}
+      />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <MascotRuntimeProvider>
+      <AppShell />
+    </MascotRuntimeProvider>
   );
 }

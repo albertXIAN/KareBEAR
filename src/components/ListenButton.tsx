@@ -3,12 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  *
  * Accessible "Listen" button using browser speechSynthesis API when available.
- * Automatically hidden if speechSynthesis is unsupported or disabled by caregiver preference.
+ * Connected to the app-owned MascotRuntimeContext so Kare enters the 'speaking'
+ * state only while narration is actively playing and returns cleanly when
+ * paused, ended, cancelled, or on error/unmount.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Volume2, Square } from 'lucide-react';
 import { UI_COPY } from '../data/demoContent';
+import { useMascotRuntime } from '../mascot/MascotRuntimeContext';
 
 interface ListenButtonProps {
   textToRead: string;
@@ -19,26 +22,41 @@ export const ListenButton: React.FC<ListenButtonProps> = ({
   textToRead,
   enabledByCaregiver = true,
 }) => {
+  const { setNarrationSpeaking } = useMascotRuntime();
   const [isSupported, setIsSupported] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const fallbackTimerRef = useRef<number | null>(null);
+
+  const clearFallbackTimer = () => {
+    if (fallbackTimerRef.current !== null && typeof window !== 'undefined') {
+      window.clearTimeout(fallbackTimerRef.current);
+      fallbackTimerRef.current = null;
+    }
+  };
+
+  const stopSpeechCleanly = () => {
+    clearFallbackTimer();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch {}
+    }
+    setIsSpeaking(false);
+    setNarrationSpeaking(false);
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       setIsSupported(true);
     }
     return () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
+      stopSpeechCleanly();
     };
   }, []);
 
-  // Stop speech when text changes
+  // Stop speech when text changes (e.g., page navigation)
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-    }
+    stopSpeechCleanly();
   }, [textToRead]);
 
   if (!isSupported || !enabledByCaregiver) {
@@ -49,22 +67,56 @@ export const ListenButton: React.FC<ListenButtonProps> = ({
     if (!('speechSynthesis' in window)) return;
 
     if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
+      stopSpeechCleanly();
       return;
     }
 
     try {
+      clearFallbackTimer();
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(textToRead);
       utterance.lang = 'en-CA';
       utterance.rate = 0.92;
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
+
+      utterance.onstart = () => {
+        setIsSpeaking(true);
+        setNarrationSpeaking(true);
+      };
+      utterance.onpause = () => {
+        setIsSpeaking(false);
+        setNarrationSpeaking(false);
+      };
+      utterance.onresume = () => {
+        setIsSpeaking(true);
+        setNarrationSpeaking(true);
+      };
+      utterance.onend = () => {
+        clearFallbackTimer();
+        setIsSpeaking(false);
+        setNarrationSpeaking(false);
+      };
+      utterance.onerror = () => {
+        clearFallbackTimer();
+        setIsSpeaking(false);
+        setNarrationSpeaking(false);
+      };
+
       setIsSpeaking(true);
+      setNarrationSpeaking(true);
       window.speechSynthesis.speak(utterance);
+
+      // Safety bounded duration in case the browser speech engine lacks audio output devices
+      const estimatedMs = Math.min(
+        18000,
+        Math.max(2800, textToRead.split(/\s+/).length * 360)
+      );
+      fallbackTimerRef.current = window.setTimeout(() => {
+        setIsSpeaking(false);
+        setNarrationSpeaking(false);
+        fallbackTimerRef.current = null;
+      }, estimatedMs);
     } catch {
-      setIsSpeaking(false);
+      stopSpeechCleanly();
     }
   };
 

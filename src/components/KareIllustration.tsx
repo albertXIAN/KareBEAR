@@ -2,19 +2,26 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  *
- * Renders the teammate-created Kare bear illustrations
- * (Companion Heart Bear, Doctor/Teaching Bear, and Checklist Bear)
- * along with expression states and contextual scene badges.
+ * KareIllustration — Renders the single reusable KareMascot component
+ * with contextual costume presets (coat, glasses, clipboard, headset, cast)
+ * and real-time state from the app-owned MascotRuntimeContext arbiter.
  */
 
 import React from 'react';
 import {
-  BEAR_ASSETS,
   type BearVariant,
   type KareExpression,
   type RecoverySceneProp,
   type StorySceneProp,
 } from '../data/demoContent';
+import { KareMascot } from '../mascot/KareMascot';
+import {
+  KARE_STATE_LABELS,
+  type KareAccessory,
+  type KareCostumePreset,
+  type KareMascotState,
+} from '../mascot/kareArtwork';
+import { useMascotRuntime } from '../mascot/MascotRuntimeContext';
 
 interface KareIllustrationProps {
   expression: KareExpression;
@@ -22,6 +29,8 @@ interface KareIllustrationProps {
   variant?: BearVariant;
   caption?: string;
   size?: 'md' | 'lg';
+  /** Optional explicit state override for isolated preview cards. */
+  stateOverride?: KareMascotState;
 }
 
 export const KareIllustration: React.FC<KareIllustrationProps> = ({
@@ -30,8 +39,13 @@ export const KareIllustration: React.FC<KareIllustrationProps> = ({
   variant,
   caption,
   size = 'lg',
+  stateOverride,
 }) => {
-  // Automatically select the best teammate bear illustration for the current scene if variant is not explicitly passed
+  const { resolvedState, liveMouthOpen, renderMode } = useMascotRuntime();
+
+  const activeState: KareMascotState = stateOverride ?? resolvedState;
+
+  // Map variant + sceneProp to seated costume preset and accessory overlays on the same base bear
   const resolvedVariant: BearVariant =
     variant ??
     (sceneProp === 'doctor-chart' ||
@@ -42,16 +56,46 @@ export const KareIllustration: React.FC<KareIllustrationProps> = ({
       ? 'doctor'
       : 'companion');
 
-  const bearAsset = BEAR_ASSETS[resolvedVariant];
+  const hasCastInScene =
+    sceneProp === 'cast-wrap' ||
+    sceneProp === 'going-home' ||
+    sceneProp === 'keep-cast-dry' ||
+    sceneProp === 'no-objects-inside' ||
+    sceneProp === 'finger-warning-signs';
 
-  const expressionBadge: Record<KareExpression, { text: string; icon: string }> = {
+  let preset: KareCostumePreset = 'neutral';
+  const extraAccessories: KareAccessory[] = [];
+
+  if (resolvedVariant === 'checklist') {
+    preset = 'checklist';
+    if (hasCastInScene) {
+      extraAccessories.push('cast');
+    }
+  } else if (resolvedVariant === 'doctor') {
+    preset = hasCastInScene ? 'doctor-cast' : 'doctor';
+  } else {
+    preset = hasCastInScene ? 'cast' : 'neutral';
+  }
+
+  const stateBadgeMap: Record<KareMascotState, { text: string; icon: string }> = {
+    idle: {
+      text:
+        expression === 'encouraging'
+          ? 'Encouraging & Supportive'
+          : KARE_STATE_LABELS.idle.badgeText,
+      icon: '💛',
+    },
     waving: { text: 'Welcoming & Friendly', icon: '👋' },
-    calm: { text: 'Calm & Reassuring', icon: '💛' },
-    celebrating: { text: 'Celebrating with You!', icon: '🌟' },
+    listening: { text: 'Listening to You', icon: '🎙️' },
+    speaking: { text: 'Speaking with You', icon: '🔊' },
     encouraging: { text: 'Encouraging & Supportive', icon: '🤝' },
+    celebrating: { text: 'Celebrating with You!', icon: '🌟' },
   };
 
-  const sceneLabelMap: Record<StorySceneProp | RecoverySceneProp, { label: string; icon: string }> = {
+  const sceneLabelMap: Record<
+    StorySceneProp | RecoverySceneProp,
+    { label: string; icon: string }
+  > = {
     'reception-wristband': { label: 'Hospital Check-In & Wristband', icon: '🏷️' },
     'xray-camera': { label: 'Bone Picture (X-Ray)', icon: '📷' },
     'doctor-chart': { label: 'Talking with the Doctor', icon: '🩺' },
@@ -63,19 +107,25 @@ export const KareIllustration: React.FC<KareIllustrationProps> = ({
   };
 
   const activeSceneBadge = sceneProp ? sceneLabelMap[sceneProp] : null;
-  const activeExpression = expressionBadge[expression];
+  const activeBadge = stateBadgeMap[activeState];
+
+  const accessibleLabel = `Kare the honey-brown bear (${activeBadge.text}${
+    activeSceneBadge ? `, ${activeSceneBadge.label}` : ''
+  })`;
 
   return (
     <figure
       className={`relative flex flex-col items-center justify-between rounded-2xl border-2 border-[#3A2E26]/15 bg-[#FFFDF8] p-4 shadow-xs ${
-        size === 'lg' ? 'w-full min-h-[260px] lg:min-h-[320px]' : 'w-full min-h-[210px]'
+        size === 'lg'
+          ? 'w-full min-h-[260px] lg:min-h-[320px]'
+          : 'w-full min-h-[210px]'
       }`}
     >
       {/* Top Status & Context Header */}
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2 w-full px-1 text-xs font-bold text-[#3A2E26]/85">
         <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#FFF8EC] border border-[#3A2E26]/15 px-2.5 py-1 text-[#1F6F6B]">
-          <span aria-hidden="true">{activeExpression.icon}</span>
-          <span>{activeExpression.text}</span>
+          <span aria-hidden="true">{activeBadge.icon}</span>
+          <span>{activeBadge.text}</span>
         </span>
 
         {activeSceneBadge && (
@@ -86,13 +136,19 @@ export const KareIllustration: React.FC<KareIllustrationProps> = ({
         )}
       </div>
 
-      {/* Teammate Bear Artwork Container */}
+      {/* Reusable Layered Vector Mascot Container */}
       <div className="relative my-auto flex items-center justify-center w-full py-2">
         <div className="relative flex items-center justify-center rounded-2xl bg-white p-3 shadow-xs border border-[#3A2E26]/10">
-          <img
-            src={bearAsset.src}
-            alt={`${bearAsset.alt} (${activeExpression.text})`}
-            className="max-h-[220px] w-auto object-contain select-none"
+          <KareMascot
+            state={activeState}
+            preset={preset}
+            accessories={
+              extraAccessories.length > 0 ? extraAccessories : undefined
+            }
+            mouthOpen={liveMouthOpen}
+            renderMode={renderMode}
+            size={size}
+            label={accessibleLabel}
           />
         </div>
       </div>

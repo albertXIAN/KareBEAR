@@ -27,16 +27,16 @@ import {
   Square,
   Volume2,
 } from 'lucide-react';
-import {
-  BEAR_ASSETS,
-  type RecoveryPointContent,
-} from '../data/demoContent';
+import { type RecoveryPointContent } from '../data/demoContent';
 import {
   generateLocalExplainResponse,
   type ExplainInteractionSource,
   type ExplainMessage,
   type PointExplainObservation,
 } from '../utils/explainKareLogic';
+import { KareMascot } from '../mascot/KareMascot';
+import { useMascotRuntime } from '../mascot/MascotRuntimeContext';
+import { rmsToMouthOpen } from '../mascot/mascotStateArbiter';
 
 export type ExplainModeTab = 'type' | 'talk' | 'record';
 
@@ -71,13 +71,15 @@ function float32ToBase64Pcm16(float32Array: Float32Array): string {
 }
 
 /**
- * Helper to decode base64 16-bit PCM little-endian (24kHz) into an AudioBuffer and schedule gapless playback.
+ * Helper to decode base64 16-bit PCM little-endian (24kHz) into an AudioBuffer,
+ * compute approximate RMS mouth opening, and schedule gapless playback.
  */
 function schedulePcm24kPlayback(
   audioCtx: AudioContext,
   base64Data: string,
   nextStartTimeRef: React.MutableRefObject<number>,
-  activeSourcesRef: React.MutableRefObject<AudioBufferSourceNode[]>
+  activeSourcesRef: React.MutableRefObject<AudioBufferSourceNode[]>,
+  onPlaybackChange: (playing: boolean, mouthOpen?: number) => void
 ) {
   const binary = atob(base64Data);
   const byteLength = binary.length;
@@ -91,9 +93,14 @@ function schedulePcm24kPlayback(
   const view = new DataView(bytes.buffer);
   const audioBuffer = audioCtx.createBuffer(1, sampleCount, 24000);
   const channelData = audioBuffer.getChannelData(0);
+  let sumSq = 0;
   for (let i = 0; i < sampleCount; i++) {
-    channelData[i] = view.getInt16(i * 2, true) / 32768;
+    const sample = view.getInt16(i * 2, true) / 32768;
+    channelData[i] = sample;
+    sumSq += sample * sample;
   }
+  const rms = Math.sqrt(sumSq / sampleCount);
+  const mouthOpen = rmsToMouthOpen(rms);
 
   const source = audioCtx.createBufferSource();
   source.buffer = audioBuffer;
@@ -105,8 +112,13 @@ function schedulePcm24kPlayback(
   nextStartTimeRef.current = startAt + audioBuffer.duration;
 
   activeSourcesRef.current.push(source);
+  onPlaybackChange(true, mouthOpen);
+
   source.onended = () => {
     activeSourcesRef.current = activeSourcesRef.current.filter((s) => s !== source);
+    if (activeSourcesRef.current.length === 0) {
+      onPlaybackChange(false, 0);
+    }
   };
 }
 
@@ -117,6 +129,14 @@ export const ExplainItToKarePanel: React.FC<ExplainItToKarePanelProps> = ({
   onJumpToExplanation,
   isOnLearnScreen = false,
 }) => {
+  const {
+    resolvedState,
+    renderMode,
+    setModelAudioSpeaking,
+    setMicrophoneListening,
+    triggerTransientGesture,
+  } = useMascotRuntime();
+
   const [activeTab, setActiveTab] = useState<ExplainModeTab>('type');
 
   // Typed mode state
@@ -159,6 +179,13 @@ export const ExplainItToKarePanel: React.FC<ExplainItToKarePanelProps> = ({
     coveredIdsRef.current = observation.coveredLearningPointIds;
   }, [observation.coveredLearningPointIds]);
 
+  // Synchronize real microphone listening state (ONLY when permission is granted & capture is active)
+  useEffect(() => {
+    const isActivelyCapturing =
+      liveStatus === 'connected' || recordStatus === 'recording';
+    setMicrophoneListening(isActivelyCapturing);
+  }, [liveStatus, recordStatus, setMicrophoneListening]);
+
   // Scroll conversation thread when messages update
   useEffect(() => {
     if (threadContainerRef.current) {
@@ -172,6 +199,8 @@ export const ExplainItToKarePanel: React.FC<ExplainItToKarePanelProps> = ({
     return () => {
       stopLiveConversation();
       stopMediaRecordingCleanup();
+      setMicrophoneListening(false);
+      setModelAudioSpeaking(false, 0);
     };
   }, [point.id]);
 
@@ -237,11 +266,18 @@ export const ExplainItToKarePanel: React.FC<ExplainItToKarePanelProps> = ({
         isOutOfScopeRedirect: data.isOutOfScope,
       };
 
+      const nextCovered =
+        data.allCoveredPointIds ?? observation.coveredLearningPointIds;
       onRecordTurn(
         point.id,
         childMsg ? [childMsg, kareMsg] : [kareMsg],
-        data.allCoveredPointIds ?? observation.coveredLearningPointIds
+        nextCovered
       );
+      if (nextCovered.length >= point.expectedLearningPoints.length) {
+        triggerTransientGesture('celebrating', 2600);
+      } else {
+        triggerTransientGesture('encouraging', 2200);
+      }
     } catch {
       // Deterministic grounded fallback if network/API is unavailable
       const fallback = generateLocalExplainResponse(
@@ -263,6 +299,14 @@ export const ExplainItToKarePanel: React.FC<ExplainItToKarePanelProps> = ({
         childMsg ? [childMsg, kareMsg] : [kareMsg],
         fallback.allCoveredPointIds
       );
+      if (
+        fallback.allCoveredPointIds.length >=
+        point.expectedLearningPoints.length
+      ) {
+        triggerTransientGesture('celebrating', 2600);
+      } else {
+        triggerTransientGesture('encouraging', 2200);
+      }
     } finally {
       setIsSendingChat(false);
     }
@@ -318,6 +362,7 @@ export const ExplainItToKarePanel: React.FC<ExplainItToKarePanelProps> = ({
     }
     setLiveChildCaption('');
     setLiveKareCaption('');
+    setModelAudioSpeaking(false, 0);
     setLiveStatus((prev) => (prev === 'mic-error' ? 'mic-error' : 'idle'));
   };
 
@@ -420,7 +465,8 @@ export const ExplainItToKarePanel: React.FC<ExplainItToKarePanelProps> = ({
               outputAudioCtxRef.current,
               msg.audio,
               nextStartTimeRef,
-              activeSourcesRef
+              activeSourcesRef,
+              setModelAudioSpeaking
             );
           } else if (msg.type === 'interrupted') {
             activeSourcesRef.current.forEach((s) => {
@@ -430,6 +476,7 @@ export const ExplainItToKarePanel: React.FC<ExplainItToKarePanelProps> = ({
             });
             activeSourcesRef.current = [];
             nextStartTimeRef.current = 0;
+            setModelAudioSpeaking(false, 0);
           } else if (msg.type === 'turn_complete') {
             const newMsgs: ExplainMessage[] = [];
             if (msg.childTurnText) {
@@ -633,12 +680,15 @@ export const ExplainItToKarePanel: React.FC<ExplainItToKarePanelProps> = ({
       {/* Panel Header */}
       <div className="space-y-3 border-b border-[#3A2E26]/15 pb-3">
         <div className="flex items-center gap-3">
-          <img
-            src={BEAR_ASSETS.companion.src}
-            alt=""
-            aria-hidden="true"
-            className="h-11 w-11 rounded-xl border border-[#1F6F6B]/30 bg-white object-contain p-1 shrink-0"
-          />
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#1F6F6B]/30 bg-white p-1 shrink-0">
+            <KareMascot
+              size="xs"
+              preset="cast"
+              state={resolvedState}
+              renderMode={renderMode}
+              decorative={true}
+            />
+          </div>
           <div>
             <span className="text-xs font-bold text-[#1F6F6B]">
               Interactive Practice · Step {point.stepNumber}: {point.shortTitle}

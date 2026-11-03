@@ -278,3 +278,75 @@ test('Explain it to Kare: tracks covered vs unclear learning points and supports
   assert.ok(sysPrompt.includes(FIXED_OUT_OF_SCOPE_MESSAGE));
 });
 
+import {
+  resolveMascotState,
+  rmsToMouthOpen,
+} from '../mascot/mascotStateArbiter';
+import {
+  clampMouthOpen,
+  resolveKareAccessories,
+} from '../mascot/kareArtwork';
+
+test('Mascot Kit Arbiter: enforces speaking > listening > gesture > idle priority and accessory resolution', () => {
+  // 1. speaking overrides listening and gestures
+  assert.equal(
+    resolveMascotState({
+      isSpeakingAudioPlaying: true,
+      isMicrophoneListening: true,
+      activeGesture: 'celebrating',
+    }),
+    'speaking'
+  );
+
+  // 2. listening overrides transient gestures when not speaking
+  assert.equal(
+    resolveMascotState({
+      isSpeakingAudioPlaying: false,
+      isMicrophoneListening: true,
+      activeGesture: 'waving',
+    }),
+    'listening'
+  );
+
+  // 3. transient gestures apply when neither speaking nor listening
+  assert.equal(
+    resolveMascotState({
+      isSpeakingAudioPlaying: false,
+      isMicrophoneListening: false,
+      activeGesture: 'encouraging',
+    }),
+    'encouraging'
+  );
+
+  // 4. idle when no audio, listening, or active gesture
+  assert.equal(
+    resolveMascotState({
+      isSpeakingAudioPlaying: false,
+      isMicrophoneListening: false,
+      activeGesture: null,
+    }),
+    'idle'
+  );
+
+  // 5. mouthOpen clamping & RMS conversion
+  assert.equal(clampMouthOpen(-0.4), 0);
+  assert.equal(clampMouthOpen(0), 0);
+  assert.equal(clampMouthOpen(0.55), 0.55);
+  assert.equal(clampMouthOpen(1.6), 1);
+  assert.equal(rmsToMouthOpen(0.001), 0);
+  assert.ok(rmsToMouthOpen(0.08) > 0.2 && rmsToMouthOpen(0.08) < 0.9);
+  assert.equal(rmsToMouthOpen(0.35), 1);
+
+  // 6. Accessory presets and overrides
+  const doctorCast = resolveKareAccessories('doctor-cast');
+  assert.equal(doctorCast.coat, true);
+  assert.equal(doctorCast.headset, true);
+  assert.equal(doctorCast.cast, true);
+  assert.equal(doctorCast.glasses, false);
+  assert.equal(doctorCast.clipboard, false);
+
+  const checklistWithCast = resolveKareAccessories('checklist', ['cast']);
+  assert.equal(checklistWithCast.glasses, true);
+  assert.equal(checklistWithCast.clipboard, true);
+  assert.equal(checklistWithCast.cast, true);
+});

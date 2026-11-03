@@ -26,6 +26,7 @@ import {
 } from '../data/demoContent';
 import type { DemoState } from '../utils/demoState';
 import { KareIllustration } from './KareIllustration';
+import { KareMascot } from '../mascot/KareMascot';
 import { ListenButton } from './ListenButton';
 import { FaceSelector } from './FaceSelector';
 
@@ -35,6 +36,7 @@ interface S1HomeProps {
   onStartNewRecovery: () => void;
   onResumeRecovery?: () => void;
   onOpenFacilitatorModal: () => void;
+  onOpenMascotPreviewModal?: () => void;
 }
 
 export const S1HomeScreen: React.FC<S1HomeProps> = ({
@@ -43,6 +45,7 @@ export const S1HomeScreen: React.FC<S1HomeProps> = ({
   onStartNewRecovery,
   onResumeRecovery,
   onOpenFacilitatorModal,
+  onOpenMascotPreviewModal,
 }) => {
   const hasExistingRecoveryProgress =
     state.caregiverApproved ||
@@ -87,12 +90,15 @@ export const S1HomeScreen: React.FC<S1HomeProps> = ({
               className="group flex min-h-[100px] w-full items-center justify-between gap-4 rounded-2xl border-2 border-[#1F6F6B] bg-[#FFFDF8] p-4 text-left transition-colors hover:bg-[#DDF1EE]/60 cursor-pointer"
             >
               <div className="flex items-center gap-4">
-                <img
-                  src={BEAR_ASSETS.doctor.src}
-                  alt=""
-                  aria-hidden="true"
-                  className="h-16 w-16 shrink-0 rounded-xl border border-[#1F6F6B]/25 bg-white object-contain p-1"
-                />
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-[#1F6F6B]/25 bg-white p-1">
+                  <KareMascot
+                    size="xs"
+                    preset="doctor"
+                    state="idle"
+                    decorative={true}
+                    className="h-14 w-14"
+                  />
+                </div>
                 <div className="space-y-1">
                   <span className="block font-child text-[24px] font-extrabold text-[#1F6F6B]">
                     {UI_COPY.home.storyCard.title}
@@ -117,12 +123,15 @@ export const S1HomeScreen: React.FC<S1HomeProps> = ({
               className="group flex min-h-[100px] w-full items-center justify-between gap-4 rounded-2xl border-2 border-[#3A2E26]/30 bg-[#FFFDF8] p-4 text-left transition-colors hover:border-[#1F6F6B] hover:bg-[#FDE8D4]/50 cursor-pointer"
             >
               <div className="flex items-center gap-4">
-                <img
-                  src={BEAR_ASSETS.checklist.src}
-                  alt=""
-                  aria-hidden="true"
-                  className="h-16 w-16 shrink-0 rounded-xl border border-[#3A2E26]/20 bg-white object-contain p-1"
-                />
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-[#3A2E26]/20 bg-white p-1">
+                  <KareMascot
+                    size="xs"
+                    preset="checklist"
+                    state="idle"
+                    decorative={true}
+                    className="h-14 w-14"
+                  />
+                </div>
                 <div className="space-y-1">
                   <span className="block font-child text-[24px] font-extrabold text-[#1F6F6B]">
                     {UI_COPY.home.recoveryCard.title}
@@ -172,14 +181,25 @@ export const S1HomeScreen: React.FC<S1HomeProps> = ({
                 {SICKKIDS_SOURCE_INFO.castTypeNotice}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={onOpenFacilitatorModal}
-              className="inline-flex min-h-[48px] items-center gap-2 rounded-xl border-2 border-[#1F6F6B] bg-[#FFF8EC] px-4 py-2 text-base font-bold text-[#1F6F6B] hover:bg-[#DDF1EE] cursor-pointer whitespace-nowrap shrink-0"
-            >
-              <Info className="h-5 w-5 shrink-0" aria-hidden="true" />
-              <span>Scenario Tasks &amp; SickKids Source</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              {onOpenMascotPreviewModal && (
+                <button
+                  type="button"
+                  onClick={onOpenMascotPreviewModal}
+                  className="inline-flex min-h-[48px] items-center gap-2 rounded-xl border-2 border-[#3A2E26]/30 bg-[#FFF8EC] px-4 py-2 text-base font-bold text-[#3A2E26] hover:border-[#1F6F6B] hover:bg-[#DDF1EE]/50 cursor-pointer whitespace-nowrap shrink-0"
+                >
+                  <span>Mascot Kit Preview (Dev)</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={onOpenFacilitatorModal}
+                className="inline-flex min-h-[48px] items-center gap-2 rounded-xl border-2 border-[#1F6F6B] bg-[#FFF8EC] px-4 py-2 text-base font-bold text-[#1F6F6B] hover:bg-[#DDF1EE] cursor-pointer whitespace-nowrap shrink-0"
+              >
+                <Info className="h-5 w-5 shrink-0" aria-hidden="true" />
+                <span>Scenario Tasks &amp; SickKids Source</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

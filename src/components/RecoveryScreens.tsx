@@ -37,6 +37,7 @@ import {
 } from '../utils/demoState';
 import type { ExplainMessage } from '../utils/explainKareLogic';
 import { KareIllustration } from './KareIllustration';
+import { KareMascot } from '../mascot/KareMascot';
 import { ListenButton } from './ListenButton';
 import { FaceSelector } from './FaceSelector';
 import { ExplainItToKarePanel } from './ExplainItToKarePanel';
@@ -85,11 +86,15 @@ export const S4GrownUpReviewScreen: React.FC<S4GrownUpReviewProps> = ({
           </div>
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <img
-              src={BEAR_ASSETS.checklist.src}
-              alt={BEAR_ASSETS.checklist.alt}
-              className="h-24 w-24 shrink-0 rounded-2xl border border-[#3A2E26]/15 bg-white object-contain p-1.5 shadow-xs"
-            />
+            <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border border-[#3A2E26]/15 bg-white p-1.5 shadow-xs">
+              <KareMascot
+                size="sm"
+                preset="checklist"
+                state="idle"
+                label={BEAR_ASSETS.checklist.alt}
+                className="h-20 w-20"
+              />
+            </div>
             <div className="space-y-1.5">
               <h1 className="font-child text-[28px] sm:text-[32px] font-extrabold text-[#1F6F6B]">
                 {UI_COPY.grownUpReview.screenTitle}
