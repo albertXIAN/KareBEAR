@@ -873,12 +873,66 @@ private func restoredStoryPlace(pages: [StoryPage], pageID: String, phaseName: S
     return (last, .done)
 }
 
+/// Gives the story text its own height and the leftover space to the bear.
+private struct StoryBookLayout: Layout {
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        proposal.replacingUnspecifiedDimensions()
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard subviews.count == 2 else { return }
+        let width = bounds.width
+        let ideal = subviews[1].sizeThatFits(ProposedViewSize(width: width, height: nil)).height
+        let textHeight = min(max(ideal, 0), bounds.height * 0.62)
+        let stage = max(bounds.height - textHeight, 0)
+        subviews[0].place(
+            at: CGPoint(x: bounds.minX, y: bounds.minY),
+            anchor: .topLeading,
+            proposal: ProposedViewSize(width: width, height: stage)
+        )
+        subviews[1].place(
+            at: CGPoint(x: bounds.minX, y: bounds.minY + stage),
+            anchor: .topLeading,
+            proposal: ProposedViewSize(width: width, height: textHeight)
+        )
+    }
+}
+
+private struct StoryBookStage<Bear: View, Words: View>: View {
+    @ViewBuilder var bear: (CGFloat) -> Bear
+    @ViewBuilder var words: () -> Words
+
+    var body: some View {
+        StoryBookLayout {
+            GeometryReader { proxy in
+                bear(proxy.size.height)
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+            }
+            ViewThatFits(in: .vertical) {
+                wordBlock
+                ScrollView {
+                    wordBlock
+                }
+                .scrollIndicators(.hidden)
+            }
+        }
+    }
+
+    private var wordBlock: some View {
+        words()
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 10)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .top)
+    }
+}
+
 struct StoryGameView: View {
     var onHome: () -> Void
     var onGame: () -> Void
 
     @Environment(CareStore.self) private var store
-    @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.scenePhase) private var scenePhase
     @State private var index = 0
     @State private var phase: StoryPhase = .reading
@@ -962,37 +1016,21 @@ struct StoryGameView: View {
     }
 
     private var storyScroll: some View {
-        GeometryReader { geo in
-            let stage = min(geo.size.height * 0.52, sizeClass == .regular ? 560 : 400)
-            VStack(spacing: 0) {
-                storyBear(size: stage * 0.9)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: stage)
-                ScrollView {
-                    storyWords
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
-                        .padding(.bottom, 24)
-                        .readableColumn()
-                }
-                .scrollIndicators(.hidden)
-            }
+        StoryBookStage { stage in
+            storyBear(size: stage)
+        } words: {
+            storyWords
+                .readableColumn()
         }
     }
 
     private func storyBear(size: CGFloat) -> some View {
-        VStack(spacing: 4) {
-            BearBadge(
-                size: size,
-                speaking: speaker.isSpeaking,
-                speechMark: speaker.speechMark
-            )
-            if speaker.isSpeaking {
-                Text("\(store.companionName) is reading")
-                    .font(jakarta(13, .bold))
-                    .foregroundStyle(Theme.teal)
-            }
-        }
+        BearBadge(
+            size: max(size - 6, 120),
+            speaking: speaker.isSpeaking,
+            speechMark: speaker.speechMark
+        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var storyWords: some View {
@@ -1000,10 +1038,10 @@ struct StoryGameView: View {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("\(store.companionName)'s story · Page \(index + 1) of \(pages.count)")
-                            .font(jakarta(13, .bold))
+                            .font(jakarta(20, .bold))
                             .foregroundStyle(Theme.teal)
                         Text(page.title)
-                            .font(jakarta(22, .extraBold))
+                            .font(jakarta(36, .extraBold))
                             .foregroundStyle(Theme.teal)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -1012,10 +1050,10 @@ struct StoryGameView: View {
                         scheduleSpeech(force: true)
                     } label: {
                         Label(speaker.isSpeaking ? "Reading" : "Listen", systemImage: "speaker.wave.2.fill")
-                            .font(jakarta(13, .bold))
+                            .font(jakarta(20, .bold))
                             .foregroundStyle(Theme.teal)
-                            .padding(.horizontal, 12)
-                            .frame(height: 40)
+                            .padding(.horizontal, 16)
+                            .frame(height: 48)
                             .background(Color.white, in: Capsule())
                             .overlay(Capsule().stroke(Theme.teal.opacity(0.35), lineWidth: 1.5))
                     }
@@ -1036,11 +1074,12 @@ struct StoryGameView: View {
     private var speechCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("\(store.companionName) says:")
-                .font(jakarta(13, .bold))
+                .font(jakarta(22, .bold))
                 .foregroundStyle(Theme.teal)
             Text("“\(page.speech)”")
-                .font(jakarta(16, .semibold))
+                .font(jakarta(28, .semibold))
                 .foregroundStyle(Theme.text)
+                .lineSpacing(5)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(16)
@@ -1055,10 +1094,10 @@ struct StoryGameView: View {
     private var questionBlock: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Check what you learned")
-                .font(jakarta(13, .bold))
+                .font(jakarta(22, .bold))
                 .foregroundStyle(Theme.teal)
             Text(page.question)
-                .font(jakarta(20, .extraBold))
+                .font(jakarta(32, .extraBold))
                 .foregroundStyle(Theme.text)
                 .fixedSize(horizontal: false, vertical: true)
             ForEach(page.choices) { choice in
@@ -1081,12 +1120,12 @@ struct StoryGameView: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: choice.symbol)
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 18, weight: .bold))
                     .foregroundStyle(showCorrect ? .white : Theme.teal)
-                    .frame(width: 40, height: 40)
+                    .frame(width: 44, height: 44)
                     .background(showCorrect ? Theme.teal : Theme.tealSoft, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 Text(choice.label)
-                    .font(jakarta(16, .bold))
+                    .font(jakarta(26, .bold))
                     .foregroundStyle(Theme.text)
                     .multilineTextAlignment(.leading)
                 Spacer(minLength: 4)
@@ -1095,8 +1134,8 @@ struct StoryGameView: View {
                         .foregroundStyle(Theme.teal)
                 }
             }
-            .padding(12)
-            .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+            .padding(14)
+            .frame(maxWidth: .infinity, minHeight: 84, alignment: .leading)
             .card(
                 fill: showCorrect ? Theme.tealSoft : .white,
                 border: showCorrect ? Theme.teal : (selected ? Theme.terra : Theme.border),
@@ -1111,8 +1150,9 @@ struct StoryGameView: View {
 
     private func feedback(_ text: String, tone: FeedbackTone) -> some View {
         Text(text)
-            .font(jakarta(15, .bold))
+            .font(jakarta(26, .bold))
             .foregroundStyle(tone == .good ? Theme.teal : Theme.text)
+            .lineSpacing(4)
             .fixedSize(horizontal: false, vertical: true)
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -1385,7 +1425,6 @@ struct PracticeStoryView: View {
     var onDone: () -> Void
 
     @Environment(CareStore.self) private var store
-    @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.scenePhase) private var scenePhase
     @State private var index = 0
     @State private var phase: StoryPhase = .reading
@@ -1470,42 +1509,27 @@ struct PracticeStoryView: View {
     }
 
     private func storyScroll(_ page: StoryPage) -> some View {
-        GeometryReader { geo in
-            let stage = min(geo.size.height * 0.52, sizeClass == .regular ? 560 : 400)
-            VStack(spacing: 0) {
-                VStack(spacing: 4) {
-                    BearBadge(
-                        size: stage * 0.9,
-                        speaking: speaker.isSpeaking,
-                        speechMark: speaker.speechMark
-                    )
-                    .overlay(alignment: .bottomTrailing) {
-                        Image(systemName: page.symbol)
-                            .font(.system(size: stage * 0.08, weight: .bold))
-                            .foregroundStyle(Theme.teal)
-                            .frame(width: stage * 0.16, height: stage * 0.16)
-                            .background(Theme.tealSoft, in: Circle())
-                            .overlay(Circle().stroke(Color.white, lineWidth: 2))
-                            .accessibilityHidden(true)
-                    }
-                    .accessibilityLabel(page.title)
-                    if speaker.isSpeaking {
-                        Text("\(store.companionName) is reading")
-                            .font(jakarta(13, .bold))
-                            .foregroundStyle(Theme.teal)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: stage)
-                ScrollView {
-                    prepWords(page)
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
-                        .padding(.bottom, 24)
-                        .readableColumn(compact: 520)
-                }
-                .scrollIndicators(.hidden)
+        StoryBookStage { stage in
+            let badge = max(stage - 6, 120)
+            BearBadge(
+                size: badge,
+                speaking: speaker.isSpeaking,
+                speechMark: speaker.speechMark
+            )
+            .overlay(alignment: .bottomTrailing) {
+                Image(systemName: page.symbol)
+                    .font(.system(size: badge * 0.09, weight: .bold))
+                    .foregroundStyle(Theme.teal)
+                    .frame(width: badge * 0.18, height: badge * 0.18)
+                    .background(Theme.tealSoft, in: Circle())
+                    .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                    .accessibilityHidden(true)
             }
+            .accessibilityLabel(page.title)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } words: {
+            prepWords(page)
+                .readableColumn(compact: 520)
         }
     }
 
@@ -1513,7 +1537,7 @@ struct PracticeStoryView: View {
         VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(page.title)
-                        .font(jakarta(22, .extraBold))
+                        .font(jakarta(36, .extraBold))
                         .foregroundStyle(Theme.teal)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 8)
@@ -1521,7 +1545,7 @@ struct PracticeStoryView: View {
                         scheduleSpeech(force: true)
                     } label: {
                         Label(speaker.isSpeaking ? "Reading" : "Listen", systemImage: "speaker.wave.2.fill")
-                            .font(jakarta(13, .bold))
+                            .font(jakarta(20, .bold))
                             .foregroundStyle(Theme.teal)
                             .padding(.horizontal, 12)
                             .frame(height: 40)
@@ -1534,11 +1558,12 @@ struct PracticeStoryView: View {
                 if phase == .reading || phase == .tryAgain {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("\(store.companionName) says:")
-                            .font(jakarta(13, .bold))
+                            .font(jakarta(22, .bold))
                             .foregroundStyle(Theme.teal)
                         Text("“\(page.speech)”")
-                            .font(jakarta(16, .semibold))
+                            .font(jakarta(28, .semibold))
                             .foregroundStyle(Theme.text)
+                            .lineSpacing(5)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .padding(16)
@@ -1554,10 +1579,10 @@ struct PracticeStoryView: View {
                 } else {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Concept check")
-                            .font(jakarta(13, .bold))
+                            .font(jakarta(22, .bold))
                             .foregroundStyle(Theme.teal)
                         Text(page.question)
-                            .font(jakarta(18, .extraBold))
+                            .font(jakarta(32, .extraBold))
                             .foregroundStyle(Theme.text)
                             .fixedSize(horizontal: false, vertical: true)
                         ForEach(page.choices) { choice in
@@ -1623,12 +1648,12 @@ struct PracticeStoryView: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: choice.symbol)
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 18, weight: .bold))
                     .foregroundStyle(showCorrect ? .white : Theme.teal)
-                    .frame(width: 40, height: 40)
+                    .frame(width: 44, height: 44)
                     .background(showCorrect ? Theme.teal : Theme.tealSoft, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 Text(choice.label)
-                    .font(jakarta(16, .bold))
+                    .font(jakarta(26, .bold))
                     .foregroundStyle(Theme.text)
                     .multilineTextAlignment(.leading)
                 Spacer(minLength: 4)
@@ -1637,8 +1662,8 @@ struct PracticeStoryView: View {
                         .foregroundStyle(Theme.teal)
                 }
             }
-            .padding(12)
-            .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+            .padding(14)
+            .frame(maxWidth: .infinity, minHeight: 84, alignment: .leading)
             .card(
                 fill: showCorrect ? Theme.tealSoft : .white,
                 border: showCorrect ? Theme.teal : (selected ? Theme.terra : Theme.border),
@@ -1652,8 +1677,9 @@ struct PracticeStoryView: View {
 
     private func feedback(_ text: String, tone: FeedbackTone) -> some View {
         Text(text)
-            .font(jakarta(15, .bold))
+            .font(jakarta(26, .bold))
             .foregroundStyle(tone == .good ? Theme.teal : Theme.text)
+            .lineSpacing(4)
             .fixedSize(horizontal: false, vertical: true)
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -1919,7 +1945,7 @@ struct RememberGameView: View {
                     } else {
                         let note = store.parentInstructions[index % store.parentInstructions.count]
                         Text("\(store.companionName) says")
-                            .font(jakarta(13, .bold))
+                            .font(jakarta(16, .bold))
                             .foregroundStyle(Theme.teal)
                         Text(note.detail)
                             .font(jakarta(17, .bold))
@@ -2133,9 +2159,27 @@ private final class StorySpeaker: NSObject, AVSpeechSynthesizerDelegate, AVAudio
             .replacingOccurrences(of: "&", with: "&amp;")
             .replacingOccurrences(of: "<", with: "&lt;")
             .replacingOccurrences(of: ">", with: "&gt;")
-        let ssml = """
-        <speak version='1.0' xml:lang='en-US'><voice name='en-US-AnaNeural'><prosody rate='0.92'>\(escaped)</prosody></voice></speak>
+        let cartoon = speechSSML(escaped, style: "cheerful")
+        if let data = try? await requestSpeech(cartoon), !data.isEmpty {
+            return data
+        }
+        return try await requestSpeech(speechSSML(escaped, style: nil))
+    }
+
+    /// Jenny in a cheerful style is a bright cartoon character.
+    private func speechSSML(_ text: String, style: String?) -> String {
+        let spoken: String
+        if let style {
+            spoken = "<mstts:express-as style='\(style)' styledegree='1.8'><prosody rate='1.02' pitch='+8%'>\(text)</prosody></mstts:express-as>"
+        } else {
+            spoken = "<prosody rate='1.02' pitch='+8%'>\(text)</prosody>"
+        }
+        return """
+        <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='https://www.w3.org/2001/mstts' xml:lang='en-US'><voice name='en-US-JennyNeural'>\(spoken)</voice></speak>
         """
+    }
+
+    private func requestSpeech(_ ssml: String) async throws -> Data {
         guard let url = URL(string: "https://\(SpeechSecrets.region).tts.speech.microsoft.com/cognitiveservices/v1") else {
             throw URLError(.badURL)
         }
@@ -2184,22 +2228,22 @@ private final class StorySpeaker: NSObject, AVSpeechSynthesizerDelegate, AVAudio
                 $0.name.lowercased().contains(name) || $0.identifier.lowercased().contains(name)
             }
             if let best = matches.max(by: { qualityRank($0) < qualityRank($1) }) {
-                return childVoice(best)
+                return cartoonVoice(best)
             }
         }
         if let best = clear.max(by: { qualityRank($0) < qualityRank($1) }) {
-            return childVoice(best)
+            return cartoonVoice(best)
         }
-        return (AVSpeechSynthesisVoice(language: "en-US"), 1.3, AVSpeechUtteranceDefaultSpeechRate)
+        return (AVSpeechSynthesisVoice(language: "en-US"), 1.08, AVSpeechUtteranceDefaultSpeechRate * 1.05)
     }
 
-    /// A higher pitch on the plain voice reads as a child. Premium voices need less of a lift so they stay natural.
-    private static func childVoice(_ voice: AVSpeechSynthesisVoice) -> (voice: AVSpeechSynthesisVoice?, pitch: Float, rate: Float) {
+    /// A small lift keeps the backup voice bright and cartoonish without turning it into a little kid.
+    private static func cartoonVoice(_ voice: AVSpeechSynthesisVoice) -> (voice: AVSpeechSynthesisVoice?, pitch: Float, rate: Float) {
         let pitch: Float = switch voice.quality {
-        case .premium, .enhanced: 1.15
-        default: 1.3
+        case .premium, .enhanced: 1.06
+        default: 1.1
         }
-        return (voice, pitch, AVSpeechUtteranceDefaultSpeechRate)
+        return (voice, pitch, AVSpeechUtteranceDefaultSpeechRate * 1.05)
     }
 
     private static func qualityRank(_ voice: AVSpeechSynthesisVoice) -> Int {
