@@ -7,6 +7,8 @@ struct OnboardingView: View {
     @State private var email = ""
     @State private var childName = ""
     @State private var age = 7
+    @State private var bearDraft = ""
+    @State private var room: AppScene = .cozy
     @State private var recovery = ""
     @State private var careStage: CareStage?
     @State private var wantsPrepGame = false
@@ -203,6 +205,20 @@ struct OnboardingView: View {
                 .foregroundStyle(Theme.muted)
             fieldLabel("Child's name")
             field(text: $childName, prompt: "Emma")
+            fieldLabel("Bear's name")
+            field(text: $bearDraft, prompt: "Sunny")
+            Text("A name that does not sound like “care” helps kids who are still learning to read. The bear uses this name in stories.")
+                .font(jakarta(13, .medium))
+                .foregroundStyle(Theme.muted)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 8) {
+                suggestionName("Sunny")
+                suggestionName("Pip")
+                suggestionName("Honey")
+                suggestionName("Mochi")
+            }
+            fieldLabel("Room")
+            RoomPicker(scene: $room)
             fieldLabel("Age")
             HStack {
                 Text("\(age)")
@@ -292,6 +308,7 @@ struct OnboardingView: View {
                 .font(jakarta(15, .medium))
                 .foregroundStyle(Theme.muted)
                 .fixedSize(horizontal: false, vertical: true)
+            TranscriptGroundingNote()
             HStack(spacing: 12) {
                 BearBadge(size: 64)
                 Text("You can skip this. The tour still shows how adding a step works.")
@@ -500,6 +517,8 @@ struct OnboardingView: View {
         if parentName.isEmpty { parentName = store.parentName }
         if email.isEmpty { email = store.parentEmail }
         if childName.isEmpty { childName = store.childName }
+        if bearDraft.isEmpty { bearDraft = store.companionName }
+        room = store.appScene
         if let storedAge = Int(store.childAge), storedAge >= 1, storedAge <= 17 {
             age = storedAge
         }
@@ -534,6 +553,8 @@ struct OnboardingView: View {
         store.childName = childName.trimmingCharacters(in: .whitespacesAndNewlines)
         store.childAge = "\(age)"
         store.recoveryFocus = recovery.trimmingCharacters(in: .whitespacesAndNewlines)
+        store.renameBear(to: bearDraft)
+        store.setRoom(room)
     }
 
     private func finish() {

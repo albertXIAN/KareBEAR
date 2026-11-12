@@ -44,6 +44,7 @@ final class CareStore {
     var parentEmail: String
     var childName: String
     var bearName: String
+    var roomStyle: String
     var childAge: String
     var recoveryFocus: String
     var wellness: Int
@@ -87,6 +88,7 @@ final class CareStore {
         static let parentEmail = "kare.parentEmail"
         static let childName = "kare.childName"
         static let bearName = "kare.bearName"
+        static let roomStyle = "kare.roomStyle"
         static let childAge = "kare.childAge"
         static let recovery = "kare.recovery"
         static let wellness = "kare.wellness"
@@ -124,6 +126,7 @@ final class CareStore {
         let loadedParentEmail = defaults.string(forKey: Key.parentEmail) ?? ""
         let loadedChildName = defaults.string(forKey: Key.childName) ?? ""
         let loadedBearName = defaults.string(forKey: Key.bearName) ?? "Kare"
+        let loadedRoom = defaults.string(forKey: Key.roomStyle) ?? AppScene.cozy.rawValue
         let loadedChildAge = defaults.string(forKey: Key.childAge) ?? ""
         let loadedRecovery = defaults.string(forKey: Key.recovery) ?? ""
         let loadedWellness = defaults.object(forKey: Key.wellness) == nil
@@ -189,6 +192,7 @@ final class CareStore {
         parentEmail = loadedParentEmail
         childName = loadedChildName
         bearName = loadedBearName
+        roomStyle = loadedRoom
         childAge = loadedChildAge
         recoveryFocus = loadedRecovery
         wellness = loadedWellness
@@ -209,6 +213,19 @@ final class CareStore {
     var companionName: String {
         let trimmed = bearName.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? "Kare" : trimmed
+    }
+
+    var appScene: AppScene {
+        AppScene(rawValue: roomStyle) ?? .cozy
+    }
+
+    var childAgeYears: Int {
+        min(17, max(1, Int(childAge) ?? 7))
+    }
+
+    func setRoom(_ scene: AppScene) {
+        roomStyle = scene.rawValue
+        persist()
     }
 
     func renameBear(to raw: String) {
@@ -261,6 +278,7 @@ final class CareStore {
             prepSpotPhase = ""
             restHelps = 0
             bearName = "Kare"
+            roomStyle = AppScene.cozy.rawValue
             wellness = 3
             trackedDueID = nil
             dueStarted = nil
@@ -643,6 +661,7 @@ final class CareStore {
         defaults.set(parentEmail, forKey: Key.parentEmail)
         defaults.set(childName, forKey: Key.childName)
         defaults.set(bearName, forKey: Key.bearName)
+        defaults.set(roomStyle, forKey: Key.roomStyle)
         defaults.set(childAge, forKey: Key.childAge)
         defaults.set(recoveryFocus, forKey: Key.recovery)
         defaults.set(wellness, forKey: Key.wellness)
