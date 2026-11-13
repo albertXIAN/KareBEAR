@@ -206,17 +206,7 @@ struct OnboardingView: View {
             fieldLabel("Child's name")
             field(text: $childName, prompt: "Emma")
             fieldLabel("Bear's name")
-            field(text: $bearDraft, prompt: "Sunny")
-            Text("A name that does not sound like “care” helps kids who are still learning to read. The bear uses this name in stories.")
-                .font(jakarta(13, .medium))
-                .foregroundStyle(Theme.muted)
-                .fixedSize(horizontal: false, vertical: true)
-            HStack(spacing: 8) {
-                suggestionName("Sunny")
-                suggestionName("Pip")
-                suggestionName("Honey")
-                suggestionName("Mochi")
-            }
+            field(text: $bearDraft, prompt: "Kare")
             fieldLabel("Room")
             RoomPicker(scene: $room)
             fieldLabel("Age")
@@ -612,6 +602,20 @@ struct OnboardingView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .background(recovery == title ? Theme.teal : Theme.tealSoft, in: Capsule())
+        }
+        .buttonStyle(KidButtonStyle())
+    }
+
+    private func suggestionName(_ title: String) -> some View {
+        Button {
+            bearDraft = title
+        } label: {
+            Text(title)
+                .font(jakarta(13, .bold))
+                .foregroundStyle(bearDraft == title ? .white : Theme.teal)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(bearDraft == title ? Theme.teal : Theme.tealSoft, in: Capsule())
         }
         .buttonStyle(KidButtonStyle())
     }

@@ -277,8 +277,6 @@ final class CareStore {
             prepSpotPageID = ""
             prepSpotPhase = ""
             restHelps = 0
-            bearName = "Kare"
-            roomStyle = AppScene.cozy.rawValue
             wellness = 3
             trackedDueID = nil
             dueStarted = nil

@@ -1227,15 +1227,17 @@ struct StoryGameView: View {
     private var forwardTitle: String {
         switch phase {
         case .reading:
-            store.isStoryCleared(page.id) ? "Next" : "Check"
+            return store.isStoryCleared(page.id) ? "Next" : "Check"
         case .tryAgain:
-            "Look again"
+            return "Look again"
         case .question:
-            "Check"
+            return "Check"
         case .correct, .revealed:
-            index + 1 < pages.count ? "Next" : "Finish"
+            return index + 1 < pages.count ? "Next" : "Finish"
         case .done:
-            "Done"
+            return "Done"
+        case .trying:
+            return "Check"
         }
     }
 
@@ -1381,6 +1383,8 @@ struct StoryGameView: View {
             phase = .reading
             index = pages.count - 1
             selectedID = nil
+        case .trying:
+            break
         }
     }
 
@@ -1400,6 +1404,8 @@ struct StoryGameView: View {
         case .correct, .revealed:
             advancePage()
         case .question, .done:
+            break
+        case .trying:
             break
         }
     }
@@ -1794,12 +1800,12 @@ struct PracticeStoryView: View {
     private var canGoForward: Bool {
         switch phase {
         case .question:
-            false
+            return false
         case .trying:
             if let page { return triedPages.contains(page.id) }
             return false
         default:
-            true
+            return true
         }
     }
 
@@ -2071,22 +2077,22 @@ private enum StoryVoice {
     static func script(page: StoryPage, phase: StoryPhase, index: Int, bear: String) -> String {
         switch phase {
         case .reading:
-            "\(page.speech) \(cheers[index % cheers.count])"
+            return "\(page.speech) \(cheers[index % cheers.count])"
         case .trying:
             if let gear = page.gear {
                 return gear.prompt(bear: bear)
             }
             return page.speech
         case .tryAgain:
-            "\(StoryLibrary.firstMiss) \(page.speech)"
+            return "\(StoryLibrary.firstMiss) \(page.speech)"
         case .question:
-            "\(page.question) Is it \(choiceList(page.choices))? You can do this."
+            return "\(page.question) Is it \(choiceList(page.choices))? You can do this."
         case .correct:
-            StoryLibrary.correctFeedback(bear: bear)
+            return StoryLibrary.correctFeedback(bear: bear)
         case .revealed:
-            "\(page.reveal) I am still proud of you."
+            return "\(page.reveal) I am still proud of you."
         case .done:
-            "You finished the story. I am so proud of you."
+            return "You finished the story. I am so proud of you."
         }
     }
 
