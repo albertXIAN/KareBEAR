@@ -8,6 +8,7 @@ enum QuestScreen: String {
     case game
     case rewards
     case prep
+    case demos
 
     static func initial() -> QuestScreen {
         let args = ProcessInfo.processInfo.arguments
@@ -432,6 +433,88 @@ enum StoryLibrary {
     }
 }
 
+struct StoryDemoGallery: View {
+    var onHome: () -> Void
+    @Environment(CareStore.self) private var store
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var selected = "cuff"
+    @State private var speaker = StorySpeaker()
+    private let demos = ["cuff", "iv", "mask", "medicine"]
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                Button {
+                    speaker.stop()
+                    onHome()
+                } label: {
+                    Label("Back to Play", systemImage: "chevron.left")
+                        .font(jakarta(17, .bold))
+                        .foregroundStyle(Theme.teal)
+                        .frame(minHeight: 48)
+                }
+                .buttonStyle(KidButtonStyle())
+                Text("Watch with \(store.companionName)")
+                    .font(jakarta(30, .extraBold))
+                    .foregroundStyle(Theme.teal)
+                Text("Choose a little story to watch with your grown-up. Pause or replay whenever you like.")
+                    .font(jakarta(18, .medium))
+                    .foregroundStyle(Theme.muted)
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                    ForEach(demos, id: \.self) { id in
+                        if let scene = StoryAnimationLibrary.scene(id) {
+                            demoButton(scene)
+                        }
+                    }
+                }
+                if let scene = StoryAnimationLibrary.scene(selected) {
+                    StoryAnimationPlayer(scene: scene, bearName: store.companionName) { caption in
+                        speaker.stop()
+                        speaker.speak(caption, ageYears: store.childAgeYears, force: true)
+                    } stopNarration: {
+                        speaker.stop()
+                    }
+                    .id(selected)
+                }
+                DisclosureGroup("More stories to explore") {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                        ForEach(StoryAnimationLibrary.scenes.filter { !demos.contains($0.id) }) { scene in
+                            demoButton(scene)
+                        }
+                    }
+                    .padding(.top, 12)
+                }
+                .font(jakarta(18, .bold))
+                .foregroundStyle(Theme.teal)
+            }
+            .padding(20)
+            .readableColumn(compact: 620)
+        }
+        .kidCanvas()
+        .onDisappear { speaker.stop() }
+        .onChange(of: scenePhase) { _, phase in if phase != .active { speaker.stop() } }
+    }
+
+    private func demoButton(_ scene: StoryAnimationScene) -> some View {
+        Button {
+            speaker.stop()
+            selected = scene.id
+        } label: {
+            Text(scene.title)
+                .font(jakarta(17, .bold))
+                .multilineTextAlignment(.leading)
+                .foregroundStyle(selected == scene.id ? .white : Theme.teal)
+                .padding(14)
+                .frame(maxWidth: .infinity, minHeight: 82, alignment: .leading)
+                .background(selected == scene.id ? Theme.teal : .white, in: RoundedRectangle(cornerRadius: 16))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.tealBorder))
+        }
+        .buttonStyle(KidButtonStyle())
+        .accessibilityAddTraits(selected == scene.id ? .isSelected : [])
+    }
+
+}
+
 struct QuestHomeView: View {
     @Environment(CareStore.self) private var store
     @Environment(\.appActions) private var actions
@@ -478,6 +561,8 @@ struct QuestHomeView: View {
             StoryGameView(onHome: { screen = .hub }, onGame: { screen = .game })
         case .game:
             RememberGameView(onHome: { screen = .hub })
+        case .demos:
+            StoryDemoGallery(onHome: { screen = .hub })
         case .prep:
             PracticeStoryView(
                 pages: StoryLibrary.prepPages(childName: store.childName).map { $0.speaking(as: store.companionName) },
@@ -526,7 +611,8 @@ struct QuestHomeView: View {
                     QuestHubView(
                         openStory: { screen = .story },
                         openGame: { screen = .game },
-                        openPrep: { screen = .prep }
+                        openPrep: { screen = .prep },
+                        openDemos: { screen = .demos }
                     )
                 } else {
                     RewardsBearView(showsParentTools: false)
@@ -651,6 +737,7 @@ struct QuestHubView: View {
     var openStory: () -> Void
     var openGame: () -> Void
     var openPrep: () -> Void
+    var openDemos: () -> Void
 
     private var showPrepGame: Bool {
         store.prepGameEnabled || ProcessInfo.processInfo.arguments.contains("--prep-game")
@@ -726,6 +813,13 @@ struct QuestHubView: View {
 
     private var games: some View {
         VStack(alignment: .leading, spacing: 14) {
+            hubCard(
+                symbol: "play.rectangle.fill",
+                title: "Watch care demos",
+                detail: "See the cuff, IV, mask, and liquid medicine with a grown-up.",
+                meta: "4 little stories",
+                action: openDemos
+            )
             if showPrepGame {
                 let pages = StoryLibrary.prepPages(childName: store.childName).map { $0.speaking(as: store.companionName) }
                 let done = pages.filter { store.isStoryCleared($0.id) }.count
@@ -963,6 +1057,7 @@ struct StoryGameView: View {
     @State private var didStart = false
     @State private var speaker = StorySpeaker()
     @State private var speakTask: Task<Void, Never>?
+    @State private var animationPauseToken = 0
 
     private var pages: [StoryPage] {
         store.storyPages.map { $0.adapted(for: store.childAgeYears) }
@@ -1038,13 +1133,36 @@ struct StoryGameView: View {
         }
     }
 
+    @ViewBuilder
     private var storyScroll: some View {
-        StoryBookStage { stage in
-            storyBear(size: stage)
-        } words: {
-            storyWords
-                .readableColumn()
+        if let animation = StoryAnimationLibrary.scene(forPageID: page.id), phase == .reading || phase == .tryAgain {
+            ScrollView {
+                VStack(spacing: 20) {
+                    animationPlayer(animation)
+                    storyWords
+                }
+                .padding(16)
+                .readableColumn(compact: 620)
+            }
+        } else {
+            StoryBookStage { stage in
+                storyBear(size: stage)
+            } words: {
+                storyWords.readableColumn()
+            }
         }
+    }
+
+    private func animationPlayer(_ scene: StoryAnimationScene) -> some View {
+        StoryAnimationPlayer(scene: scene, bearName: store.companionName, pauseToken: animationPauseToken) { caption in
+            speakTask?.cancel()
+            speaker.stop()
+            speaker.speak(caption, ageYears: store.childAgeYears, force: true)
+        } stopNarration: {
+            speakTask?.cancel()
+            speaker.stop()
+        }
+        .id("\(page.id)-\(phase.savedName)")
     }
 
     private func storyBear(size: CGFloat) -> some View {
@@ -1390,6 +1508,7 @@ struct StoryGameView: View {
     private func scheduleSpeech(force: Bool = false) {
         speakTask?.cancel()
         if force {
+            animationPauseToken += 1
             speakTask = nil
             speakCurrent(force: true)
             return
@@ -1509,6 +1628,7 @@ struct PracticeStoryView: View {
     @State private var didStart = false
     @State private var speaker = StorySpeaker()
     @State private var speakTask: Task<Void, Never>?
+    @State private var animationPauseToken = 0
 
     private var page: StoryPage? {
         pages.indices.contains(index) ? pages[index].adapted(for: store.childAgeYears) : nil
@@ -1584,40 +1704,32 @@ struct PracticeStoryView: View {
         }
     }
 
+    @ViewBuilder
     private func storyScroll(_ page: StoryPage) -> some View {
-        StoryBookStage { stage in
-            let badge = max(stage - 6, 120)
-            let tried = triedPages.contains(page.id)
-            ZStack {
-                BearBadge(
-                    size: badge,
-                    speaking: speaker.isSpeaking,
-                    speechMark: speaker.speechMark
-                )
-                if let gear = page.gear, phase == .trying || tried {
-                    EquipmentStage(
-                        gear: gear,
-                        size: badge,
-                        applied: tried
-                    )
+        if let animation = StoryAnimationLibrary.scene(forPageID: page.id), phase == .reading || phase == .trying || phase == .tryAgain {
+            ScrollView {
+                VStack(spacing: 20) {
+                    StoryAnimationPlayer(scene: animation, bearName: store.companionName, pauseToken: animationPauseToken) { caption in
+                        speakTask?.cancel()
+                        speaker.stop()
+                        speaker.speak(caption, ageYears: store.childAgeYears, force: true)
+                    } stopNarration: {
+                        speakTask?.cancel()
+                        speaker.stop()
+                    }
+                    .id("\(page.id)-\(phase.savedName)")
+                    prepWords(page)
                 }
+                .padding(16)
+                .readableColumn(compact: 620)
             }
-            .overlay(alignment: .bottomTrailing) {
-                if page.gear == nil || phase != .trying {
-                    Image(systemName: page.symbol)
-                        .font(.system(size: badge * 0.09, weight: .bold))
-                        .foregroundStyle(Theme.teal)
-                        .frame(width: badge * 0.18, height: badge * 0.18)
-                        .background(Theme.tealSoft, in: Circle())
-                        .overlay(Circle().stroke(Color.white, lineWidth: 2))
-                        .accessibilityHidden(true)
-                }
+        } else {
+            StoryBookStage { stage in
+                BearBadge(size: max(stage - 6, 120), speaking: speaker.isSpeaking, speechMark: speaker.speechMark)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } words: {
+                prepWords(page).readableColumn(compact: 520)
             }
-            .accessibilityLabel(page.title)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } words: {
-            prepWords(page)
-                .readableColumn(compact: 520)
         }
     }
 
@@ -1953,6 +2065,7 @@ struct PracticeStoryView: View {
         speakTask?.cancel()
         guard !pages.isEmpty else { return }
         if force {
+            animationPauseToken += 1
             speakTask = nil
             speakCurrent(force: true)
             return

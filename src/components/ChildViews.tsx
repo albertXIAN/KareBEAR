@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef, useId } from 'react';
 import { useCareStore } from '../context/CareStoreContext.tsx';
 import { StoryPage, StoryChoice, Dose } from '../utils/careStoreLogic.ts';
 import { BearBadge, NameBearButton } from './BearArt.tsx';
+import { StoryAnimation } from './StoryAnimation.tsx';
+import { StoryDemoLibrary } from './StoryDemoLibrary.tsx';
+import { animationSceneForPage } from '../utils/storyAnimations.ts';
 import {
   Volume2,
   VolumeX,
@@ -35,6 +38,7 @@ import {
   ClipboardList,
   ShieldCheck,
   ArrowLeftRight,
+  Play,
   Pencil,
   Users,
   UserRound,
@@ -116,6 +120,7 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
   const [localMisses, setLocalMisses] = useState<Record<string, number>>({});
   const [speaking, setSpeaking] = useState(false);
   const [triedOnPage, setTriedOnPage] = useState(false);
+  const [animationPauseToken, setAnimationPauseToken] = useState(0);
   const answerLocked = useRef(false);
   const questionID = useId();
   const feedbackID = useId();
@@ -151,6 +156,7 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
   };
 
   const handleToggleSpeech = () => {
+    setAnimationPauseToken(token => token + 1);
     if (speaking) {
       stopSpeech();
       return;
@@ -231,6 +237,7 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
 
   if (!page) return null;
 
+  const animationScene = animationSceneForPage(page.id);
   const flaggedPages = pages.filter((p) => store.needsParentTalk(p.id));
 
   return (
@@ -349,12 +356,11 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
             <span className="text-xs font-extrabold uppercase tracking-wider text-[#556B68]">
               {heading}
             </span>
-            <BearBadge
-              size={phase === 'reading' ? 148 : 80}
-              showsStatus
-              speaking={speaking}
-              variant={page.id.startsWith('prep-') ? 'doctor' : 'sit'}
-            />
+            {phase === 'reading' && animationScene ? (
+              <StoryAnimation key={page.id} pauseToken={animationPauseToken} scene={animationScene} bearName={store.companionName} onNarrate={speakText} onStopNarration={stopSpeech} />
+            ) : (
+              <BearBadge size={phase === 'reading' ? 148 : 80} showsStatus speaking={speaking} variant={page.id.startsWith('prep-') ? 'doctor' : 'sit'} />
+            )}
             <div className="space-y-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E6F4F1] px-3 py-1 text-xs font-bold text-[#0E5A54]">
                 {phase === 'reading' ? `${store.companionName} is ${page.expression.toLowerCase()}` : page.interaction === 'talk' ? 'Try it together' : `Help ${store.companionName} choose`}
@@ -821,7 +827,8 @@ export const QuestHubView: React.FC<{
   openStory: () => void;
   openGame: () => void;
   openPrep: () => void;
-}> = ({ openStory, openGame, openPrep }) => {
+  openDemos: () => void;
+}> = ({ openStory, openGame, openPrep, openDemos }) => {
   const store = useCareStore();
   const prepDoneCount = store.prepPages.filter((p) => store.isStoryCleared(p.id)).length;
 
@@ -842,6 +849,11 @@ export const QuestHubView: React.FC<{
 
       {/* Activities & To-Dos Column */}
       <div className="md:col-span-7 space-y-4">
+        <button type="button" onClick={openDemos} className="w-full rounded-3xl bg-[#0E5A54] p-5 text-left text-white flex items-center gap-4 cursor-pointer hover:bg-[#0B4742]">
+          <span className="h-14 w-14 shrink-0 rounded-2xl bg-white/15 flex items-center justify-center"><Play size={26} aria-hidden="true" /></span>
+          <span className="flex-1"><span className="block text-xl font-extrabold">Watch with {store.companionName}</span><span className="block text-sm mt-1 text-white/90">See the cuff, IV, mask and medicine in action.</span></span>
+          <ArrowRight size={22} aria-hidden="true" />
+        </button>
         {/* To-Dos Card */}
         <div className="rounded-3xl bg-white p-5 border border-[#E8E2D8] shadow-2xs space-y-3">
           <div>
@@ -989,7 +1001,7 @@ export const QuestHomeView: React.FC<{
   renderRewardsTab: () => React.ReactNode;
 }> = ({ renderRewardsTab }) => {
   const store = useCareStore();
-  const [screen, setScreen] = useState<'hub' | 'story' | 'game' | 'prep' | 'rewards'>('hub');
+  const [screen, setScreen] = useState<'hub' | 'story' | 'game' | 'prep' | 'rewards' | 'demos'>('hub');
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [lockNote, setLockNote] = useState('');
@@ -1007,6 +1019,10 @@ export const QuestHomeView: React.FC<{
     setShowPasswordModal(false);
     store.setChildModeUnlocked(false);
   };
+
+  if (screen === 'demos') {
+    return <StoryDemoLibrary onHome={() => setScreen('hub')} />;
+  }
 
   if (screen === 'story') {
     return (
@@ -1028,7 +1044,7 @@ export const QuestHomeView: React.FC<{
         heading="Preparing for my operation"
         recordsProgress={true}
         doneTitle="You know these helpers"
-        doneDetail="You met the clothes, the body checks, the cuff, the IV pole, and the sleepy-air mask. You can ask questions, hold a hand, and play this tour again."
+        doneDetail="You met the clothes, the body checks, the cuff, the IV pole, and the anaesthesia mask. You can ask questions, hold a hand, and play this tour again."
         doneButton="Back to home"
         onLeave={() => setScreen('hub')}
         onDone={() => setScreen('hub')}
@@ -1071,6 +1087,7 @@ export const QuestHomeView: React.FC<{
             openStory={() => setScreen('story')}
             openGame={() => setScreen('game')}
             openPrep={() => setScreen('prep')}
+            openDemos={() => setScreen('demos')}
           />
         )}
       </main>

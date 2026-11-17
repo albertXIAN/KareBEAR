@@ -1,5 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { animationSceneForPage, animationCaption, STORY_ANIMATIONS } from './storyAnimations.ts';
 import {
   extractAmountFromText,
   parseClockTimeFromText,
@@ -143,5 +144,26 @@ describe('Questions for ages 5–8', () => {
     assert.equal(page.interaction, 'talk');
     assert.deepEqual(page.choices, []);
     assert.ok(page.question.length > 0);
+  });
+});
+
+
+describe('Story animation integration', () => {
+  it('connects authored stories to demos without interpreting parent-written instructions', () => {
+    const authored = [...CORE_STORY_PAGES, TUTORIAL_STORY_PAGE, ...buildPrepPages('Emma')];
+    for (const page of authored) {
+      const scene = animationSceneForPage(page.id);
+      assert.ok(scene && STORY_ANIMATIONS[scene], `Missing scene for ${page.id}`);
+    }
+    const [parentPage] = buildStoryPagesForInstructions([{ id: 'prep-cuff', title: 'Medicine and IV', detail: 'Ask our nurse before changing anything.', fromRecording: false }]);
+    for (const id of [parentPage.id, 'unknown', 'constructor', '__proto__']) {
+      assert.equal(animationSceneForPage(id), undefined);
+    }
+  });
+
+  it('reads the chosen bear name literally in every caption', () => {
+    assert.equal(animationCaption('{bear} watches. Ask {bear}.', '  $&  '), '$& watches. Ask $&.');
+    assert.equal(animationCaption('{bear} watches.', '   '), 'Kare watches.');
+    assert.equal(animationCaption('A helper is here.', 'Sunny'), 'A helper is here.');
   });
 });
