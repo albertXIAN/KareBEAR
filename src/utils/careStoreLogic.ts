@@ -44,6 +44,7 @@ export interface StoryPage {
   symbol?: string;
   tryTitle?: string;
   tryDetail?: string;
+  interaction?: 'talk';
 }
 
 export type BearMoodKey = 'sick' | 'tired' | 'steady' | 'bright';
@@ -322,392 +323,624 @@ export function substituteCompanionName(page: StoryPage, companionName: string):
 
   return {
     ...page,
-    title: swap(page.title),
+    title: page.interaction === 'talk' ? page.title : swap(page.title),
     scene: swap(page.scene),
-    speech: swap(page.speech),
-    more: swap(page.more),
-    question: swap(page.question),
+    speech: page.interaction === 'talk' ? page.speech : swap(page.speech),
+    more: page.interaction === 'talk' ? page.more : swap(page.more),
+    question: page.interaction === 'talk' ? page.question : swap(page.question),
     choices: page.choices.map((c) => ({ ...c, label: swap(c.label) })),
-    reveal: swap(page.reveal),
+    reveal: page.interaction === 'talk' ? page.reveal : swap(page.reveal),
     tryTitle: page.tryTitle ? swap(page.tryTitle) : undefined,
     tryDetail: page.tryDetail ? swap(page.tryDetail) : undefined,
   };
 }
 
+// Keep choices stable while a child thinks, without putting every answer in one slot.
+// Ages 5–6 see two choices; ages 7–8 see three. Older profiles retain three.
+export function adaptStoryPageForAge(page: StoryPage, childAge: string | number = 7): StoryPage {
+  if (page.interaction === 'talk' || page.choices.length < 2) return page;
+  const parsedAge = Number(childAge);
+  const age = Number.isFinite(parsedAge) && parsedAge >= 1 ? parsedAge : 7;
+  const seed = Array.from(page.id).reduce((sum, char) => sum + char.codePointAt(0)!, 0);
+  let choices = [...page.choices];
+  if (age <= 6) {
+    const correct = choices.find((choice) => choice.isCorrect);
+    const others = choices.filter((choice) => !choice.isCorrect);
+    if (correct && others.length) choices = [correct, others[seed % others.length]];
+  }
+  const offset = seed % choices.length;
+  return { ...page, choices: [...choices.slice(offset), ...choices.slice(0, offset)] };
+}
+
 export const CORE_STORY_PAGES: StoryPage[] = [
   {
-    id: 'rest',
-    title: 'Resting',
-    expression: 'Calm',
-    scene: 'Kare sits quietly with a soft pillow.',
-    speech: 'My throat feels sore after the hospital. Quiet rest helps my body heal.',
-    more: 'Stories, drawing, and cuddles are good quiet games today.',
-    question: 'What helps Kare heal today?',
-    choices: [
-      { id: 'rest-run', label: 'Running fast outside', isCorrect: false, symbol: 'figure.run' },
-      { id: 'rest-quiet', label: 'Quiet rest with a pillow', isCorrect: true, symbol: 'bed.double.fill' },
-      { id: 'rest-shout', label: 'Shouting with friends', isCorrect: false, symbol: 'speaker.wave.3.fill' },
+    "id": "rest",
+    "title": "A quiet afternoon",
+    "expression": "Encouraging",
+    "scene": "Kare picks something to do while resting.",
+    "speech": "My grown-up says it is time to rest. I can still have fun with a book or a drawing.",
+    "more": "Your grown-up can help you choose an activity that fits your care plan.",
+    "question": "It is rest time. What could Kare choose?",
+    "choices": [
+      {
+        "id": "rest-run",
+        "label": "A game of tag",
+        "isCorrect": false,
+        "symbol": "figure.run"
+      },
+      {
+        "id": "rest-quiet",
+        "label": "Drawing on the sofa",
+        "isCorrect": true,
+        "symbol": "pencil"
+      },
+      {
+        "id": "rest-shout",
+        "label": "A jumping game",
+        "isCorrect": false,
+        "symbol": "figure.play"
+      }
     ],
-    reveal: "Here's the answer: quiet rest with a pillow. Let's talk about it together.",
+    "reveal": "Drawing lets Kare play while resting. A book or a quiet game could work too."
   },
   {
-    id: 'medicine',
-    title: 'Medicine time',
-    expression: 'Encouraging',
-    scene: 'A grown-up checks the medicine cup.',
-    speech: 'A grown-up measures my medicine and checks the clock. I take it with their help.',
-    more: 'Kids never take medicine by themselves.',
-    question: "Who gives Kare's medicine?",
-    choices: [
-      { id: 'med-adult', label: 'A grown-up checks and gives it', isCorrect: true, symbol: 'checkmark.shield.fill' },
-      { id: 'med-alone', label: 'Kare takes it alone', isCorrect: false, symbol: 'hand.raised.fill' },
-      { id: 'med-guess', label: 'A friend guesses the amount', isCorrect: false, symbol: 'questionmark.circle' },
+    "id": "medicine",
+    "title": "A medicine question",
+    "expression": "Encouraging",
+    "scene": "Kare checks with a grown-up.",
+    "speech": "My grown-up checks the medicine and measures it for me. If I have a question, I can ask.",
+    "more": "Your grown-up follows the care team’s instructions for how much medicine to give and when.",
+    "question": "Kare wonders if it is medicine time. What comes first?",
+    "choices": [
+      {
+        "id": "med-adult",
+        "label": "Ask a grown-up to check",
+        "isCorrect": true,
+        "symbol": "person.fill"
+      },
+      {
+        "id": "med-alone",
+        "label": "Check the colour of the bottle",
+        "isCorrect": false,
+        "symbol": "pills.fill"
+      },
+      {
+        "id": "med-guess",
+        "label": "Try to remember yesterday’s time",
+        "isCorrect": false,
+        "symbol": "clock"
+      }
     ],
-    reveal: "Here's the answer: a grown-up checks and gives it. Let's talk about it together.",
+    "reveal": "Ask a grown-up to check the plan. The bottle’s colour or a remembered time cannot tell you when to take medicine."
   },
   {
-    id: 'sips',
-    title: 'Small cold sips',
-    expression: 'Gentle',
-    scene: 'Kare holds a cool cup of water.',
-    speech: 'Small cold sips feel better than one big gulp. I drink a little water, then I rest my throat.',
-    more: 'If the cups stay empty by the afternoon, tell a grown-up.',
-    question: "Which drink is gentler for Kare's throat?",
-    choices: [
-      { id: 'sip-hot', label: 'A big gulp of hot soup', isCorrect: false, symbol: 'mug.fill' },
-      { id: 'sip-cold', label: 'A small sip of cold water', isCorrect: true, symbol: 'drop.fill' },
-      { id: 'sip-none', label: 'No drinks today', isCorrect: false, symbol: 'nosign' },
+    "id": "sips",
+    "title": "One sip at a time",
+    "expression": "Encouraging",
+    "scene": "Kare has a cup nearby.",
+    "speech": "My care plan says to take small sips of cool water. I can take a little, then pause.",
+    "more": "Tell a grown-up if drinking hurts or you cannot drink. They can help.",
+    "question": "Kare is practising small sips. Which way matches?",
+    "choices": [
+      {
+        "id": "sip-hot",
+        "label": "Finish the cup in one gulp",
+        "isCorrect": false,
+        "symbol": "mug.fill"
+      },
+      {
+        "id": "sip-cold",
+        "label": "Take a little sip, then pause",
+        "isCorrect": true,
+        "symbol": "drop.fill"
+      },
+      {
+        "id": "sip-none",
+        "label": "Save all the sips for later",
+        "isCorrect": false,
+        "symbol": "clock"
+      }
     ],
-    reveal: "Here's the answer: a small sip of cold water. Let's talk about it together.",
+    "reveal": "A little sip and a pause match Kare’s plan. Your grown-up helps you follow your own drinking plan."
   },
   {
-    id: 'treat',
-    title: 'A cold treat',
-    expression: 'Cheerful',
-    scene: 'A popsicle can soothe a sore throat.',
-    speech: 'A popsicle can soothe my throat. Crunchy snacks can wait until a grown-up says they are OK.',
-    more: 'Cold and soft is kinder than chips or dry toast right now.',
-    question: 'Kare is hungry. Which snack is kinder today?',
-    choices: [
-      { id: 'treat-chips', label: 'Crunchy chips', isCorrect: false, symbol: 'fork.knife' },
-      { id: 'treat-pop', label: 'A cold popsicle', isCorrect: true, symbol: 'snowflake' },
-      { id: 'treat-toast', label: 'Dry toast', isCorrect: false, symbol: 'birthday.cake' },
+    "id": "treat",
+    "title": "Snack detective",
+    "expression": "Encouraging",
+    "scene": "Kare and a grown-up choose a snack.",
+    "speech": "My care plan says soft, cool foods today. My grown-up helps me find a snack that fits.",
+    "more": "Different children have different food plans. Check yours with a grown-up.",
+    "question": "Which snack is soft and cool?",
+    "choices": [
+      {
+        "id": "treat-chips",
+        "label": "Crunchy crackers",
+        "isCorrect": false,
+        "symbol": "fork.knife"
+      },
+      {
+        "id": "treat-pop",
+        "label": "Smooth, chilled yogurt",
+        "isCorrect": true,
+        "symbol": "snowflake"
+      },
+      {
+        "id": "treat-toast",
+        "label": "Warm, crunchy toast",
+        "isCorrect": false,
+        "symbol": "fork.knife"
+      }
     ],
-    reveal: "Here's the answer: a cold popsicle. Let's talk about it together.",
+    "reveal": "Smooth, chilled yogurt is soft and cool. A grown-up checks whether it fits your food plan."
   },
   {
-    id: 'speak',
-    title: 'Tell a grown-up',
-    expression: 'Serious',
-    scene: 'Kare speaks up when something feels wrong.',
-    speech: 'If I cannot drink, or something feels wrong, I tell a grown-up right away. They know who to call.',
-    more: 'Speak up right away for bleeding, trouble breathing, or being too sleepy to sip.',
-    question: 'Kare cannot sip and feels very sleepy. What should happen?',
-    choices: [
-      { id: 'help-wait', label: 'Wait until tomorrow', isCorrect: false, symbol: 'clock' },
-      { id: 'help-tell', label: 'Tell a grown-up right away', isCorrect: true, symbol: 'phone.fill' },
-      { id: 'help-extra', label: 'Take extra medicine alone', isCorrect: false, symbol: 'pills.fill' },
+    "id": "speak",
+    "title": "Say what you feel",
+    "expression": "Encouraging",
+    "scene": "Kare tells a grown-up what is happening.",
+    "speech": "If something hurts or feels wrong, I tell my grown-up. I do not need special words.",
+    "more": "If you cannot drink, have bleeding, or have trouble breathing, tell a grown-up right away.",
+    "question": "Drinking hurts. What could Kare say to get help?",
+    "choices": [
+      {
+        "id": "help-wait",
+        "label": "“Can we read a book?”",
+        "isCorrect": false,
+        "symbol": "book.fill"
+      },
+      {
+        "id": "help-tell",
+        "label": "“It hurts when I swallow.”",
+        "isCorrect": true,
+        "symbol": "bubble.left.fill"
+      },
+      {
+        "id": "help-extra",
+        "label": "“What time is it?”",
+        "isCorrect": false,
+        "symbol": "clock"
+      }
     ],
-    reveal: "Here's the answer: tell a grown-up right away. Let's talk about it together.",
-  },
+    "reveal": "“It hurts when I swallow” tells a grown-up what is wrong. You can point to where it hurts too."
+  }
 ];
 
 export const TUTORIAL_STORY_PAGE: StoryPage = {
-  id: 'tour-practice',
-  title: 'How a page works',
-  expression: 'Encouraging',
-  scene: 'Kare is practicing with you.',
-  speech:
-    'Read what I say, then answer the question. A first miss means look again. A second miss shows the answer so you can talk with a grown-up.',
-  more: 'Story answers do not add stars. Finished to-dos add stars.',
-  question: 'Who helps with a care step?',
-  choices: [
-    { id: 'tour-alone', label: 'The child, all alone', isCorrect: false, symbol: 'person.fill' },
-    { id: 'tour-adult', label: 'A grown-up', isCorrect: true, symbol: 'heart.fill' },
-    { id: 'tour-none', label: 'Nobody', isCorrect: false, symbol: 'nosign' },
+  "id": "tour-practice",
+  "title": "Let’s try one",
+  "expression": "Encouraging",
+  "scene": "Kare is choosing a quiet activity.",
+  "speech": "Let’s help me choose. You can tap Listen to hear the words. We can work it out together.",
+  "more": "There is no hurry. You can look at the story again whenever you want.",
+  "question": "Kare wants a quiet game. Which one fits?",
+  "choices": [
+    {
+      "id": "tour-alone",
+      "label": "Playing drums",
+      "isCorrect": false,
+      "symbol": "speaker.wave.3.fill"
+    },
+    {
+      "id": "tour-adult",
+      "label": "Making a puzzle",
+      "isCorrect": true,
+      "symbol": "puzzlepiece.fill"
+    },
+    {
+      "id": "tour-none",
+      "label": "A running race",
+      "isCorrect": false,
+      "symbol": "figure.run"
+    }
   ],
-  reveal: "Here's the answer: a grown-up helps with a care step. Let's talk about it together.",
+  "reveal": "A puzzle is a quiet way to play. You helped Kare choose!"
 };
 
-export function buildPrepPages(childName: string, companionName = 'Kare'): StoryPage[] {
+export function buildPrepPages(childName: string, companionName = 'Kare', childAge: string | number = 7): StoryPage[] {
   const name = childName.trim();
   const hello = name ? `Hi, ${name}. I'm Kare.` : "Hi. I'm Kare.";
   const rawPages: StoryPage[] = [
-    {
-      id: 'prep-welcome',
-      title: 'A tour with Kare',
-      expression: 'Calm',
-      scene: 'Kare waves in a quiet room.',
-      speech: `${hello} Before an operation, you may see new clothes, soft beeps, and helpers. We can meet them one at a time. A grown-up stays with you.`,
-      more: 'Wiggly, shy, and brave can all be true at once. You can hold a hand.',
-      question: 'Who can stay with you on this tour?',
-      choices: [
-        { id: 'prep-welcome-alone', label: 'You have to go alone', isCorrect: false, symbol: 'person.fill' },
-        { id: 'prep-welcome-adult', label: 'A grown-up', isCorrect: true, symbol: 'heart.fill' },
-        { id: 'prep-welcome-none', label: 'Nobody you know', isCorrect: false, symbol: 'nosign' },
-      ],
-      reveal: "Here's the answer: a grown-up stays with you. Let's talk about it together.",
-      symbol: 'heart.fill',
-      tryTitle: 'Breathe with Kare',
-      tryDetail:
-        'Breathe in as the circle grows. Breathe out as it rests. You can do this whenever something feels new.',
-    },
-    {
-      id: 'prep-scrubs',
-      title: 'Helpers in scrubs',
-      expression: 'Encouraging',
-      scene: 'Kare sees helpers in matching clothes.',
-      speech:
-        'Hospital helpers wear scrubs. Scrubs are clean, comfy clothes for taking care of people. A name badge tells you who they are. You can ask, “What is your job?”',
-      more: 'Nurses, doctors, and other helpers may all wear scrubs. The color helps you see who works here.',
-      question: 'What are scrubs?',
-      choices: [
-        { id: 'prep-scrubs-scary', label: 'Clothes that mean someone is mean', isCorrect: false, symbol: 'exclamationmark.triangle' },
-        { id: 'prep-scrubs-clothes', label: 'Clean clothes helpers wear', isCorrect: true, symbol: 'tshirt.fill' },
-        { id: 'prep-scrubs-sleep', label: 'Pajamas you must sleep in', isCorrect: false, symbol: 'moon.fill' },
-      ],
-      reveal: "Here's the answer: scrubs are clean clothes helpers wear. Let's talk about it together.",
-      symbol: 'person.2.fill',
-      tryTitle: 'Find the helper',
-      tryDetail: 'Look for a person, a name badge, and scrubs. That person is here to help.',
-    },
-    {
-      id: 'prep-gown',
-      title: 'The hospital gown',
-      expression: 'Calm',
-      scene: 'Kare changes with a grown-up nearby.',
-      speech:
-        'You change into a gown. It is a loose shirt that opens in the back so helpers can take care of you. Your clothes wait in a bag. A grown-up can help you change.',
-      more: 'The open back is for care. You can ask for another gown if you want a second layer.',
-      question: 'Why do kids change into a gown?',
-      choices: [
-        { id: 'prep-gown-trouble', label: 'Because they are in trouble', isCorrect: false, symbol: 'exclamationmark' },
-        { id: 'prep-gown-care', label: 'So helpers can take care of them', isCorrect: true, symbol: 'hands.and.sparkles.fill' },
-        { id: 'prep-gown-wrong', label: 'Because their clothes are bad', isCorrect: false, symbol: 'tshirt' },
-      ],
-      reveal: "Here's the answer: the gown helps helpers take care of you. Let's talk about it together.",
-      symbol: 'tshirt.fill',
-      tryTitle: 'Pack the clothes',
-      tryDetail: 'Your shirt and pants go in a bag with your name. They wait for you. The gown is just for now.',
-    },
-    {
-      id: 'prep-measure',
-      title: 'Height and weight',
-      expression: 'Cheerful',
-      scene: 'Kare stands by a ruler and a scale.',
-      speech:
-        'Helpers check how tall you are and how much you weigh. You may stand on a scale and next to a ruler. Shoes sometimes come off. This is not a test. There is no failing.',
-      more: 'They learn the size of your body so they can take care of you. Every body is a good body to measure.',
-      question: 'Why do helpers check height and weight?',
-      choices: [
-        { id: 'prep-measure-contest', label: 'To see who wins a contest', isCorrect: false, symbol: 'trophy.fill' },
-        { id: 'prep-measure-size', label: 'To learn the size of your body', isCorrect: true, symbol: 'ruler.fill' },
-        { id: 'prep-measure-home', label: 'To decide if you can leave', isCorrect: false, symbol: 'door.left.hand.open' },
-      ],
-      reveal: "Here's the answer: height and weight tell helpers the size of your body. Let's talk about it together.",
-      symbol: 'ruler.fill',
-      tryTitle: 'Stand tall with Kare',
-      tryDetail: 'Feet flat. Shoulders soft. The numbers are about your body today. You cannot get them wrong.',
-    },
-    {
-      id: 'prep-thermometer',
-      title: 'The thermometer',
-      expression: 'Encouraging',
-      scene: 'Kare holds still for one beep.',
-      speech:
-        'A thermometer checks how warm your body is. It might touch your forehead, rest under your arm, or sit by your ear. It often beeps when it is done. The beep means finished.',
-      more: 'Hold still like a statue for a moment. Then you can wiggle again.',
-      question: 'What does a thermometer check?',
-      choices: [
-        { id: 'prep-thermo-shout', label: 'How loud you can shout', isCorrect: false, symbol: 'speaker.wave.3.fill' },
-        { id: 'prep-thermo-warm', label: 'How warm your body is', isCorrect: true, symbol: 'thermometer.medium' },
-        { id: 'prep-thermo-wrong', label: 'Whether you did something wrong', isCorrect: false, symbol: 'xmark' },
-      ],
-      reveal: "Here's the answer: a thermometer checks how warm your body is. Let's talk about it together.",
-      symbol: 'thermometer.medium',
-      tryTitle: 'Wait for the beep',
-      tryDetail: 'Still for a second. Beep. Done. The number tells helpers how your body is doing today.',
-    },
-    {
-      id: 'prep-stethoscope',
-      title: 'The stethoscope',
-      expression: 'Cheerful',
-      scene: 'Kare hears a soft heartbeat.',
-      speech:
-        'A stethoscope lets a helper hear your heart and your breathing. The round part can feel cool on your skin. It does not pinch. You can ask if you may listen too.',
-      more: 'A heart can sound like a soft drum. Breathing can sound like a little wind.',
-      question: 'What can a helper hear with a stethoscope?',
-      choices: [
-        { id: 'prep-steth-thoughts', label: 'Your thoughts', isCorrect: false, symbol: 'brain' },
-        { id: 'prep-steth-heart', label: 'Your heart and breathing', isCorrect: true, symbol: 'stethoscope' },
-        { id: 'prep-steth-alarm', label: 'A secret alarm', isCorrect: false, symbol: 'bell.fill' },
-      ],
-      reveal: "Here's the answer: a stethoscope listens to your heart and breathing. Let's talk about it together.",
-      symbol: 'stethoscope',
-      tryTitle: 'Listen for the drum',
-      tryDetail: 'Thump-thump. That is a heart saying hello. Cool metal warms up quickly.',
-    },
-    {
-      id: 'prep-cuff',
-      title: 'The blood pressure cuff',
-      expression: 'Calm',
-      scene: "A cuff gives Kare's arm a short hug.",
-      speech:
-        'A blood pressure cuff wraps around your arm like a hug. It squeezes, then lets go. The squeeze can feel tight for a few breaths. Then it loosens. It is checking how strongly your heart pushes.',
-      more: 'Your arm is not stuck. If the squeeze feels like too much, tell the helper.',
-      question: 'What does the cuff do after it squeezes?',
-      choices: [
-        { id: 'prep-cuff-stay', label: 'It stays tight all day', isCorrect: false, symbol: 'lock.fill' },
-        { id: 'prep-cuff-release', label: 'It lets go', isCorrect: true, symbol: 'arrow.left.and.right' },
-        { id: 'prep-cuff-break', label: 'It means the arm is hurt', isCorrect: false, symbol: 'bandage.fill' },
-      ],
-      reveal: "Here's the answer: the cuff squeezes, then lets go. Let's talk about it together.",
-      symbol: 'arrow.left.and.right',
-      tryTitle: 'Squeeze, then let go',
-      tryDetail: 'Tight for a moment. Then loose. The hug is finished when the cuff relaxes.',
-    },
-    {
-      id: 'prep-vitals',
-      title: 'Taking vitals',
-      expression: 'Encouraging',
-      scene: 'Kare finishes a set of body checks.',
-      speech:
-        'Vitals are the body checks together: warmth, heartbeat, breathing, and blood pressure. Helpers write them down to see how you are doing today. Vitals are a hello to your body.',
-      more: 'You might have vitals more than once. That means the helpers are being careful.',
-      question: 'What are vitals?',
-      choices: [
-        { id: 'prep-vitals-punish', label: 'A punishment', isCorrect: false, symbol: 'nosign' },
-        { id: 'prep-vitals-check', label: 'Checks of how your body is doing', isCorrect: true, symbol: 'list.clipboard.fill' },
-        { id: 'prep-vitals-lose', label: 'A game you can lose', isCorrect: false, symbol: 'flag.checkered' },
-      ],
-      reveal: "Here's the answer: vitals are checks of how your body is doing. Let's talk about it together.",
-      symbol: 'list.clipboard.fill',
-      tryTitle: 'Count the checks',
-      tryDetail: 'Warmth. Heart. Breathing. Blood pressure. Four hellos. Then the helper writes them down.',
-    },
-    {
-      id: 'prep-iv',
-      title: 'The IV and the pole',
-      expression: 'Calm',
-      scene: 'A tall pole holds a bag beside Kare.',
-      speech:
-        'An IV is a tiny soft straw that can give your body a drink of water or medicine. Placing it can feel like a quick pinch. Then the pinch is over, and the straw stays still. The tall pole holds the bag up high so the drink can drip. The pole has wheels, so you can walk with a grown-up.',
-      more: 'Looking away and squeezing a hand is a good plan. Leave the straw in place. A helper takes it out when it is time.',
-      question: 'What happens with an IV?',
-      choices: [
-        { id: 'prep-iv-allday', label: 'The pinch lasts all day', isCorrect: false, symbol: 'clock.fill' },
-        { id: 'prep-iv-pinch', label: 'A quick pinch, then a helper removes it later', isCorrect: true, symbol: 'hand.raised.fill' },
-        { id: 'prep-iv-pull', label: 'You should pull it out', isCorrect: false, symbol: 'hand.draw' },
-      ],
-      reveal: "Here's the answer: the pinch is quick, and a helper takes the IV out later. Let's talk about it together.",
-      symbol: 'bag.fill',
-      tryTitle: 'Watch the bag',
-      tryDetail: 'The bag hangs up high. Drip, drip. The pole rolls with you. The straw stays until a helper says it is done.',
-    },
-    {
-      id: 'prep-mask',
-      title: 'The anaesthesia mask',
-      expression: 'Calm',
-      scene: 'Kare holds a soft mask with a grown-up close.',
-      speech:
-        'The anaesthesia mask is a soft cup over your nose and mouth. It gives sleepy air so your body can rest during the operation. Breathe slowly, like fogging a window. A grown-up can hold your hand. You wake up when it is time.',
-      more: 'The mask might smell like plastic, or like something sweet. Smells can differ. You can ask for a story while you breathe.',
-      question: 'What is the sleepy air for?',
-      choices: [
-        { id: 'prep-mask-play', label: 'So you can run around the room', isCorrect: false, symbol: 'figure.run' },
-        { id: 'prep-mask-rest', label: 'So your body can rest, then you wake up', isCorrect: true, symbol: 'moon.stars.fill' },
-        { id: 'prep-mask-hair', label: 'So your hair grows faster', isCorrect: false, symbol: 'comb.fill' },
-      ],
-      reveal: "Here's the answer: the sleepy air helps your body rest during the operation, and you wake up afterward. Let's talk about it together.",
-      symbol: 'facemask.fill',
-      tryTitle: 'Fog the window',
-      tryDetail: 'Slow breath in. Slow breath out, like fog on a window. A hand can stay in yours the whole time.',
-    },
-    {
-      id: 'prep-ready',
-      title: 'You know the way',
-      expression: 'Cheerful',
-      scene: 'Kare smiles beside you.',
-      speech:
-        'You met the scrubs, the gown, the measuring, the thermometer, the stethoscope, the cuff, the vitals, the IV pole, and the mask. When something looks new, you can ask what it is. When you want a hand, you can say so.',
-      more: 'Nervous and ready can sit side by side. You can play this tour again any time.',
-      question: 'What can you do when something feels new?',
-      choices: [
-        { id: 'prep-ready-hide', label: 'Hide the question', isCorrect: false, symbol: 'eye.slash' },
-        { id: 'prep-ready-ask', label: 'Ask what it is, and hold a hand', isCorrect: true, symbol: 'bubble.left.and.heart.fill' },
-        { id: 'prep-ready-trouble', label: 'Decide you are in trouble', isCorrect: false, symbol: 'exclamationmark' },
-      ],
-      reveal: "Here's the answer: ask what it is, and you can hold a hand. Let's talk about it together.",
-      symbol: 'hands.and.sparkles.fill',
-      tryTitle: 'Practice the question',
-      tryDetail: 'Try saying, “What is that?” and “Can I hold your hand?” Both questions are welcome.',
-    },
-  ];
-
-  return rawPages.map((p) => substituteCompanionName(p, companionName));
+  {
+    "id": "prep-welcome",
+    "title": "A tour with Kare",
+    "expression": "Encouraging",
+    "scene": "Kare explores the hospital with you.",
+    "speech": `${hello} Before an operation, you may meet new people and see new things. Let’s find out about them together.`,
+    "more": "It is OK to feel curious, worried, or both. You can tell a grown-up how you feel.",
+    "question": "Kare feels worried. What could Kare say?",
+    "choices": [
+      {
+        "id": "prep-welcome-alone",
+        "label": "“Where is my coat?”",
+        "isCorrect": false,
+        "symbol": "tshirt.fill"
+      },
+      {
+        "id": "prep-welcome-adult",
+        "label": "“I feel worried. Can you help?”",
+        "isCorrect": true,
+        "symbol": "bubble.left.fill"
+      },
+      {
+        "id": "prep-welcome-none",
+        "label": "“What time is lunch?”",
+        "isCorrect": false,
+        "symbol": "clock"
+      }
+    ],
+    "reveal": "Saying “I feel worried” helps your grown-up understand. You can ask for a hand to hold.",
+    "symbol": "heart.fill",
+    "tryTitle": "Breathe with Kare",
+    "tryDetail": "Try one slow breath in and one slow breath out. You can stop whenever you want."
+  },
+  {
+    "id": "prep-scrubs",
+    "title": "Meet a helper",
+    "expression": "Encouraging",
+    "scene": "Kare meets someone wearing scrubs.",
+    "speech": "Scrubs are the clothes many hospital helpers wear. Their name badge can tell you who they are.",
+    "more": "You can ask, “What is your name? What do you do?”",
+    "question": "Where could Kare look for a helper’s name?",
+    "choices": [
+      {
+        "id": "prep-scrubs-scary",
+        "label": "On their shoes",
+        "isCorrect": false,
+        "symbol": "shoe.fill"
+      },
+      {
+        "id": "prep-scrubs-clothes",
+        "label": "On their name badge",
+        "isCorrect": true,
+        "symbol": "person.crop.rectangle"
+      },
+      {
+        "id": "prep-scrubs-sleep",
+        "label": "On their bag",
+        "isCorrect": false,
+        "symbol": "bag.fill"
+      }
+    ],
+    "reveal": "A name badge helps you find out who someone is. You can ask them to read it to you.",
+    "symbol": "person.2.fill",
+    "tryTitle": "Say hello",
+    "tryDetail": "Try asking your grown-up, “What is your name?” Then tell them yours."
+  },
+  {
+    "id": "prep-gown",
+    "title": "Your hospital clothes",
+    "expression": "Encouraging",
+    "scene": "Kare gets a gown and a clothes bag.",
+    "speech": "A hospital gown is a loose piece of clothing. It helps the care team check your body. Your own clothes wait in a bag.",
+    "more": "You can ask for help changing, or tell someone if you feel cold.",
+    "question": "Where do Kare’s own clothes wait during the operation?",
+    "choices": [
+      {
+        "id": "prep-gown-trouble",
+        "label": "On the weighing scale",
+        "isCorrect": false,
+        "symbol": "scalemass.fill"
+      },
+      {
+        "id": "prep-gown-care",
+        "label": "In a bag with Kare’s name",
+        "isCorrect": true,
+        "symbol": "bag.fill"
+      },
+      {
+        "id": "prep-gown-wrong",
+        "label": "On the food tray",
+        "isCorrect": false,
+        "symbol": "fork.knife"
+      }
+    ],
+    "reveal": "A bag with your name keeps your clothes together so they are ready when you need them.",
+    "symbol": "tshirt.fill",
+    "tryTitle": "Pack for later",
+    "tryDetail": "Pretend to fold a shirt and put it in a bag. What would help you find your bag again?"
+  },
+  {
+    "id": "prep-measure",
+    "title": "How tall? How much?",
+    "expression": "Encouraging",
+    "scene": "Kare meets a ruler and a scale.",
+    "speech": "A ruler measures how tall I am. A scale checks how much I weigh. These numbers help the team plan my care.",
+    "more": "Your grown-up or a helper can show you where to stand.",
+    "question": "The helper wants to know how tall Kare is. Which tool helps?",
+    "choices": [
+      {
+        "id": "prep-measure-contest",
+        "label": "A weighing scale",
+        "isCorrect": false,
+        "symbol": "scalemass.fill"
+      },
+      {
+        "id": "prep-measure-size",
+        "label": "A height ruler",
+        "isCorrect": true,
+        "symbol": "ruler.fill"
+      },
+      {
+        "id": "prep-measure-home",
+        "label": "A thermometer",
+        "isCorrect": false,
+        "symbol": "thermometer.medium"
+      }
+    ],
+    "reveal": "A height ruler measures how tall you are. A scale measures weight, and a thermometer checks temperature.",
+    "symbol": "ruler.fill",
+    "tryTitle": "Stand tall",
+    "tryDetail": "Stand with your feet flat and look ahead. Pretend a helper is measuring your height."
+  },
+  {
+    "id": "prep-thermometer",
+    "title": "A temperature check",
+    "expression": "Encouraging",
+    "scene": "Kare meets the thermometer.",
+    "speech": "A thermometer checks how warm my body is. A helper may put it near my forehead, ear, or under my arm.",
+    "more": "The helper will show you what to do. Some thermometers beep when they finish.",
+    "question": "Which tool checks how warm Kare’s body is?",
+    "choices": [
+      {
+        "id": "prep-thermo-shout",
+        "label": "A stethoscope",
+        "isCorrect": false,
+        "symbol": "stethoscope"
+      },
+      {
+        "id": "prep-thermo-warm",
+        "label": "A thermometer",
+        "isCorrect": true,
+        "symbol": "thermometer.medium"
+      },
+      {
+        "id": "prep-thermo-wrong",
+        "label": "A weighing scale",
+        "isCorrect": false,
+        "symbol": "scalemass.fill"
+      }
+    ],
+    "reveal": "A thermometer checks your temperature. That tells the helper how warm your body is.",
+    "symbol": "thermometer.medium",
+    "tryTitle": "Be still, then wiggle",
+    "tryDetail": "Practise holding still for a moment. When your grown-up says “done,” have a wiggle."
+  },
+  {
+    "id": "prep-stethoscope",
+    "title": "Listen to a heartbeat",
+    "expression": "Encouraging",
+    "scene": "Kare meets the stethoscope.",
+    "speech": "A stethoscope helps the nurse hear my heart and breathing. Its round end may feel cool on my skin.",
+    "more": "You can ask the nurse what they are listening for.",
+    "question": "What does a stethoscope help the nurse check?",
+    "choices": [
+      {
+        "id": "prep-steth-thoughts",
+        "label": "Body temperature",
+        "isCorrect": false,
+        "symbol": "thermometer.medium"
+      },
+      {
+        "id": "prep-steth-heart",
+        "label": "Heartbeat and breathing",
+        "isCorrect": true,
+        "symbol": "heart.fill"
+      },
+      {
+        "id": "prep-steth-alarm",
+        "label": "Body weight",
+        "isCorrect": false,
+        "symbol": "scalemass.fill"
+      }
+    ],
+    "reveal": "A stethoscope carries sounds from inside your body, like your heartbeat and breathing.",
+    "symbol": "stethoscope",
+    "tryTitle": "Make a heartbeat",
+    "tryDetail": "Tap a gentle thump-thump on your knee. That is a rhythm a heartbeat can make."
+  },
+  {
+    "id": "prep-cuff",
+    "title": "A squeeze on your arm",
+    "expression": "Encouraging",
+    "scene": "Kare tries a blood pressure cuff.",
+    "speech": "A cuff wraps around my arm. It fills with air, feels tight, then loosens. It checks my blood pressure.",
+    "more": "Tell the helper if the squeeze hurts or feels uncomfortable.",
+    "question": "The cuff has filled with air. What happens next?",
+    "choices": [
+      {
+        "id": "prep-cuff-stay",
+        "label": "It checks Kare’s height",
+        "isCorrect": false,
+        "symbol": "ruler.fill"
+      },
+      {
+        "id": "prep-cuff-release",
+        "label": "The air comes out and it loosens",
+        "isCorrect": true,
+        "symbol": "arrow.left.and.right"
+      },
+      {
+        "id": "prep-cuff-break",
+        "label": "It listens to Kare’s breathing",
+        "isCorrect": false,
+        "symbol": "stethoscope"
+      }
+    ],
+    "reveal": "The cuff loosens as the air comes out. Tell the helper how your arm feels.",
+    "symbol": "arrow.left.and.right",
+    "tryTitle": "Squeeze, then relax",
+    "tryDetail": "Gently squeeze your own hand, then let it relax. You are in charge of this pretend squeeze."
+  },
+  {
+    "id": "prep-vitals",
+    "title": "Checking your body",
+    "expression": "Encouraging",
+    "scene": "The helper writes down Kare’s checks.",
+    "speech": "Temperature, heartbeat, breathing, and blood pressure are called vital signs. They help the team see how my body is doing.",
+    "more": "The team may check them again later to see what has changed.",
+    "question": "Why might a nurse check Kare’s temperature again?",
+    "choices": [
+      {
+        "id": "prep-vitals-punish",
+        "label": "To find out how tall Kare is",
+        "isCorrect": false,
+        "symbol": "ruler.fill"
+      },
+      {
+        "id": "prep-vitals-check",
+        "label": "To see if it has changed",
+        "isCorrect": true,
+        "symbol": "thermometer.medium"
+      },
+      {
+        "id": "prep-vitals-lose",
+        "label": "To find out when Kare last ate",
+        "isCorrect": false,
+        "symbol": "fork.knife"
+      }
+    ],
+    "reveal": "A new check shows whether your temperature has changed. The team uses checks to follow how you are doing.",
+    "symbol": "list.clipboard.fill",
+    "tryTitle": "Remember a check",
+    "tryDetail": "Point to your arm or chest. Tell your grown-up one check you remember."
+  },
+  {
+    "id": "prep-iv",
+    "title": "Meet the IV",
+    "expression": "Encouraging",
+    "scene": "Kare sees a small tube and a bag.",
+    "speech": "An IV is a small, soft tube that goes into a vein. It can give my body fluid or medicine. Putting it in may pinch or sting.",
+    "more": "A nurse looks after the IV. Tell them if it hurts or feels uncomfortable. You can ask to hold a hand.",
+    "question": "What does an IV help the team give Kare?",
+    "choices": [
+      {
+        "id": "prep-iv-allday",
+        "label": "A temperature check",
+        "isCorrect": false,
+        "symbol": "thermometer.medium"
+      },
+      {
+        "id": "prep-iv-pinch",
+        "label": "Fluid or medicine",
+        "isCorrect": true,
+        "symbol": "drop.fill"
+      },
+      {
+        "id": "prep-iv-pull",
+        "label": "A heartbeat check",
+        "isCorrect": false,
+        "symbol": "heart.fill"
+      }
+    ],
+    "reveal": "Fluid or medicine can travel through the little tube into your body. A nurse looks after it.",
+    "symbol": "bag.fill",
+    "tryTitle": "Choose some support",
+    "tryDetail": "Would you like to look away or hold a hand? Practise asking for what would help you."
+  },
+  {
+    "id": "prep-mask",
+    "title": "Meet the mask",
+    "expression": "Encouraging",
+    "scene": "Kare learns about medicine for the operation.",
+    "speech": "Some children get medicine through a mask over their nose and mouth. It helps them sleep during the operation. The care team watches over them.",
+    "more": "The team will explain how you will get your medicine and who can stay with you.",
+    "question": "What is the medicine in this mask for?",
+    "choices": [
+      {
+        "id": "prep-mask-play",
+        "label": "Checking how tall Kare is",
+        "isCorrect": false,
+        "symbol": "ruler.fill"
+      },
+      {
+        "id": "prep-mask-rest",
+        "label": "Helping Kare sleep during the operation",
+        "isCorrect": true,
+        "symbol": "moon.stars.fill"
+      },
+      {
+        "id": "prep-mask-hair",
+        "label": "Listening to Kare’s heartbeat",
+        "isCorrect": false,
+        "symbol": "stethoscope"
+      }
+    ],
+    "reveal": "This medicine helps you sleep during the operation. The care team looks after you while it works.",
+    "symbol": "facemask.fill",
+    "tryTitle": "Practise a slow breath",
+    "tryDetail": "Try a slow breath in and out. Ask your grown-up what you would like the team to explain."
+  },
+  {
+    "id": "prep-ready",
+    "title": "Your turn to ask",
+    "expression": "Encouraging",
+    "scene": "Kare is ready with a question.",
+    "speech": "You have met some hospital helpers and tools. You can always ask what something is or what will happen next.",
+    "more": "You do not need to remember every word. Asking for help is part of learning.",
+    "question": "Kare sees a new tool. Which question helps Kare learn about it?",
+    "choices": [
+      {
+        "id": "prep-ready-hide",
+        "label": "“Where is my bag?”",
+        "isCorrect": false,
+        "symbol": "bag.fill"
+      },
+      {
+        "id": "prep-ready-ask",
+        "label": "“What does this do?”",
+        "isCorrect": true,
+        "symbol": "bubble.left.fill"
+      },
+      {
+        "id": "prep-ready-trouble",
+        "label": "“What time is lunch?”",
+        "isCorrect": false,
+        "symbol": "clock"
+      }
+    ],
+    "reveal": "“What does this do?” invites the helper to explain. You can also ask them to show you first.",
+    "symbol": "hands.and.sparkles.fill",
+    "tryTitle": "Ask your question",
+    "tryDetail": "Pick one thing from the tour. What would you like to ask about it?"
+  }
+];
+  return rawPages.map((page) => adaptStoryPageForAge(substituteCompanionName(page, companionName), childAge));
 }
 
 export function buildStoryPagesForInstructions(
   instructions: ParentInstruction[],
-  companionName = 'Kare'
+  companionName = 'Kare',
+  childAge: string | number = 7
 ): StoryPage[] {
   if (instructions.length === 0) {
-    const waitingPage: StoryPage = {
+    return [substituteCompanionName({
       id: 'waiting-for-parent',
-      title: 'Kare is getting ready',
+      title: 'Let’s get ready together',
       expression: 'Gentle',
       scene: 'Kare sits with a notebook.',
-      speech:
-        'A grown-up is adding your care steps. When they save them, I will tell you about each one here.',
-      more: 'Hand this to a grown-up if you are ready to add care steps together.',
-      question: 'Who adds the care steps to KareBEAR?',
-      choices: [
-        { id: 'wait-adult', label: 'A grown-up', isCorrect: true, symbol: 'checkmark.shield.fill' },
-        { id: 'wait-bear', label: 'Kare makes them up', isCorrect: false, symbol: 'pawprint.fill' },
-        { id: 'wait-guess', label: 'We guess by ourselves', isCorrect: false, symbol: 'questionmark.circle' },
-      ],
-      reveal: "Here's the answer: a grown-up adds the care steps. Let's talk about it together.",
-    };
-    return [substituteCompanionName(waitingPage, companionName)];
+      speech: 'Your grown-up can add the steps from your care team. Then we can practise them together.',
+      more: 'If something hurts or feels wrong, tell a grown-up.',
+      question: 'What would you like to ask your grown-up about your care?',
+      interaction: 'talk',
+      choices: [],
+      reveal: 'Your grown-up can help you get started with your care steps.',
+    }, companionName)];
   }
 
-  const customPages: StoryPage[] = instructions.map((instruction) => {
-    const page: StoryPage = {
-      id: `parent-${instruction.id}`,
-      title: instruction.title,
-      expression: instruction.fromRecording ? 'Listening' : 'Encouraging',
-      scene: instruction.fromRecording
-        ? 'From the care visit recording, checked by a grown-up.'
-        : 'Added by a grown-up for home care.',
-      speech: `Here is a care step from your grown-up: ${instruction.detail}`,
-      more: 'Do this step with a grown-up. Ask them if any part feels confusing.',
-      question: `What is the "${instruction.title}" step about?`,
-      choices: [
-        {
-          id: `parent-correct-${instruction.id}`,
-          label: `${instruction.detail} With a grown-up.`,
-          isCorrect: true,
-          symbol: 'checkmark.circle.fill',
-        },
-        {
-          id: `parent-skip-${instruction.id}`,
-          label: 'Skip it and do not tell anyone',
-          isCorrect: false,
-          symbol: 'xmark.circle',
-        },
-        {
-          id: `parent-alone-${instruction.id}`,
-          label: 'Try to do medical steps all alone',
-          isCorrect: false,
-          symbol: 'hand.raised.fill',
-        },
-      ],
-      reveal: `Here's the answer: ${instruction.detail} A grown-up helps with this step. Let's talk about it together.`,
-    };
-    return substituteCompanionName(page, companionName);
-  });
+  const customPages: StoryPage[] = instructions.map((instruction) => substituteCompanionName({
+    id: `parent-${instruction.id}`,
+    title: instruction.title,
+    expression: 'Encouraging',
+    scene: 'A care step to practise with your grown-up.',
+    speech: `Your grown-up’s care step: ${instruction.detail}`,
+    more: 'Read or listen together. Your grown-up can explain any new words.',
+    question: 'Show or tell your grown-up: how will you do this step together?',
+    interaction: 'talk',
+    choices: [],
+    reveal: `Keep this step handy: ${instruction.detail}`,
+  }, companionName));
 
-  const corePages = CORE_STORY_PAGES.map((p) => substituteCompanionName(p, companionName));
+  const corePages = CORE_STORY_PAGES.map((page) => adaptStoryPageForAge(substituteCompanionName(page, companionName), childAge));
   return [...customPages, ...corePages];
 }
 

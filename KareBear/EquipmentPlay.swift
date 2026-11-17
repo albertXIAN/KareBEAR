@@ -40,7 +40,7 @@ enum StoryGear: String {
         case .cuff: "Blood pressure cuff"
         case .vitals: "Vitals list"
         case .iv: "IV bag"
-        case .mask: "Sleepy-air mask"
+        case .mask: "Anaesthesia mask"
         case .ask: "A question"
         }
     }
@@ -55,8 +55,8 @@ enum StoryGear: String {
         case .stethoscope: "A helper wants to hear \(bear)'s heart. What does \(bear) need?"
         case .cuff: "A helper wants to check \(bear)'s blood pressure. What does \(bear) need?"
         case .vitals: "Helpers want to write down \(bear)'s body checks. What does \(bear) need?"
-        case .iv: "\(bear) needs a drip of water or medicine. What does \(bear) need?"
-        case .mask: "\(bear) will breathe sleepy air. What does \(bear) need?"
+        case .iv: "\(bear) needs fluid or medicine through an IV. What does \(bear) need?"
+        case .mask: "\(bear) will breathe medicine through a mask. What does \(bear) need?"
         case .ask: "Something looks new. What does \(bear) need?"
         }
     }
@@ -84,11 +84,11 @@ enum StoryGear: String {
         case .gown: "The gown is on. Clothes wait in a bag."
         case .measure: "Feet flat. The numbers are not a test."
         case .thermometer: "Beep. Finished. That checks how warm the body is."
-        case .stethoscope: "Thump-thump. That is a heart saying hello."
-        case .cuff: "Squeeze, hug, then let go. The cuff is done."
-        case .vitals: "Warmth, heart, breathing, blood pressure. Four hellos."
-        case .iv: "The bag hangs up high. The straw stays until a helper says so."
-        case .mask: "Slow breath in. Slow breath out, like fog on a window."
+        case .stethoscope: "Thump-thump. A stethoscope helps a nurse hear a heartbeat."
+        case .cuff: "The cuff fills with air, then loosens. Tell the helper how it feels."
+        case .vitals: "Temperature, heartbeat, breathing, and blood pressure help the team check your body."
+        case .iv: "A nurse looks after the IV. Tell them if it hurts or feels uncomfortable."
+        case .mask: "You practised a slow breath. The care team will explain how you get your medicine."
         case .ask: "“What is that?” and “Can I hold your hand?” are welcome."
         }
     }

@@ -1,0 +1,41 @@
+.story-animation {
+  overflow: hidden;
+  border: 1px solid #bfd9d0;
+  border-radius: 24px;
+  background: #fff;
+  color: #163835;
+}
+.story-animation-heading { padding: 18px 18px 12px; }
+.story-animation-eyebrow { color: #54756b; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.story-animation-heading h3 { margin: 4px 0 0; font-size: 19px; line-height: 1.35; font-weight: 800; color: #0e5a54; }
+.story-animation-stage { margin: 0 10px; overflow: hidden; border-radius: 18px; }
+.story-animation-stage svg { display: block; width: 100%; height: auto; }
+.story-art-motion { transition: transform 1.1s ease-in-out, opacity .7s ease-in-out, d 1.1s ease-in-out, cx 1.1s ease-in-out, cy 1.1s ease-in-out, y 1.1s ease-in-out, width 1.1s ease-in-out, fill .8s ease-in-out; }
+.story-animation-step { padding: 16px 18px 10px; min-height: 132px; }
+.story-animation-step .story-animation-count { margin: 0 0 5px; font-size: 12px; font-weight: 800; color: #607b70; }
+.story-animation-step h4 { margin: 0 0 6px; font-size: 18px; line-height: 1.35; font-weight: 800; }
+.story-animation-step p { margin: 0; font-size: 16px; line-height: 1.55; }
+.story-animation-progress { display: flex; gap: 5px; padding: 0 18px 15px; }
+.story-animation-progress span { flex: 1; height: 5px; border-radius: 10px; background: #e7ece5; }
+.story-animation-progress .is-complete { background: #388d7c; }
+.story-animation-controls { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 14px 12px; }
+.story-animation button { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid #c3d8cf; border-radius: 13px; padding: 10px 12px; background: #fff; color: #0e5a54; font-size: 14px; font-weight: 800; cursor: pointer; }
+.story-animation button:hover:not(:disabled) { background: #e9f3ed; }
+.story-animation button:focus-visible { outline: 3px solid #e2a15c; outline-offset: 3px; }
+.story-animation button:disabled { opacity: .4; cursor: default; }
+.story-animation-controls button { flex: 1; }
+.story-animation-controls .story-animation-play { background: #0e5a54; color: white; border-color: #0e5a54; }
+.story-animation-controls .story-animation-play:hover { background: #0b4742; }
+.story-animation-navigation { display: flex; align-items: center; justify-content: space-between; gap: 7px; padding: 10px 14px 14px; border-top: 1px solid #e5ece5; }
+.story-animation-navigation button { padding: 8px; flex-shrink: 0; }
+.story-animation-navigation span { max-width: 135px; text-align: center; font-size: 11px; line-height: 1.4; color: #60756b; }
+.story-animation--reduced .story-art-motion { transition: none; }
+@media (prefers-reduced-motion: reduce) { .story-art-motion { transition: none; } }
+@media (max-width: 360px) {
+  .story-animation-heading { padding: 14px 12px 10px; }
+  .story-animation-step { padding-left: 12px; padding-right: 12px; }
+  .story-animation-controls { gap: 5px; padding-left: 8px; padding-right: 8px; }
+  .story-animation button { padding-left: 9px; padding-right: 9px; font-size: 13px; gap: 5px; }
+  .story-animation-navigation { padding-left: 8px; padding-right: 8px; }
+  .story-animation-navigation span { font-size: 10px; }
+}
