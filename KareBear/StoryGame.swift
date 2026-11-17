@@ -1456,6 +1456,7 @@ struct PracticeStoryView: View {
     @State private var localMisses: [String: Int] = [:]
     @State private var selectedID: String?
     @State private var triedPages: Set<String> = []
+    @State private var gearMiss = false
     @State private var didStart = false
     @State private var speaker = StorySpeaker()
     @State private var speakTask: Task<Void, Never>?
@@ -1547,10 +1548,8 @@ struct PracticeStoryView: View {
                 if let gear = page.gear, phase == .trying || tried {
                     EquipmentStage(
                         gear: gear,
-                        bear: store.companionName,
                         size: badge,
-                        applied: tried,
-                        onApply: { applyGear(page) }
+                        applied: tried
                     )
                 }
             }
@@ -1595,7 +1594,7 @@ struct PracticeStoryView: View {
                     .buttonStyle(KidButtonStyle())
                 }
 
-                if phase == .reading || phase == .tryAgain || phase == .trying {
+                if phase == .reading || phase == .tryAgain {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("\(store.companionName) says:")
                             .font(jakarta(22, .bold))
@@ -1616,12 +1615,21 @@ struct PracticeStoryView: View {
                     if phase == .tryAgain {
                         feedback(StoryLibrary.firstMiss, tone: .retry)
                     }
-                    if phase == .trying, let gear = page.gear {
-                        let tried = triedPages.contains(page.id)
-                        feedback(
-                            tried ? gear.doneLine(bear: store.companionName) : gear.prompt(bear: store.companionName),
-                            tone: tried ? .good : .talk
-                        )
+                } else if phase == .trying, let gear = page.gear {
+                    let tried = triedPages.contains(page.id)
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(gear.needQuestion(bear: store.companionName))
+                            .font(jakarta(32, .extraBold))
+                            .foregroundStyle(Theme.text)
+                            .fixedSize(horizontal: false, vertical: true)
+                        ForEach(gear.needChoices) { choice in
+                            gearChoiceButton(choice, tried: tried)
+                        }
+                        if tried {
+                            feedback(gear.doneLine(bear: store.companionName), tone: .good)
+                        } else if gearMiss {
+                            feedback("Not quite. Think about what \(store.companionName) needs.", tone: .retry)
+                        }
                     }
                 } else {
                     VStack(alignment: .leading, spacing: 10) {
@@ -1736,7 +1744,7 @@ struct PracticeStoryView: View {
     private var forwardTitle: String {
         switch phase {
         case .reading:
-            page?.gear == nil ? "Check" : "Try it"
+            page?.gear == nil ? "Check" : "Choose"
         case .trying:
             "Check"
         case .tryAgain:
@@ -1866,6 +1874,56 @@ struct PracticeStoryView: View {
         speaker.speak(page.gear?.doneLine(bear: store.companionName) ?? "", ageYears: store.childAgeYears)
     }
 
+    private func chooseGear(_ choice: GearNeedChoice, page: StoryPage) {
+        guard phase == .trying, page.gear != nil, !triedPages.contains(page.id) else { return }
+        selectedID = choice.id
+        if choice.isCorrect {
+            gearMiss = false
+            applyGear(page)
+            return
+        }
+        gearMiss = true
+        speaker.stop()
+        speaker.speak("Not quite. Think about what \(store.companionName) needs.", ageYears: store.childAgeYears)
+    }
+
+    private func gearChoiceButton(_ choice: GearNeedChoice, tried: Bool) -> some View {
+        let showCorrect = tried && choice.isCorrect
+        let selected = selectedID == choice.id
+        return Button {
+            guard let page else { return }
+            chooseGear(choice, page: page)
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: choice.symbol)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(showCorrect ? .white : Theme.teal)
+                    .frame(width: 44, height: 44)
+                    .background(showCorrect ? Theme.teal : Theme.tealSoft, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                Text(choice.label)
+                    .font(jakarta(26, .bold))
+                    .foregroundStyle(Theme.text)
+                    .multilineTextAlignment(.leading)
+                Spacer(minLength: 4)
+                if showCorrect {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(Theme.teal)
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, minHeight: 84, alignment: .leading)
+            .card(
+                fill: showCorrect ? Theme.tealSoft : .white,
+                border: showCorrect ? Theme.teal : (selected ? Theme.terra : Theme.border),
+                radius: 18,
+                lineWidth: showCorrect || selected ? 2 : 1
+            )
+        }
+        .buttonStyle(KidButtonStyle())
+        .disabled(tried)
+        .accessibilityLabel(choice.label)
+    }
+
     private func leave() {
         rememberPlace()
         speakTask?.cancel()
@@ -1879,6 +1937,7 @@ struct PracticeStoryView: View {
         case .question, .tryAgain, .correct, .revealed, .trying:
             phase = .reading
             selectedID = nil
+            gearMiss = false
         case .reading:
             guard index > 0 else { return }
             index -= 1
@@ -1898,6 +1957,8 @@ struct PracticeStoryView: View {
         switch phase {
         case .reading:
             if pages[index].gear != nil, !triedPages.contains(pages[index].id) {
+                gearMiss = false
+                selectedID = nil
                 phase = .trying
             } else {
                 phase = .question
@@ -1905,6 +1966,7 @@ struct PracticeStoryView: View {
             }
         case .trying:
             guard triedPages.contains(pages[index].id) else { return }
+            gearMiss = false
             phase = .question
             selectedID = nil
         case .tryAgain:
@@ -1923,6 +1985,7 @@ struct PracticeStoryView: View {
         index = 0
         phase = .reading
         selectedID = nil
+        gearMiss = false
         triedPages = []
     }
 
@@ -2080,13 +2143,13 @@ private enum StoryVoice {
             return "\(page.speech) \(cheers[index % cheers.count])"
         case .trying:
             if let gear = page.gear {
-                return gear.prompt(bear: bear)
+                return "\(gear.needQuestion(bear: bear)) Is it \(choiceList(gear.needChoices.map(\.label)))?"
             }
             return page.speech
         case .tryAgain:
             return "\(StoryLibrary.firstMiss) \(page.speech)"
         case .question:
-            return "\(page.question) Is it \(choiceList(page.choices))? You can do this."
+            return "\(page.question) Is it \(choiceList(page.choices.map(\.label)))? You can do this."
         case .correct:
             return StoryLibrary.correctFeedback(bear: bear)
         case .revealed:
@@ -2096,8 +2159,7 @@ private enum StoryVoice {
         }
     }
 
-    private static func choiceList(_ choices: [StoryChoice]) -> String {
-        let labels = choices.map(\.label)
+    private static func choiceList(_ labels: [String]) -> String {
         switch labels.count {
         case 0:
             return "the choice you remember"

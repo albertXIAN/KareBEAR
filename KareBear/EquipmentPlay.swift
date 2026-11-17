@@ -45,19 +45,35 @@ enum StoryGear: String {
         }
     }
 
-    func prompt(bear: String) -> String {
+    func needQuestion(bear: String) -> String {
         switch self {
-        case .breath: "Tap the circle and breathe with \(bear)."
-        case .helper: "Tap the helper so they stand with \(bear)."
-        case .gown: "Tap the gown to put it on \(bear)."
-        case .measure: "Tap the ruler so \(bear) can stand tall."
-        case .thermometer: "Tap the thermometer. Wait for the beep."
-        case .stethoscope: "Tap the stethoscope so it can listen."
-        case .cuff: "Tap the cuff. It gives \(bear)'s arm a hug, then lets go."
-        case .vitals: "Tap the list to count \(bear)'s body checks."
-        case .iv: "Tap the bag so it can hang beside \(bear)."
-        case .mask: "Tap the mask so \(bear) can practice slow breaths."
-        case .ask: "Tap the question. It is always okay to ask."
+        case .breath: "\(bear) wants to practice calm breaths. What does \(bear) need?"
+        case .helper: "\(bear) wants a helper to stand close. What does \(bear) need?"
+        case .gown: "\(bear) is changing for care. What does \(bear) need?"
+        case .measure: "Helpers want to check how tall \(bear) is. What does \(bear) need?"
+        case .thermometer: "Helpers want to check how warm \(bear) is. What does \(bear) need?"
+        case .stethoscope: "A helper wants to hear \(bear)'s heart. What does \(bear) need?"
+        case .cuff: "A helper wants to check \(bear)'s blood pressure. What does \(bear) need?"
+        case .vitals: "Helpers want to write down \(bear)'s body checks. What does \(bear) need?"
+        case .iv: "\(bear) needs a drip of water or medicine. What does \(bear) need?"
+        case .mask: "\(bear) will breathe sleepy air. What does \(bear) need?"
+        case .ask: "Something looks new. What does \(bear) need?"
+        }
+    }
+
+    var needChoices: [GearNeedChoice] {
+        switch self {
+        case .breath: options([.cuff, .breath, .iv])
+        case .helper: options([.helper, .measure, .mask])
+        case .gown: options([.thermometer, .stethoscope, .gown])
+        case .measure: options([.mask, .measure, .thermometer])
+        case .thermometer: options([.gown, .thermometer, .measure])
+        case .stethoscope: options([.stethoscope, .vitals, .cuff])
+        case .cuff: options([.gown, .mask, .cuff])
+        case .vitals: options([.measure, .vitals, .mask])
+        case .iv: options([.breath, .stethoscope, .iv])
+        case .mask: options([.vitals, .measure, .mask])
+        case .ask: options([.cuff, .ask, .iv])
         }
     }
 
@@ -76,38 +92,34 @@ enum StoryGear: String {
         case .ask: "“What is that?” and “Can I hold your hand?” are welcome."
         }
     }
+
+    private func options(_ gears: [StoryGear]) -> [GearNeedChoice] {
+        gears.map { item in
+            GearNeedChoice(
+                id: "\(rawValue)-\(item.rawValue)",
+                label: item.label,
+                symbol: item.symbol,
+                isCorrect: item == self
+            )
+        }
+    }
+}
+
+struct GearNeedChoice: Identifiable {
+    let id: String
+    let label: String
+    let symbol: String
+    let isCorrect: Bool
 }
 
 struct EquipmentStage: View {
     let gear: StoryGear
-    let bear: String
     let size: CGFloat
     let applied: Bool
-    var onApply: () -> Void
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            EquipmentOnBear(gear: gear, size: size, applied: applied)
-            if !applied {
-                Button(action: onApply) {
-                    HStack(spacing: 10) {
-                        Image(systemName: gear.symbol)
-                            .font(.system(size: 22, weight: .bold))
-                        Text(gear.label)
-                            .font(jakarta(16, .bold))
-                    }
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 16)
-                    .frame(height: 52)
-                    .background(Theme.terra, in: Capsule())
-                    .shadow(color: Theme.terra.opacity(0.35), radius: 8, y: 3)
-                }
-                .buttonStyle(KidButtonStyle())
-                .accessibilityLabel(gear.prompt(bear: bear))
-                .padding(.bottom, 8)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        EquipmentOnBear(gear: gear, size: size, applied: applied)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
