@@ -38,6 +38,7 @@ struct StoryPage: Identifiable {
     var symbol: String = "heart.fill"
     var tryTitle: String? = nil
     var tryDetail: String? = nil
+    var gear: StoryGear? = nil
 
     func speaking(as name: String) -> StoryPage {
         let bear = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -59,7 +60,8 @@ struct StoryPage: Identifiable {
             reveal: swap(reveal),
             symbol: symbol,
             tryTitle: tryTitle.map(swap),
-            tryDetail: tryDetail.map(swap)
+            tryDetail: tryDetail.map(swap),
+            gear: gear
         )
     }
 }
@@ -226,7 +228,8 @@ enum StoryLibrary {
                 reveal: "Here's the answer: a grown-up stays with you. Let's talk about it together.",
                 symbol: "heart.fill",
                 tryTitle: "Breathe with Kare",
-                tryDetail: "Breathe in as the circle grows. Breathe out as it rests. You can do this whenever something feels new."
+                tryDetail: "Breathe in as the circle grows. Breathe out as it rests. You can do this whenever something feels new.",
+                gear: .breath
             ),
             StoryPage(
                 id: "prep-scrubs",
@@ -244,7 +247,8 @@ enum StoryLibrary {
                 reveal: "Here's the answer: scrubs are clean clothes helpers wear. Let's talk about it together.",
                 symbol: "person.2.fill",
                 tryTitle: "Find the helper",
-                tryDetail: "Look for a person, a name badge, and scrubs. That person is here to help."
+                tryDetail: "Look for a person, a name badge, and scrubs. That person is here to help.",
+                gear: .helper
             ),
             StoryPage(
                 id: "prep-gown",
@@ -262,7 +266,8 @@ enum StoryLibrary {
                 reveal: "Here's the answer: the gown helps helpers take care of you. Let's talk about it together.",
                 symbol: "tshirt.fill",
                 tryTitle: "Pack the clothes",
-                tryDetail: "Your shirt and pants go in a bag with your name. They wait for you. The gown is just for now."
+                tryDetail: "Your shirt and pants go in a bag with your name. They wait for you. The gown is just for now.",
+                gear: .gown
             ),
             StoryPage(
                 id: "prep-measure",
@@ -280,7 +285,8 @@ enum StoryLibrary {
                 reveal: "Here's the answer: height and weight tell helpers the size of your body. Let's talk about it together.",
                 symbol: "ruler.fill",
                 tryTitle: "Stand tall with Kare",
-                tryDetail: "Feet flat. Shoulders soft. The numbers are about your body today. You cannot get them wrong."
+                tryDetail: "Feet flat. Shoulders soft. The numbers are about your body today. You cannot get them wrong.",
+                gear: .measure
             ),
             StoryPage(
                 id: "prep-thermometer",
@@ -298,7 +304,8 @@ enum StoryLibrary {
                 reveal: "Here's the answer: a thermometer checks how warm your body is. Let's talk about it together.",
                 symbol: "thermometer.medium",
                 tryTitle: "Wait for the beep",
-                tryDetail: "Still for a second. Beep. Done. The number tells helpers how your body is doing today."
+                tryDetail: "Still for a second. Beep. Done. The number tells helpers how your body is doing today.",
+                gear: .thermometer
             ),
             StoryPage(
                 id: "prep-stethoscope",
@@ -316,7 +323,8 @@ enum StoryLibrary {
                 reveal: "Here's the answer: a stethoscope listens to your heart and breathing. Let's talk about it together.",
                 symbol: "stethoscope",
                 tryTitle: "Listen for the drum",
-                tryDetail: "Thump-thump. That is a heart saying hello. Cool metal warms up quickly."
+                tryDetail: "Thump-thump. That is a heart saying hello. Cool metal warms up quickly.",
+                gear: .stethoscope
             ),
             StoryPage(
                 id: "prep-cuff",
@@ -334,7 +342,8 @@ enum StoryLibrary {
                 reveal: "Here's the answer: the cuff squeezes, then lets go. Let's talk about it together.",
                 symbol: "arrow.left.and.right",
                 tryTitle: "Squeeze, then let go",
-                tryDetail: "Tight for a moment. Then loose. The hug is finished when the cuff relaxes."
+                tryDetail: "Tight for a moment. Then loose. The hug is finished when the cuff relaxes.",
+                gear: .cuff
             ),
             StoryPage(
                 id: "prep-vitals",
@@ -352,7 +361,8 @@ enum StoryLibrary {
                 reveal: "Here's the answer: vitals are checks of how your body is doing. Let's talk about it together.",
                 symbol: "list.clipboard.fill",
                 tryTitle: "Count the checks",
-                tryDetail: "Warmth. Heart. Breathing. Blood pressure. Four hellos. Then the helper writes them down."
+                tryDetail: "Warmth. Heart. Breathing. Blood pressure. Four hellos. Then the helper writes them down.",
+                gear: .vitals
             ),
             StoryPage(
                 id: "prep-iv",
@@ -370,7 +380,8 @@ enum StoryLibrary {
                 reveal: "Here's the answer: the pinch is quick, and a helper takes the IV out later. Let's talk about it together.",
                 symbol: "bag.fill",
                 tryTitle: "Watch the bag",
-                tryDetail: "The bag hangs up high. Drip, drip. The pole rolls with you. The straw stays until a helper says it is done."
+                tryDetail: "The bag hangs up high. Drip, drip. The pole rolls with you. The straw stays until a helper says it is done.",
+                gear: .iv
             ),
             StoryPage(
                 id: "prep-mask",
@@ -388,7 +399,8 @@ enum StoryLibrary {
                 reveal: "Here's the answer: the sleepy air helps your body rest during the operation, and you wake up afterward. Let's talk about it together.",
                 symbol: "facemask.fill",
                 tryTitle: "Fog the window",
-                tryDetail: "Slow breath in. Slow breath out, like fog on a window. A hand can stay in yours the whole time."
+                tryDetail: "Slow breath in. Slow breath out, like fog on a window. A hand can stay in yours the whole time.",
+                gear: .mask
             ),
             StoryPage(
                 id: "prep-ready",
@@ -406,7 +418,8 @@ enum StoryLibrary {
                 reveal: "Here's the answer: ask what it is, and you can hold a hand. Let's talk about it together.",
                 symbol: "hands.and.sparkles.fill",
                 tryTitle: "Practice the question",
-                tryDetail: "Try saying, “What is that?” and “Can I hold your hand?” Both questions are welcome."
+                tryDetail: "Try saying, “What is that?” and “Can I hold your hand?” Both questions are welcome.",
+                gear: .ask
             )
         ]
     }
@@ -514,7 +527,7 @@ struct QuestHomeView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .background(Theme.bg)
+        .kidCanvas()
         .safeAreaInset(edge: .bottom, spacing: 0) {
             childTabBar
         }
@@ -644,7 +657,7 @@ struct QuestHubView: View {
                 phoneHub
             }
         }
-        .background(Theme.bg)
+        .kidCanvas()
     }
 
     private var phoneHub: some View {
@@ -826,6 +839,7 @@ struct QuestHubView: View {
 
 private enum StoryPhase {
     case reading
+    case trying
     case question
     case tryAgain
     case correct
@@ -835,6 +849,7 @@ private enum StoryPhase {
     var savedName: String {
         switch self {
         case .reading: "reading"
+        case .trying: "trying"
         case .question: "question"
         case .tryAgain: "tryAgain"
         case .correct: "correct"
@@ -846,6 +861,7 @@ private enum StoryPhase {
     init?(savedName: String) {
         switch savedName {
         case "reading": self = .reading
+        case "trying": self = .trying
         case "question": self = .question
         case "tryAgain": self = .tryAgain
         case "correct": self = .correct
@@ -959,7 +975,7 @@ struct StoryGameView: View {
             }
             pageControls
         }
-        .background(Theme.bg)
+        .kidCanvas()
         .onAppear {
             startIfNeeded()
             scheduleSpeech()
@@ -1211,15 +1227,17 @@ struct StoryGameView: View {
     private var forwardTitle: String {
         switch phase {
         case .reading:
-            store.isStoryCleared(page.id) ? "Next" : "Check"
+            return store.isStoryCleared(page.id) ? "Next" : "Check"
         case .tryAgain:
-            "Look again"
+            return "Look again"
         case .question:
-            "Check"
+            return "Check"
         case .correct, .revealed:
-            index + 1 < pages.count ? "Next" : "Finish"
+            return index + 1 < pages.count ? "Next" : "Finish"
         case .done:
-            "Done"
+            return "Done"
+        case .trying:
+            return "Check"
         }
     }
 
@@ -1242,6 +1260,9 @@ struct StoryGameView: View {
                     speaking: speaker.isSpeaking,
                     speechMark: speaker.speechMark
                 )
+                if !store.parentInstructions.isEmpty {
+                    TranscriptGroundingNote(compact: true)
+                }
                 Text("You finished \(store.companionName)'s story")
                     .font(jakarta(26, .extraBold))
                     .foregroundStyle(Theme.teal)
@@ -1336,7 +1357,7 @@ struct StoryGameView: View {
         let line = phase == .done
             ? "You finished the story. I am so proud of you."
             : StoryVoice.script(page: page, phase: phase, index: index, bear: store.companionName)
-        speaker.speak(line, force: force)
+        speaker.speak(line, ageYears: store.childAgeYears, force: force)
     }
 
     private func goHome() {
@@ -1362,6 +1383,8 @@ struct StoryGameView: View {
             phase = .reading
             index = pages.count - 1
             selectedID = nil
+        case .trying:
+            break
         }
     }
 
@@ -1381,6 +1404,8 @@ struct StoryGameView: View {
         case .correct, .revealed:
             advancePage()
         case .question, .done:
+            break
+        case .trying:
             break
         }
     }
@@ -1430,6 +1455,8 @@ struct PracticeStoryView: View {
     @State private var phase: StoryPhase = .reading
     @State private var localMisses: [String: Int] = [:]
     @State private var selectedID: String?
+    @State private var triedPages: Set<String> = []
+    @State private var gearMiss = false
     @State private var didStart = false
     @State private var speaker = StorySpeaker()
     @State private var speakTask: Task<Void, Never>?
@@ -1456,7 +1483,7 @@ struct PracticeStoryView: View {
                 pageControls
             }
         }
-        .background(Theme.bg)
+        .kidCanvas()
         .onAppear {
             startIfNeeded()
             scheduleSpeech()
@@ -1511,19 +1538,31 @@ struct PracticeStoryView: View {
     private func storyScroll(_ page: StoryPage) -> some View {
         StoryBookStage { stage in
             let badge = max(stage - 6, 120)
-            BearBadge(
-                size: badge,
-                speaking: speaker.isSpeaking,
-                speechMark: speaker.speechMark
-            )
+            let tried = triedPages.contains(page.id)
+            ZStack {
+                BearBadge(
+                    size: badge,
+                    speaking: speaker.isSpeaking,
+                    speechMark: speaker.speechMark
+                )
+                if let gear = page.gear, phase == .trying || tried {
+                    EquipmentStage(
+                        gear: gear,
+                        size: badge,
+                        applied: tried
+                    )
+                }
+            }
             .overlay(alignment: .bottomTrailing) {
-                Image(systemName: page.symbol)
-                    .font(.system(size: badge * 0.09, weight: .bold))
-                    .foregroundStyle(Theme.teal)
-                    .frame(width: badge * 0.18, height: badge * 0.18)
-                    .background(Theme.tealSoft, in: Circle())
-                    .overlay(Circle().stroke(Color.white, lineWidth: 2))
-                    .accessibilityHidden(true)
+                if page.gear == nil || phase != .trying {
+                    Image(systemName: page.symbol)
+                        .font(.system(size: badge * 0.09, weight: .bold))
+                        .foregroundStyle(Theme.teal)
+                        .frame(width: badge * 0.18, height: badge * 0.18)
+                        .background(Theme.tealSoft, in: Circle())
+                        .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                        .accessibilityHidden(true)
+                }
             }
             .accessibilityLabel(page.title)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -1575,6 +1614,22 @@ struct PracticeStoryView: View {
                     )
                     if phase == .tryAgain {
                         feedback(StoryLibrary.firstMiss, tone: .retry)
+                    }
+                } else if phase == .trying, let gear = page.gear {
+                    let tried = triedPages.contains(page.id)
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(gear.needQuestion(bear: store.companionName))
+                            .font(jakarta(32, .extraBold))
+                            .foregroundStyle(Theme.text)
+                            .fixedSize(horizontal: false, vertical: true)
+                        ForEach(gear.needChoices) { choice in
+                            gearChoiceButton(choice, tried: tried)
+                        }
+                        if tried {
+                            feedback(gear.doneLine(bear: store.companionName), tone: .good)
+                        } else if gearMiss {
+                            feedback("Not quite. Think about what \(store.companionName) needs.", tone: .retry)
+                        }
                     }
                 } else {
                     VStack(alignment: .leading, spacing: 10) {
@@ -1689,6 +1744,8 @@ struct PracticeStoryView: View {
     private var forwardTitle: String {
         switch phase {
         case .reading:
+            page?.gear == nil ? "Check" : "Choose"
+        case .trying:
             "Check"
         case .tryAgain:
             "Look again"
@@ -1749,7 +1806,15 @@ struct PracticeStoryView: View {
     }
 
     private var canGoForward: Bool {
-        phase != .question
+        switch phase {
+        case .question:
+            return false
+        case .trying:
+            if let page { return triedPages.contains(page.id) }
+            return false
+        default:
+            return true
+        }
     }
 
     private var narrationKey: String {
@@ -1795,11 +1860,68 @@ struct PracticeStoryView: View {
         guard !pages.isEmpty else { return }
         if !force, UIAccessibility.isVoiceOverRunning { return }
         if phase == .done {
-            speaker.speak("\(doneTitle). I am so proud of you.", force: force)
+            speaker.speak("\(doneTitle). I am so proud of you.", ageYears: store.childAgeYears, force: force)
             return
         }
         guard let page else { return }
-        speaker.speak(StoryVoice.script(page: page, phase: phase, index: index, bear: store.companionName), force: force)
+        speaker.speak(StoryVoice.script(page: page, phase: phase, index: index, bear: store.companionName), ageYears: store.childAgeYears, force: force)
+    }
+
+    private func applyGear(_ page: StoryPage) {
+        guard page.gear != nil, !triedPages.contains(page.id) else { return }
+        triedPages.insert(page.id)
+        speaker.stop()
+        speaker.speak(page.gear?.doneLine(bear: store.companionName) ?? "", ageYears: store.childAgeYears)
+    }
+
+    private func chooseGear(_ choice: GearNeedChoice, page: StoryPage) {
+        guard phase == .trying, page.gear != nil, !triedPages.contains(page.id) else { return }
+        selectedID = choice.id
+        if choice.isCorrect {
+            gearMiss = false
+            applyGear(page)
+            return
+        }
+        gearMiss = true
+        speaker.stop()
+        speaker.speak("Not quite. Think about what \(store.companionName) needs.", ageYears: store.childAgeYears)
+    }
+
+    private func gearChoiceButton(_ choice: GearNeedChoice, tried: Bool) -> some View {
+        let showCorrect = tried && choice.isCorrect
+        let selected = selectedID == choice.id
+        return Button {
+            guard let page else { return }
+            chooseGear(choice, page: page)
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: choice.symbol)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(showCorrect ? .white : Theme.teal)
+                    .frame(width: 44, height: 44)
+                    .background(showCorrect ? Theme.teal : Theme.tealSoft, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                Text(choice.label)
+                    .font(jakarta(26, .bold))
+                    .foregroundStyle(Theme.text)
+                    .multilineTextAlignment(.leading)
+                Spacer(minLength: 4)
+                if showCorrect {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(Theme.teal)
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, minHeight: 84, alignment: .leading)
+            .card(
+                fill: showCorrect ? Theme.tealSoft : .white,
+                border: showCorrect ? Theme.teal : (selected ? Theme.terra : Theme.border),
+                radius: 18,
+                lineWidth: showCorrect || selected ? 2 : 1
+            )
+        }
+        .buttonStyle(KidButtonStyle())
+        .disabled(tried)
+        .accessibilityLabel(choice.label)
     }
 
     private func leave() {
@@ -1812,9 +1934,10 @@ struct PracticeStoryView: View {
     private func goBack() {
         speaker.stop()
         switch phase {
-        case .question, .tryAgain, .correct, .revealed:
+        case .question, .tryAgain, .correct, .revealed, .trying:
             phase = .reading
             selectedID = nil
+            gearMiss = false
         case .reading:
             guard index > 0 else { return }
             index -= 1
@@ -1833,6 +1956,17 @@ struct PracticeStoryView: View {
         guard pages.indices.contains(index) else { return }
         switch phase {
         case .reading:
+            if pages[index].gear != nil, !triedPages.contains(pages[index].id) {
+                gearMiss = false
+                selectedID = nil
+                phase = .trying
+            } else {
+                phase = .question
+                selectedID = nil
+            }
+        case .trying:
+            guard triedPages.contains(pages[index].id) else { return }
+            gearMiss = false
             phase = .question
             selectedID = nil
         case .tryAgain:
@@ -1851,6 +1985,8 @@ struct PracticeStoryView: View {
         index = 0
         phase = .reading
         selectedID = nil
+        gearMiss = false
+        triedPages = []
     }
 
     private func advance() {
@@ -1891,7 +2027,7 @@ struct RememberGameView: View {
     @Environment(CareStore.self) private var store
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var index = 0
-    @State private var message = "Tap the care step Kare means."
+    @State private var message = "Tap the care step the bear means."
     @State private var solved: Set<String> = []
 
     var body: some View {
@@ -1930,7 +2066,7 @@ struct RememberGameView: View {
                 }
             }
         }
-        .background(Theme.bg)
+        .kidCanvas()
     }
 
     private var rememberWords: some View {
@@ -2004,22 +2140,26 @@ private enum StoryVoice {
     static func script(page: StoryPage, phase: StoryPhase, index: Int, bear: String) -> String {
         switch phase {
         case .reading:
-            "\(page.speech) \(cheers[index % cheers.count])"
+            return "\(page.speech) \(cheers[index % cheers.count])"
+        case .trying:
+            if let gear = page.gear {
+                return "\(gear.needQuestion(bear: bear)) Is it \(choiceList(gear.needChoices.map(\.label)))?"
+            }
+            return page.speech
         case .tryAgain:
-            "\(StoryLibrary.firstMiss) \(page.speech)"
+            return "\(StoryLibrary.firstMiss) \(page.speech)"
         case .question:
-            "\(page.question) Is it \(choiceList(page.choices))? You can do this."
+            return "\(page.question) Is it \(choiceList(page.choices.map(\.label)))? You can do this."
         case .correct:
-            StoryLibrary.correctFeedback(bear: bear)
+            return StoryLibrary.correctFeedback(bear: bear)
         case .revealed:
-            "\(page.reveal) I am still proud of you."
+            return "\(page.reveal) I am still proud of you."
         case .done:
-            "You finished the story. I am so proud of you."
+            return "You finished the story. I am so proud of you."
         }
     }
 
-    private static func choiceList(_ choices: [StoryChoice]) -> String {
-        let labels = choices.map(\.label)
+    private static func choiceList(_ labels: [String]) -> String {
         switch labels.count {
         case 0:
             return "the choice you remember"
@@ -2029,6 +2169,71 @@ private enum StoryVoice {
             return "\(labels[0]), or \(labels[1])"
         default:
             return "\(labels.dropLast().joined(separator: ", ")), or \(labels[labels.count - 1])"
+        }
+    }
+}
+
+private enum VoiceBand {
+    case little
+    case middle
+    case older
+
+    init(ageYears: Int) {
+        switch ageYears {
+        case ...6: self = .little
+        case 7...9: self = .middle
+        default: self = .older
+        }
+    }
+
+    var azureVoice: String {
+        switch self {
+        case .little, .middle: "en-US-JennyNeural"
+        case .older: "en-US-AriaNeural"
+        }
+    }
+
+    var azureStyle: String {
+        self == .older ? "friendly" : "cheerful"
+    }
+
+    var styleDegree: String {
+        switch self {
+        case .little: "2"
+        case .middle: "1.8"
+        case .older: "1.2"
+        }
+    }
+
+    var azureRate: String {
+        switch self {
+        case .little: "0.92"
+        case .middle: "1.02"
+        case .older: "0.98"
+        }
+    }
+
+    var azurePitch: String {
+        switch self {
+        case .little: "+16%"
+        case .middle: "+8%"
+        case .older: "+2%"
+        }
+    }
+
+    var localPitch: Float {
+        switch self {
+        case .little: 1.18
+        case .middle: 1.08
+        case .older: 1.02
+        }
+    }
+
+    var localRate: Float {
+        switch self {
+        case .little: AVSpeechUtteranceDefaultSpeechRate * 0.92
+        case .middle: AVSpeechUtteranceDefaultSpeechRate * 1.05
+        case .older: AVSpeechUtteranceDefaultSpeechRate * 0.98
         }
     }
 }
@@ -2056,7 +2261,7 @@ private final class StorySpeaker: NSObject, AVSpeechSynthesizerDelegate, AVAudio
         synth.delegate = self
     }
 
-    func speak(_ text: String, force: Bool = false) {
+    func speak(_ text: String, ageYears: Int = 7, force: Bool = false) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         prepareAudio()
@@ -2065,9 +2270,10 @@ private final class StorySpeaker: NSObject, AVSpeechSynthesizerDelegate, AVAudio
         haltAudio()
         isSpeaking = true
         speechMark = Date().timeIntervalSinceReferenceDate
+        let band = VoiceBand(ageYears: ageYears)
         Task { @MainActor in
             do {
-                let data = try await azureAudio(for: trimmed)
+                let data = try await azureAudio(for: trimmed, band: band)
                 guard requestID == id else { return }
                 let player = try AVAudioPlayer(data: data)
                 player.delegate = self
@@ -2078,7 +2284,7 @@ private final class StorySpeaker: NSObject, AVSpeechSynthesizerDelegate, AVAudio
                 startMouthTicks()
             } catch {
                 guard requestID == id else { return }
-                speakLocally(trimmed)
+                speakLocally(trimmed, band: band)
             }
         }
         _ = force
@@ -2121,11 +2327,11 @@ private final class StorySpeaker: NSObject, AVSpeechSynthesizerDelegate, AVAudio
         }
     }
 
-    private func speakLocally(_ text: String) {
+    private func speakLocally(_ text: String, band: VoiceBand) {
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = voice ?? AVSpeechSynthesisVoice(language: "en-US")
-        utterance.rate = rate
-        utterance.pitchMultiplier = pitch
+        utterance.rate = band.localRate
+        utterance.pitchMultiplier = band.localPitch
         utterance.prefersAssistiveTechnologySettings = false
         utterance.volume = 1
         utterance.preUtteranceDelay = 0.05
@@ -2154,28 +2360,28 @@ private final class StorySpeaker: NSObject, AVSpeechSynthesizerDelegate, AVAudio
         }
     }
 
-    private func azureAudio(for text: String) async throws -> Data {
+    private func azureAudio(for text: String, band: VoiceBand) async throws -> Data {
         let escaped = text
             .replacingOccurrences(of: "&", with: "&amp;")
             .replacingOccurrences(of: "<", with: "&lt;")
             .replacingOccurrences(of: ">", with: "&gt;")
-        let cartoon = speechSSML(escaped, style: "cheerful")
+        let cartoon = speechSSML(escaped, band: band, styled: true)
         if let data = try? await requestSpeech(cartoon), !data.isEmpty {
             return data
         }
-        return try await requestSpeech(speechSSML(escaped, style: nil))
+        return try await requestSpeech(speechSSML(escaped, band: band, styled: false))
     }
 
-    /// Jenny in a cheerful style is a bright cartoon character.
-    private func speechSSML(_ text: String, style: String?) -> String {
+    /// Age band changes pitch, pace, and Azure voice so younger kids hear a gentler bear.
+    private func speechSSML(_ text: String, band: VoiceBand, styled: Bool) -> String {
         let spoken: String
-        if let style {
-            spoken = "<mstts:express-as style='\(style)' styledegree='1.8'><prosody rate='1.02' pitch='+8%'>\(text)</prosody></mstts:express-as>"
+        if styled {
+            spoken = "<mstts:express-as style='\(band.azureStyle)' styledegree='\(band.styleDegree)'><prosody rate='\(band.azureRate)' pitch='\(band.azurePitch)'>\(text)</prosody></mstts:express-as>"
         } else {
-            spoken = "<prosody rate='1.02' pitch='+8%'>\(text)</prosody>"
+            spoken = "<prosody rate='\(band.azureRate)' pitch='\(band.azurePitch)'>\(text)</prosody>"
         }
         return """
-        <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='https://www.w3.org/2001/mstts' xml:lang='en-US'><voice name='en-US-JennyNeural'>\(spoken)</voice></speak>
+        <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='https://www.w3.org/2001/mstts' xml:lang='en-US'><voice name='\(band.azureVoice)'>\(spoken)</voice></speak>
         """
     }
 
