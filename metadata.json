@@ -1,0 +1,10 @@
+{
+  "name": "KareBEAR",
+  "description": "Gentle surgery preparation, recovery care schedule, parent audio instruction extractor, and interactive companion quests for children and caregivers.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
