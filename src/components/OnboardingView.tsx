@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useCareStore } from '../context/CareStoreContext.tsx';
-import { TUTORIAL_STORY_PAGE, substituteCompanionName } from '../utils/careStoreLogic.ts';
+import { TUTORIAL_STORY_PAGE, substituteCompanionName, adaptStoryPageForAge } from '../utils/careStoreLogic.ts';
 import { BearBadge } from './BearArt.tsx';
 import { PracticeStoryView } from './ChildViews.tsx';
 import { ArrowRight, ArrowLeft, CheckCircle2, Heart } from 'lucide-react';
@@ -33,7 +33,7 @@ export const OnboardingView: React.FC = () => {
   };
 
   if (step === 'practice') {
-    const tutorialPage = substituteCompanionName(TUTORIAL_STORY_PAGE, store.companionName);
+    const tutorialPage = adaptStoryPageForAge(substituteCompanionName(TUTORIAL_STORY_PAGE, store.companionName), age);
     return (
       <PracticeStoryView
         pages={[tutorialPage]}
@@ -250,7 +250,7 @@ export const OnboardingView: React.FC = () => {
               >
                 <p className="text-base font-extrabold text-[#0E5A54]">Pre-op</p>
                 <p className="text-xs font-medium text-[#556B68] mt-1">
-                  Before the operation: meet scrubs, vitals, the cuff, the IV pole, and the sleepy-air mask.
+                  Before the operation: meet scrubs, vitals, the cuff, the IV pole, and the anaesthesia mask.
                 </p>
               </button>
 

@@ -251,13 +251,13 @@ export const CareStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   );
 
   const storyPages = useMemo(
-    () => buildStoryPagesForInstructions(parentInstructions, companionName),
-    [parentInstructions, companionName]
+    () => buildStoryPagesForInstructions(parentInstructions, companionName, childAge),
+    [parentInstructions, companionName, childAge]
   );
 
   const prepPages = useMemo(
-    () => buildPrepPages(childName, companionName),
-    [childName, companionName]
+    () => buildPrepPages(childName, companionName, childAge),
+    [childName, companionName, childAge]
   );
 
   const storyFinished = useMemo(

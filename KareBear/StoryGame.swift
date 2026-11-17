@@ -39,6 +39,7 @@ struct StoryPage: Identifiable {
     var tryTitle: String? = nil
     var tryDetail: String? = nil
     var gear: StoryGear? = nil
+    var isTalkActivity: Bool = false
 
     func speaking(as name: String) -> StoryPage {
         let bear = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -48,68 +49,74 @@ struct StoryPage: Identifiable {
         }
         return StoryPage(
             id: id,
-            title: swap(title),
+            title: isTalkActivity ? title : swap(title),
             expression: expression,
             scene: swap(scene),
-            speech: swap(speech),
-            more: swap(more),
-            question: swap(question),
+            speech: isTalkActivity ? speech : swap(speech),
+            more: isTalkActivity ? more : swap(more),
+            question: isTalkActivity ? question : swap(question),
             choices: choices.map {
                 StoryChoice(id: $0.id, label: swap($0.label), isCorrect: $0.isCorrect, symbol: $0.symbol)
             },
-            reveal: swap(reveal),
+            reveal: isTalkActivity ? reveal : swap(reveal),
             symbol: symbol,
             tryTitle: tryTitle.map(swap),
             tryDetail: tryDetail.map(swap),
-            gear: gear
+            gear: gear,
+            isTalkActivity: isTalkActivity
+        )
+    }
+
+    /// Keep the choices steady during a page, with less reading for ages five and six.
+    func adapted(for ageYears: Int) -> StoryPage {
+        guard let correct = choices.first(where: \.isCorrect) else { return self }
+        let seed = id.unicodeScalars.reduce(0) { $0 + Int($1.value) }
+        let alternatives = choices.filter { !$0.isCorrect }
+        var displayed = choices
+        if ageYears <= 6, !alternatives.isEmpty {
+            displayed = [correct, alternatives[seed % alternatives.count]]
+        }
+        let offset = seed % displayed.count
+        displayed = Array(displayed[offset...]) + Array(displayed[..<offset])
+        return StoryPage(
+            id: id, title: title, expression: expression, scene: scene,
+            speech: speech, more: more, question: question, choices: displayed,
+            reveal: reveal, symbol: symbol, tryTitle: tryTitle, tryDetail: tryDetail,
+            gear: gear, isTalkActivity: isTalkActivity
         )
     }
 }
 
 enum StoryLibrary {
-    static func correctFeedback(bear: String) -> String {
-        "Yes! You remembered. \(bear) is proud of you."
-    }
-    static let firstMiss = "Not quite, and that's OK! Let's look at that part again."
+    static let firstMiss = "Let's find a clue together. Read or listen, then try another answer."
 
     static func pages(for notes: [ParentInstruction], childName: String) -> [StoryPage] {
-        let name = childName.isEmpty ? "you" : childName
         guard !notes.isEmpty else {
-            return [
-                StoryPage(
-                    id: "welcome",
-                    title: "Waiting for care steps",
-                    expression: "Calm",
-                    scene: "Kare is ready to learn.",
-                    speech: "Hi, I'm Kare. A grown-up can add \(name)'s care steps. Then I will teach them, one page at a time.",
-                    more: "Until those steps are here, tell a grown-up if something feels wrong.",
-                    question: "Who adds the care steps?",
-                    choices: [
-                        StoryChoice(id: "welcome-child", label: "A child, all alone", isCorrect: false, symbol: "person.fill"),
-                        StoryChoice(id: "welcome-adult", label: "A grown-up", isCorrect: true, symbol: "heart.fill"),
-                        StoryChoice(id: "welcome-skip", label: "Nobody", isCorrect: false, symbol: "nosign")
-                    ],
-                    reveal: "Here's the answer: a grown-up adds the care steps. Let's talk about it together."
-                )
-            ]
+            return [StoryPage(
+                id: "welcome",
+                title: "Let’s get ready together",
+                expression: "Gentle",
+                scene: "Kare sits with a notebook.",
+                speech: "Your grown-up can add the steps from your care team. Then we can practise them together.",
+                more: "If something hurts or feels wrong, tell a grown-up.",
+                question: "What would you like to ask your grown-up about your care?",
+                choices: [],
+                reveal: "Your grown-up can help you get started with your care steps.",
+                isTalkActivity: true
+            )]
         }
         return notes.map { note in
-            let correct = StoryChoice(id: "\(note.id.uuidString)-yes", label: note.title, isCorrect: true, symbol: "heart.fill")
-            let skip = StoryChoice(id: "\(note.id.uuidString)-skip", label: "Skip this step", isCorrect: false, symbol: "forward.fill")
-            let alone = StoryChoice(id: "\(note.id.uuidString)-alone", label: "Do it without a grown-up", isCorrect: false, symbol: "person.fill")
-            let choices = note.id.uuidString.first?.isNumber == true
-                ? [correct, skip, alone]
-                : [skip, correct, alone]
-            return StoryPage(
+            StoryPage(
                 id: note.id.uuidString,
                 title: note.title,
                 expression: "Encouraging",
-                scene: "Kare is learning \(name)'s care.",
-                speech: "A grown-up said: \(note.detail). I need help remembering this step.",
-                more: note.detail,
-                question: "Which care step did the grown-up write?",
-                choices: choices,
-                reveal: "Here's the answer: \(note.title). \(note.detail)"
+                scene: "A care step to practise with your grown-up.",
+                speech: "Your grown-up’s care step: \(note.detail)",
+                more: "Read or listen together. Your grown-up can explain any new words.",
+                question: "Show or tell your grown-up: how will you do this step together?",
+                choices: [],
+                reveal: "Keep this step handy: \(note.detail)",
+                isTalkActivity: true
             )
         }
     }
@@ -117,95 +124,95 @@ enum StoryLibrary {
     static let pages: [StoryPage] = [
         StoryPage(
             id: "rest",
-            title: "Resting after surgery",
-            expression: "Calm",
-            scene: "Kare is home, with a grown-up close by.",
-            speech: "Hi, I'm Kare. My throat is sore after surgery. It's OK to feel tired. I stay quiet, and a grown-up stays with me.",
-            more: "Rest does not have to be perfect. Holding a grown-up's hand is enough.",
-            question: "Kare wants to yell and run around. What should Kare do?",
+            title: "A quiet afternoon",
+            expression: "Encouraging",
+            scene: "Kare picks something to do while resting.",
+            speech: "My grown-up says it is time to rest. I can still have fun with a book or a drawing.",
+            more: "Your grown-up can help you choose an activity that fits your care plan.",
+            question: "It is rest time. What could Kare choose?",
             choices: [
-                StoryChoice(id: "rest-run", label: "Yell and race around", isCorrect: false, symbol: "figure.run"),
-                StoryChoice(id: "rest-stay", label: "Rest with a grown-up", isCorrect: true, symbol: "moon.fill"),
-                StoryChoice(id: "rest-hide", label: "Hide that it hurts", isCorrect: false, symbol: "eye.slash")
+                StoryChoice(id: "rest-run", label: "A game of tag", isCorrect: false, symbol: "figure.run"),
+                StoryChoice(id: "rest-quiet", label: "Drawing on the sofa", isCorrect: true, symbol: "pencil"),
+                StoryChoice(id: "rest-shout", label: "A jumping game", isCorrect: false, symbol: "figure.play")
             ],
-            reveal: "Here's the answer: rest with a grown-up. Let's talk about it together."
+            reveal: "Drawing lets Kare play while resting. A book or a quiet game could work too."
         ),
         StoryPage(
             id: "medicine",
-            title: "Medicine time",
+            title: "A medicine question",
             expression: "Encouraging",
-            scene: "A grown-up holds the oral syringe.",
-            speech: "When it's medicine time, a grown-up measures my dose. I swallow it. I don't measure it by myself.",
-            more: "The syringe shows the amount. The schedule says when the next dose is due.",
-            question: "Who should measure Kare's medicine?",
+            scene: "Kare checks with a grown-up.",
+            speech: "My grown-up checks the medicine and measures it for me. If I have a question, I can ask.",
+            more: "Your grown-up follows the care team’s instructions for how much medicine to give and when.",
+            question: "Kare wonders if it is medicine time. What comes first?",
             choices: [
-                StoryChoice(id: "med-kare", label: "Kare, all alone", isCorrect: false, symbol: "person.fill"),
-                StoryChoice(id: "med-adult", label: "A grown-up", isCorrect: true, symbol: "stethoscope"),
-                StoryChoice(id: "med-friend", label: "A friend", isCorrect: false, symbol: "person.2.fill")
+                StoryChoice(id: "med-adult", label: "Ask a grown-up to check", isCorrect: true, symbol: "person.fill"),
+                StoryChoice(id: "med-alone", label: "Check the colour of the bottle", isCorrect: false, symbol: "pills.fill"),
+                StoryChoice(id: "med-guess", label: "Try to remember yesterday’s time", isCorrect: false, symbol: "clock")
             ],
-            reveal: "Here's the answer: a grown-up measures the medicine. Let's talk about it together."
+            reveal: "Ask a grown-up to check the plan. The bottle’s colour or a remembered time cannot tell you when to take medicine."
         ),
         StoryPage(
             id: "sips",
-            title: "Small cold sips",
-            expression: "Cheerful",
-            scene: "Kare takes one small sip, then rests.",
-            speech: "Small cold sips feel better than one big gulp. I drink a little water, then I rest my throat.",
-            more: "If the cups stay empty by the afternoon, tell a grown-up.",
-            question: "Which drink is gentler for Kare's throat?",
+            title: "One sip at a time",
+            expression: "Encouraging",
+            scene: "Kare has a cup nearby.",
+            speech: "My care plan says to take small sips of cool water. I can take a little, then pause.",
+            more: "Tell a grown-up if drinking hurts or you cannot drink. They can help.",
+            question: "Kare is practising small sips. Which way matches?",
             choices: [
-                StoryChoice(id: "sip-hot", label: "A big gulp of hot soup", isCorrect: false, symbol: "mug.fill"),
-                StoryChoice(id: "sip-cold", label: "A small sip of cold water", isCorrect: true, symbol: "drop.fill"),
-                StoryChoice(id: "sip-none", label: "No drinks today", isCorrect: false, symbol: "nosign")
+                StoryChoice(id: "sip-hot", label: "Finish the cup in one gulp", isCorrect: false, symbol: "mug.fill"),
+                StoryChoice(id: "sip-cold", label: "Take a little sip, then pause", isCorrect: true, symbol: "drop.fill"),
+                StoryChoice(id: "sip-none", label: "Save all the sips for later", isCorrect: false, symbol: "clock")
             ],
-            reveal: "Here's the answer: a small sip of cold water. Let's talk about it together."
+            reveal: "A little sip and a pause match Kare’s plan. Your grown-up helps you follow your own drinking plan."
         ),
         StoryPage(
             id: "treat",
-            title: "A cold treat",
-            expression: "Cheerful",
-            scene: "A popsicle can soothe a sore throat.",
-            speech: "A popsicle can soothe my throat. Crunchy snacks can wait until a grown-up says they are OK.",
-            more: "Cold and soft is kinder than chips or dry toast right now.",
-            question: "Kare is hungry. Which snack is kinder today?",
+            title: "Snack detective",
+            expression: "Encouraging",
+            scene: "Kare and a grown-up choose a snack.",
+            speech: "My care plan says soft, cool foods today. My grown-up helps me find a snack that fits.",
+            more: "Different children have different food plans. Check yours with a grown-up.",
+            question: "Which snack is soft and cool?",
             choices: [
-                StoryChoice(id: "treat-chips", label: "Crunchy chips", isCorrect: false, symbol: "fork.knife"),
-                StoryChoice(id: "treat-pop", label: "A cold popsicle", isCorrect: true, symbol: "snowflake"),
-                StoryChoice(id: "treat-toast", label: "Dry toast", isCorrect: false, symbol: "birthday.cake")
+                StoryChoice(id: "treat-chips", label: "Crunchy crackers", isCorrect: false, symbol: "fork.knife"),
+                StoryChoice(id: "treat-pop", label: "Smooth, chilled yogurt", isCorrect: true, symbol: "snowflake"),
+                StoryChoice(id: "treat-toast", label: "Warm, crunchy toast", isCorrect: false, symbol: "fork.knife")
             ],
-            reveal: "Here's the answer: a cold popsicle. Let's talk about it together."
+            reveal: "Smooth, chilled yogurt is soft and cool. A grown-up checks whether it fits your food plan."
         ),
         StoryPage(
             id: "speak",
-            title: "Tell a grown-up",
-            expression: "Serious",
-            scene: "Kare speaks up when something feels wrong.",
-            speech: "If I cannot drink, or something feels wrong, I tell a grown-up right away. They know who to call.",
-            more: "Speak up right away for bleeding, trouble breathing, or being too sleepy to sip.",
-            question: "Kare cannot sip and feels very sleepy. What should happen?",
+            title: "Say what you feel",
+            expression: "Encouraging",
+            scene: "Kare tells a grown-up what is happening.",
+            speech: "If something hurts or feels wrong, I tell my grown-up. I do not need special words.",
+            more: "If you cannot drink, have bleeding, or have trouble breathing, tell a grown-up right away.",
+            question: "Drinking hurts. What could Kare say to get help?",
             choices: [
-                StoryChoice(id: "help-wait", label: "Wait until tomorrow", isCorrect: false, symbol: "clock"),
-                StoryChoice(id: "help-tell", label: "Tell a grown-up right away", isCorrect: true, symbol: "phone.fill"),
-                StoryChoice(id: "help-extra", label: "Take extra medicine alone", isCorrect: false, symbol: "pills.fill")
+                StoryChoice(id: "help-wait", label: "“Can we read a book?”", isCorrect: false, symbol: "book.fill"),
+                StoryChoice(id: "help-tell", label: "“It hurts when I swallow.”", isCorrect: true, symbol: "bubble.left.fill"),
+                StoryChoice(id: "help-extra", label: "“What time is it?”", isCorrect: false, symbol: "clock")
             ],
-            reveal: "Here's the answer: tell a grown-up right away. Let's talk about it together."
+            reveal: "“It hurts when I swallow” tells a grown-up what is wrong. You can point to where it hurts too."
         )
     ]
 
     static let tutorialPage = StoryPage(
         id: "tour-practice",
-        title: "How a page works",
+        title: "Let’s try one",
         expression: "Encouraging",
-        scene: "Kare is practicing with you.",
-        speech: "Read what I say, then answer the question. A first miss means look again. A second miss shows the answer so you can talk with a grown-up.",
-        more: "Story answers do not add stars. Finished to-dos add stars.",
-        question: "Who helps with a care step?",
+        scene: "Kare is choosing a quiet activity.",
+        speech: "Let’s help me choose. You can tap Listen to hear the words. We can work it out together.",
+        more: "There is no hurry. You can look at the story again whenever you want.",
+        question: "Kare wants a quiet game. Which one fits?",
         choices: [
-            StoryChoice(id: "tour-alone", label: "The child, all alone", isCorrect: false, symbol: "person.fill"),
-            StoryChoice(id: "tour-adult", label: "A grown-up", isCorrect: true, symbol: "heart.fill"),
-            StoryChoice(id: "tour-none", label: "Nobody", isCorrect: false, symbol: "nosign")
+            StoryChoice(id: "tour-alone", label: "Playing drums", isCorrect: false, symbol: "speaker.wave.3.fill"),
+            StoryChoice(id: "tour-adult", label: "Making a puzzle", isCorrect: true, symbol: "puzzlepiece.fill"),
+            StoryChoice(id: "tour-none", label: "A running race", isCorrect: false, symbol: "figure.run")
         ],
-        reveal: "Here's the answer: a grown-up helps with a care step. Let's talk about it together."
+        reveal: "A puzzle is a quiet way to play. You helped Kare choose!"
     )
 
     static func prepPages(childName: String) -> [StoryPage] {
@@ -215,210 +222,210 @@ enum StoryLibrary {
             StoryPage(
                 id: "prep-welcome",
                 title: "A tour with Kare",
-                expression: "Calm",
-                scene: "Kare waves in a quiet room.",
-                speech: "\(hello) Before an operation, you may see new clothes, soft beeps, and helpers. We can meet them one at a time. A grown-up stays with you.",
-                more: "Wiggly, shy, and brave can all be true at once. You can hold a hand.",
-                question: "Who can stay with you on this tour?",
+                expression: "Encouraging",
+                scene: "Kare explores the hospital with you.",
+                speech: "\(hello) Before an operation, you may meet new people and see new things. Let’s find out about them together.",
+                more: "It is OK to feel curious, worried, or both. You can tell a grown-up how you feel.",
+                question: "Kare feels worried. What could Kare say?",
                 choices: [
-                    StoryChoice(id: "prep-welcome-alone", label: "You have to go alone", isCorrect: false, symbol: "person.fill"),
-                    StoryChoice(id: "prep-welcome-adult", label: "A grown-up", isCorrect: true, symbol: "heart.fill"),
-                    StoryChoice(id: "prep-welcome-none", label: "Nobody you know", isCorrect: false, symbol: "nosign")
+                    StoryChoice(id: "prep-welcome-alone", label: "“Where is my coat?”", isCorrect: false, symbol: "tshirt.fill"),
+                    StoryChoice(id: "prep-welcome-adult", label: "“I feel worried. Can you help?”", isCorrect: true, symbol: "bubble.left.fill"),
+                    StoryChoice(id: "prep-welcome-none", label: "“What time is lunch?”", isCorrect: false, symbol: "clock")
                 ],
-                reveal: "Here's the answer: a grown-up stays with you. Let's talk about it together.",
+                reveal: "Saying “I feel worried” helps your grown-up understand. You can ask for a hand to hold.",
                 symbol: "heart.fill",
                 tryTitle: "Breathe with Kare",
-                tryDetail: "Breathe in as the circle grows. Breathe out as it rests. You can do this whenever something feels new.",
+                tryDetail: "Try one slow breath in and one slow breath out. You can stop whenever you want.",
                 gear: .breath
             ),
             StoryPage(
                 id: "prep-scrubs",
-                title: "Helpers in scrubs",
+                title: "Meet a helper",
                 expression: "Encouraging",
-                scene: "Kare sees helpers in matching clothes.",
-                speech: "Hospital helpers wear scrubs. Scrubs are clean, comfy clothes for taking care of people. A name badge tells you who they are. You can ask, “What is your job?”",
-                more: "Nurses, doctors, and other helpers may all wear scrubs. The color helps you see who works here.",
-                question: "What are scrubs?",
+                scene: "Kare meets someone wearing scrubs.",
+                speech: "Scrubs are the clothes many hospital helpers wear. Their name badge can tell you who they are.",
+                more: "You can ask, “What is your name? What do you do?”",
+                question: "Where could Kare look for a helper’s name?",
                 choices: [
-                    StoryChoice(id: "prep-scrubs-scary", label: "Clothes that mean someone is mean", isCorrect: false, symbol: "exclamationmark.triangle"),
-                    StoryChoice(id: "prep-scrubs-clothes", label: "Clean clothes helpers wear", isCorrect: true, symbol: "tshirt.fill"),
-                    StoryChoice(id: "prep-scrubs-sleep", label: "Pajamas you must sleep in", isCorrect: false, symbol: "moon.fill")
+                    StoryChoice(id: "prep-scrubs-scary", label: "On their shoes", isCorrect: false, symbol: "shoe.fill"),
+                    StoryChoice(id: "prep-scrubs-clothes", label: "On their name badge", isCorrect: true, symbol: "person.crop.rectangle"),
+                    StoryChoice(id: "prep-scrubs-sleep", label: "On their bag", isCorrect: false, symbol: "bag.fill")
                 ],
-                reveal: "Here's the answer: scrubs are clean clothes helpers wear. Let's talk about it together.",
+                reveal: "A name badge helps you find out who someone is. You can ask them to read it to you.",
                 symbol: "person.2.fill",
-                tryTitle: "Find the helper",
-                tryDetail: "Look for a person, a name badge, and scrubs. That person is here to help.",
+                tryTitle: "Say hello",
+                tryDetail: "Try asking your grown-up, “What is your name?” Then tell them yours.",
                 gear: .helper
             ),
             StoryPage(
                 id: "prep-gown",
-                title: "The hospital gown",
-                expression: "Calm",
-                scene: "Kare changes with a grown-up nearby.",
-                speech: "You change into a gown. It is a loose shirt that opens in the back so helpers can take care of you. Your clothes wait in a bag. A grown-up can help you change.",
-                more: "The open back is for care. You can ask for another gown if you want a second layer.",
-                question: "Why do kids change into a gown?",
+                title: "Your hospital clothes",
+                expression: "Encouraging",
+                scene: "Kare gets a gown and a clothes bag.",
+                speech: "A hospital gown is a loose piece of clothing. It helps the care team check your body. Your own clothes wait in a bag.",
+                more: "You can ask for help changing, or tell someone if you feel cold.",
+                question: "Where do Kare’s own clothes wait during the operation?",
                 choices: [
-                    StoryChoice(id: "prep-gown-trouble", label: "Because they are in trouble", isCorrect: false, symbol: "exclamationmark"),
-                    StoryChoice(id: "prep-gown-care", label: "So helpers can take care of them", isCorrect: true, symbol: "hands.and.sparkles.fill"),
-                    StoryChoice(id: "prep-gown-wrong", label: "Because their clothes are bad", isCorrect: false, symbol: "tshirt")
+                    StoryChoice(id: "prep-gown-trouble", label: "On the weighing scale", isCorrect: false, symbol: "scalemass.fill"),
+                    StoryChoice(id: "prep-gown-care", label: "In a bag with Kare’s name", isCorrect: true, symbol: "bag.fill"),
+                    StoryChoice(id: "prep-gown-wrong", label: "On the food tray", isCorrect: false, symbol: "fork.knife")
                 ],
-                reveal: "Here's the answer: the gown helps helpers take care of you. Let's talk about it together.",
+                reveal: "A bag with your name keeps your clothes together so they are ready when you need them.",
                 symbol: "tshirt.fill",
-                tryTitle: "Pack the clothes",
-                tryDetail: "Your shirt and pants go in a bag with your name. They wait for you. The gown is just for now.",
+                tryTitle: "Pack for later",
+                tryDetail: "Pretend to fold a shirt and put it in a bag. What would help you find your bag again?",
                 gear: .gown
             ),
             StoryPage(
                 id: "prep-measure",
-                title: "Height and weight",
-                expression: "Cheerful",
-                scene: "Kare stands by a ruler and a scale.",
-                speech: "Helpers check how tall you are and how much you weigh. You may stand on a scale and next to a ruler. Shoes sometimes come off. This is not a test. There is no failing.",
-                more: "They learn the size of your body so they can take care of you. Every body is a good body to measure.",
-                question: "Why do helpers check height and weight?",
+                title: "How tall? How much?",
+                expression: "Encouraging",
+                scene: "Kare meets a ruler and a scale.",
+                speech: "A ruler measures how tall I am. A scale checks how much I weigh. These numbers help the team plan my care.",
+                more: "Your grown-up or a helper can show you where to stand.",
+                question: "The helper wants to know how tall Kare is. Which tool helps?",
                 choices: [
-                    StoryChoice(id: "prep-measure-contest", label: "To see who wins a contest", isCorrect: false, symbol: "trophy.fill"),
-                    StoryChoice(id: "prep-measure-size", label: "To learn the size of your body", isCorrect: true, symbol: "ruler.fill"),
-                    StoryChoice(id: "prep-measure-home", label: "To decide if you can leave", isCorrect: false, symbol: "door.left.hand.open")
+                    StoryChoice(id: "prep-measure-contest", label: "A weighing scale", isCorrect: false, symbol: "scalemass.fill"),
+                    StoryChoice(id: "prep-measure-size", label: "A height ruler", isCorrect: true, symbol: "ruler.fill"),
+                    StoryChoice(id: "prep-measure-home", label: "A thermometer", isCorrect: false, symbol: "thermometer.medium")
                 ],
-                reveal: "Here's the answer: height and weight tell helpers the size of your body. Let's talk about it together.",
+                reveal: "A height ruler measures how tall you are. A scale measures weight, and a thermometer checks temperature.",
                 symbol: "ruler.fill",
-                tryTitle: "Stand tall with Kare",
-                tryDetail: "Feet flat. Shoulders soft. The numbers are about your body today. You cannot get them wrong.",
+                tryTitle: "Stand tall",
+                tryDetail: "Stand with your feet flat and look ahead. Pretend a helper is measuring your height.",
                 gear: .measure
             ),
             StoryPage(
                 id: "prep-thermometer",
-                title: "The thermometer",
+                title: "A temperature check",
                 expression: "Encouraging",
-                scene: "Kare holds still for one beep.",
-                speech: "A thermometer checks how warm your body is. It might touch your forehead, rest under your arm, or sit by your ear. It often beeps when it is done. The beep means finished.",
-                more: "Hold still like a statue for a moment. Then you can wiggle again.",
-                question: "What does a thermometer check?",
+                scene: "Kare meets the thermometer.",
+                speech: "A thermometer checks how warm my body is. A helper may put it near my forehead, ear, or under my arm.",
+                more: "The helper will show you what to do. Some thermometers beep when they finish.",
+                question: "Which tool checks how warm Kare’s body is?",
                 choices: [
-                    StoryChoice(id: "prep-thermo-shout", label: "How loud you can shout", isCorrect: false, symbol: "speaker.wave.3.fill"),
-                    StoryChoice(id: "prep-thermo-warm", label: "How warm your body is", isCorrect: true, symbol: "thermometer.medium"),
-                    StoryChoice(id: "prep-thermo-wrong", label: "Whether you did something wrong", isCorrect: false, symbol: "xmark")
+                    StoryChoice(id: "prep-thermo-shout", label: "A stethoscope", isCorrect: false, symbol: "stethoscope"),
+                    StoryChoice(id: "prep-thermo-warm", label: "A thermometer", isCorrect: true, symbol: "thermometer.medium"),
+                    StoryChoice(id: "prep-thermo-wrong", label: "A weighing scale", isCorrect: false, symbol: "scalemass.fill")
                 ],
-                reveal: "Here's the answer: a thermometer checks how warm your body is. Let's talk about it together.",
+                reveal: "A thermometer checks your temperature. That tells the helper how warm your body is.",
                 symbol: "thermometer.medium",
-                tryTitle: "Wait for the beep",
-                tryDetail: "Still for a second. Beep. Done. The number tells helpers how your body is doing today.",
+                tryTitle: "Be still, then wiggle",
+                tryDetail: "Practise holding still for a moment. When your grown-up says “done,” have a wiggle.",
                 gear: .thermometer
             ),
             StoryPage(
                 id: "prep-stethoscope",
-                title: "The stethoscope",
-                expression: "Cheerful",
-                scene: "Kare hears a soft heartbeat.",
-                speech: "A stethoscope lets a helper hear your heart and your breathing. The round part can feel cool on your skin. It does not pinch. You can ask if you may listen too.",
-                more: "A heart can sound like a soft drum. Breathing can sound like a little wind.",
-                question: "What can a helper hear with a stethoscope?",
+                title: "Listen to a heartbeat",
+                expression: "Encouraging",
+                scene: "Kare meets the stethoscope.",
+                speech: "A stethoscope helps the nurse hear my heart and breathing. Its round end may feel cool on my skin.",
+                more: "You can ask the nurse what they are listening for.",
+                question: "What does a stethoscope help the nurse check?",
                 choices: [
-                    StoryChoice(id: "prep-steth-thoughts", label: "Your thoughts", isCorrect: false, symbol: "brain"),
-                    StoryChoice(id: "prep-steth-heart", label: "Your heart and breathing", isCorrect: true, symbol: "stethoscope"),
-                    StoryChoice(id: "prep-steth-alarm", label: "A secret alarm", isCorrect: false, symbol: "bell.fill")
+                    StoryChoice(id: "prep-steth-thoughts", label: "Body temperature", isCorrect: false, symbol: "thermometer.medium"),
+                    StoryChoice(id: "prep-steth-heart", label: "Heartbeat and breathing", isCorrect: true, symbol: "heart.fill"),
+                    StoryChoice(id: "prep-steth-alarm", label: "Body weight", isCorrect: false, symbol: "scalemass.fill")
                 ],
-                reveal: "Here's the answer: a stethoscope listens to your heart and breathing. Let's talk about it together.",
+                reveal: "A stethoscope carries sounds from inside your body, like your heartbeat and breathing.",
                 symbol: "stethoscope",
-                tryTitle: "Listen for the drum",
-                tryDetail: "Thump-thump. That is a heart saying hello. Cool metal warms up quickly.",
+                tryTitle: "Make a heartbeat",
+                tryDetail: "Tap a gentle thump-thump on your knee. That is a rhythm a heartbeat can make.",
                 gear: .stethoscope
             ),
             StoryPage(
                 id: "prep-cuff",
-                title: "The blood pressure cuff",
-                expression: "Calm",
-                scene: "A cuff gives Kare's arm a short hug.",
-                speech: "A blood pressure cuff wraps around your arm like a hug. It squeezes, then lets go. The squeeze can feel tight for a few breaths. Then it loosens. It is checking how strongly your heart pushes.",
-                more: "Your arm is not stuck. If the squeeze feels like too much, tell the helper.",
-                question: "What does the cuff do after it squeezes?",
+                title: "A squeeze on your arm",
+                expression: "Encouraging",
+                scene: "Kare tries a blood pressure cuff.",
+                speech: "A cuff wraps around my arm. It fills with air, feels tight, then loosens. It checks my blood pressure.",
+                more: "Tell the helper if the squeeze hurts or feels uncomfortable.",
+                question: "The cuff has filled with air. What happens next?",
                 choices: [
-                    StoryChoice(id: "prep-cuff-stay", label: "It stays tight all day", isCorrect: false, symbol: "lock.fill"),
-                    StoryChoice(id: "prep-cuff-release", label: "It lets go", isCorrect: true, symbol: "arrow.left.and.right"),
-                    StoryChoice(id: "prep-cuff-break", label: "It means the arm is hurt", isCorrect: false, symbol: "bandage.fill")
+                    StoryChoice(id: "prep-cuff-stay", label: "It checks Kare’s height", isCorrect: false, symbol: "ruler.fill"),
+                    StoryChoice(id: "prep-cuff-release", label: "The air comes out and it loosens", isCorrect: true, symbol: "arrow.left.and.right"),
+                    StoryChoice(id: "prep-cuff-break", label: "It listens to Kare’s breathing", isCorrect: false, symbol: "stethoscope")
                 ],
-                reveal: "Here's the answer: the cuff squeezes, then lets go. Let's talk about it together.",
+                reveal: "The cuff loosens as the air comes out. Tell the helper how your arm feels.",
                 symbol: "arrow.left.and.right",
-                tryTitle: "Squeeze, then let go",
-                tryDetail: "Tight for a moment. Then loose. The hug is finished when the cuff relaxes.",
+                tryTitle: "Squeeze, then relax",
+                tryDetail: "Gently squeeze your own hand, then let it relax. You are in charge of this pretend squeeze.",
                 gear: .cuff
             ),
             StoryPage(
                 id: "prep-vitals",
-                title: "Taking vitals",
+                title: "Checking your body",
                 expression: "Encouraging",
-                scene: "Kare finishes a set of body checks.",
-                speech: "Vitals are the body checks together: warmth, heartbeat, breathing, and blood pressure. Helpers write them down to see how you are doing today. Vitals are a hello to your body.",
-                more: "You might have vitals more than once. That means the helpers are being careful.",
-                question: "What are vitals?",
+                scene: "The helper writes down Kare’s checks.",
+                speech: "Temperature, heartbeat, breathing, and blood pressure are called vital signs. They help the team see how my body is doing.",
+                more: "The team may check them again later to see what has changed.",
+                question: "Why might a nurse check Kare’s temperature again?",
                 choices: [
-                    StoryChoice(id: "prep-vitals-punish", label: "A punishment", isCorrect: false, symbol: "nosign"),
-                    StoryChoice(id: "prep-vitals-check", label: "Checks of how your body is doing", isCorrect: true, symbol: "list.clipboard.fill"),
-                    StoryChoice(id: "prep-vitals-lose", label: "A game you can lose", isCorrect: false, symbol: "flag.checkered")
+                    StoryChoice(id: "prep-vitals-punish", label: "To find out how tall Kare is", isCorrect: false, symbol: "ruler.fill"),
+                    StoryChoice(id: "prep-vitals-check", label: "To see if it has changed", isCorrect: true, symbol: "thermometer.medium"),
+                    StoryChoice(id: "prep-vitals-lose", label: "To find out when Kare last ate", isCorrect: false, symbol: "fork.knife")
                 ],
-                reveal: "Here's the answer: vitals are checks of how your body is doing. Let's talk about it together.",
+                reveal: "A new check shows whether your temperature has changed. The team uses checks to follow how you are doing.",
                 symbol: "list.clipboard.fill",
-                tryTitle: "Count the checks",
-                tryDetail: "Warmth. Heart. Breathing. Blood pressure. Four hellos. Then the helper writes them down.",
+                tryTitle: "Remember a check",
+                tryDetail: "Point to your arm or chest. Tell your grown-up one check you remember.",
                 gear: .vitals
             ),
             StoryPage(
                 id: "prep-iv",
-                title: "The IV and the pole",
-                expression: "Calm",
-                scene: "A tall pole holds a bag beside Kare.",
-                speech: "An IV is a tiny soft straw that can give your body a drink of water or medicine. Placing it can feel like a quick pinch. Then the pinch is over, and the straw stays still. The tall pole holds the bag up high so the drink can drip. The pole has wheels, so you can walk with a grown-up.",
-                more: "Looking away and squeezing a hand is a good plan. Leave the straw in place. A helper takes it out when it is time.",
-                question: "What happens with an IV?",
+                title: "Meet the IV",
+                expression: "Encouraging",
+                scene: "Kare sees a small tube and a bag.",
+                speech: "An IV is a small, soft tube that goes into a vein. It can give my body fluid or medicine. Putting it in may pinch or sting.",
+                more: "A nurse looks after the IV. Tell them if it hurts or feels uncomfortable. You can ask to hold a hand.",
+                question: "What does an IV help the team give Kare?",
                 choices: [
-                    StoryChoice(id: "prep-iv-allday", label: "The pinch lasts all day", isCorrect: false, symbol: "clock.fill"),
-                    StoryChoice(id: "prep-iv-pinch", label: "A quick pinch, then a helper removes it later", isCorrect: true, symbol: "hand.raised.fill"),
-                    StoryChoice(id: "prep-iv-pull", label: "You should pull it out", isCorrect: false, symbol: "hand.draw")
+                    StoryChoice(id: "prep-iv-allday", label: "A temperature check", isCorrect: false, symbol: "thermometer.medium"),
+                    StoryChoice(id: "prep-iv-pinch", label: "Fluid or medicine", isCorrect: true, symbol: "drop.fill"),
+                    StoryChoice(id: "prep-iv-pull", label: "A heartbeat check", isCorrect: false, symbol: "heart.fill")
                 ],
-                reveal: "Here's the answer: the pinch is quick, and a helper takes the IV out later. Let's talk about it together.",
+                reveal: "Fluid or medicine can travel through the little tube into your body. A nurse looks after it.",
                 symbol: "bag.fill",
-                tryTitle: "Watch the bag",
-                tryDetail: "The bag hangs up high. Drip, drip. The pole rolls with you. The straw stays until a helper says it is done.",
+                tryTitle: "Choose some support",
+                tryDetail: "Would you like to look away or hold a hand? Practise asking for what would help you.",
                 gear: .iv
             ),
             StoryPage(
                 id: "prep-mask",
-                title: "The anaesthesia mask",
-                expression: "Calm",
-                scene: "Kare holds a soft mask with a grown-up close.",
-                speech: "The anaesthesia mask is a soft cup over your nose and mouth. It gives sleepy air so your body can rest during the operation. Breathe slowly, like fogging a window. A grown-up can hold your hand. You wake up when it is time.",
-                more: "The mask might smell like plastic, or like something sweet. Smells can differ. You can ask for a story while you breathe.",
-                question: "What is the sleepy air for?",
+                title: "Meet the mask",
+                expression: "Encouraging",
+                scene: "Kare learns about medicine for the operation.",
+                speech: "Some children get medicine through a mask over their nose and mouth. It helps them sleep during the operation. The care team watches over them.",
+                more: "The team will explain how you will get your medicine and who can stay with you.",
+                question: "What is the medicine in this mask for?",
                 choices: [
-                    StoryChoice(id: "prep-mask-play", label: "So you can run around the room", isCorrect: false, symbol: "figure.run"),
-                    StoryChoice(id: "prep-mask-rest", label: "So your body can rest, then you wake up", isCorrect: true, symbol: "moon.stars.fill"),
-                    StoryChoice(id: "prep-mask-hair", label: "So your hair grows faster", isCorrect: false, symbol: "comb.fill")
+                    StoryChoice(id: "prep-mask-play", label: "Checking how tall Kare is", isCorrect: false, symbol: "ruler.fill"),
+                    StoryChoice(id: "prep-mask-rest", label: "Helping Kare sleep during the operation", isCorrect: true, symbol: "moon.stars.fill"),
+                    StoryChoice(id: "prep-mask-hair", label: "Listening to Kare’s heartbeat", isCorrect: false, symbol: "stethoscope")
                 ],
-                reveal: "Here's the answer: the sleepy air helps your body rest during the operation, and you wake up afterward. Let's talk about it together.",
+                reveal: "This medicine helps you sleep during the operation. The care team looks after you while it works.",
                 symbol: "facemask.fill",
-                tryTitle: "Fog the window",
-                tryDetail: "Slow breath in. Slow breath out, like fog on a window. A hand can stay in yours the whole time.",
+                tryTitle: "Practise a slow breath",
+                tryDetail: "Try a slow breath in and out. Ask your grown-up what you would like the team to explain.",
                 gear: .mask
             ),
             StoryPage(
                 id: "prep-ready",
-                title: "You know the way",
-                expression: "Cheerful",
-                scene: "Kare smiles beside you.",
-                speech: "You met the scrubs, the gown, the measuring, the thermometer, the stethoscope, the cuff, the vitals, the IV pole, and the mask. When something looks new, you can ask what it is. When you want a hand, you can say so.",
-                more: "Nervous and ready can sit side by side. You can play this tour again any time.",
-                question: "What can you do when something feels new?",
+                title: "Your turn to ask",
+                expression: "Encouraging",
+                scene: "Kare is ready with a question.",
+                speech: "You have met some hospital helpers and tools. You can always ask what something is or what will happen next.",
+                more: "You do not need to remember every word. Asking for help is part of learning.",
+                question: "Kare sees a new tool. Which question helps Kare learn about it?",
                 choices: [
-                    StoryChoice(id: "prep-ready-hide", label: "Hide the question", isCorrect: false, symbol: "eye.slash"),
-                    StoryChoice(id: "prep-ready-ask", label: "Ask what it is, and hold a hand", isCorrect: true, symbol: "bubble.left.and.heart.fill"),
-                    StoryChoice(id: "prep-ready-trouble", label: "Decide you are in trouble", isCorrect: false, symbol: "exclamationmark")
+                    StoryChoice(id: "prep-ready-hide", label: "“Where is my bag?”", isCorrect: false, symbol: "bag.fill"),
+                    StoryChoice(id: "prep-ready-ask", label: "“What does this do?”", isCorrect: true, symbol: "bubble.left.fill"),
+                    StoryChoice(id: "prep-ready-trouble", label: "“What time is lunch?”", isCorrect: false, symbol: "clock")
                 ],
-                reveal: "Here's the answer: ask what it is, and you can hold a hand. Let's talk about it together.",
+                reveal: "“What does this do?” invites the helper to explain. You can also ask them to show you first.",
                 symbol: "hands.and.sparkles.fill",
-                tryTitle: "Practice the question",
-                tryDetail: "Try saying, “What is that?” and “Can I hold your hand?” Both questions are welcome.",
+                tryTitle: "Ask your question",
+                tryDetail: "Pick one thing from the tour. What would you like to ask about it?",
                 gear: .ask
             )
         ]
@@ -958,7 +965,7 @@ struct StoryGameView: View {
     @State private var speakTask: Task<Void, Never>?
 
     private var pages: [StoryPage] {
-        store.storyPages
+        store.storyPages.map { $0.adapted(for: store.childAgeYears) }
     }
 
     private var page: StoryPage {
@@ -1063,9 +1070,14 @@ struct StoryGameView: View {
                     }
                     Spacer(minLength: 8)
                     Button {
-                        scheduleSpeech(force: true)
+                        if speaker.isSpeaking {
+                            speakTask?.cancel()
+                            speaker.stop()
+                        } else {
+                            scheduleSpeech(force: true)
+                        }
                     } label: {
-                        Label(speaker.isSpeaking ? "Reading" : "Listen", systemImage: "speaker.wave.2.fill")
+                        Label(speaker.isSpeaking ? "Stop" : "Listen", systemImage: speaker.isSpeaking ? "stop.fill" : "speaker.wave.2.fill")
                             .font(jakarta(20, .bold))
                             .foregroundStyle(Theme.teal)
                             .padding(.horizontal, 16)
@@ -1097,6 +1109,10 @@ struct StoryGameView: View {
                 .foregroundStyle(Theme.text)
                 .lineSpacing(5)
                 .fixedSize(horizontal: false, vertical: true)
+            Text(page.more)
+                .font(jakarta(20, .medium))
+                .foregroundStyle(Theme.muted)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -1109,22 +1125,56 @@ struct StoryGameView: View {
 
     private var questionBlock: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Check what you learned")
+            Text("Your turn")
                 .font(jakarta(22, .bold))
                 .foregroundStyle(Theme.teal)
             Text(page.question)
                 .font(jakarta(32, .extraBold))
                 .foregroundStyle(Theme.text)
                 .fixedSize(horizontal: false, vertical: true)
-            ForEach(page.choices) { choice in
-                choiceButton(choice)
+            if page.isTalkActivity {
+                talkActivity(page) {
+                    store.clearStory(page.id, needsTalk: false)
+                    phase = .correct
+                }
+            } else {
+                Text("Tap one answer. You can listen again any time.")
+                    .font(jakarta(16, .medium))
+                    .foregroundStyle(Theme.muted)
+                ForEach(page.choices) { choice in
+                    choiceButton(choice)
+                }
             }
             if phase == .correct {
-                feedback(StoryLibrary.correctFeedback(bear: store.companionName), tone: .good)
+                feedback("\(page.isTalkActivity ? "You practised together!" : "You got it!") \(page.reveal)", tone: .good)
             } else if phase == .revealed {
                 feedback(page.reveal, tone: .talk)
             }
         }
+    }
+
+    private func talkActivity(_ page: StoryPage, onPracticed: @escaping () -> Void) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Practise with your grown-up", systemImage: "bubble.left.and.bubble.right.fill")
+                .font(jakarta(18, .bold))
+                .foregroundStyle(Theme.teal)
+            Text("You can talk, point, or show. Ask for help with any words you do not know.")
+                .font(jakarta(20, .medium))
+                .foregroundStyle(Theme.text)
+            if phase == .question {
+                Button(action: onPracticed) {
+                    Label("We talked it through", systemImage: "checkmark.circle.fill")
+                        .font(jakarta(22, .bold))
+                        .foregroundStyle(.white)
+                        .padding(16)
+                        .frame(maxWidth: .infinity, minHeight: 64)
+                        .background(Theme.teal, in: RoundedRectangle(cornerRadius: 18))
+                }
+                .buttonStyle(KidButtonStyle())
+            }
+        }
+        .padding(16)
+        .card(fill: Theme.tealSoft, border: Theme.tealBorder)
     }
 
     private func choiceButton(_ choice: StoryChoice) -> some View {
@@ -1227,17 +1277,17 @@ struct StoryGameView: View {
     private var forwardTitle: String {
         switch phase {
         case .reading:
-            return store.isStoryCleared(page.id) ? "Next" : "Check"
+            return store.isStoryCleared(page.id) ? "Next page" : (page.isTalkActivity ? "Try it together" : "Your turn")
         case .tryAgain:
-            return "Look again"
+            return "Try another answer"
         case .question:
-            return "Check"
+            return "Choose one"
         case .correct, .revealed:
             return index + 1 < pages.count ? "Next" : "Finish"
         case .done:
             return "Done"
         case .trying:
-            return "Check"
+            return "Choose one"
         }
     }
 
@@ -1355,8 +1405,8 @@ struct StoryGameView: View {
         guard !pages.isEmpty else { return }
         if !force, UIAccessibility.isVoiceOverRunning { return }
         let line = phase == .done
-            ? "You finished the story. I am so proud of you."
-            : StoryVoice.script(page: page, phase: phase, index: index, bear: store.companionName)
+            ? "You finished the story. You can come back and practice any time."
+            : StoryVoice.script(page: page, phase: phase)
         speaker.speak(line, ageYears: store.childAgeYears, force: force)
     }
 
@@ -1399,7 +1449,7 @@ struct StoryGameView: View {
                 selectedID = nil
             }
         case .tryAgain:
-            phase = .reading
+            phase = .question
             selectedID = nil
         case .correct, .revealed:
             advancePage()
@@ -1456,13 +1506,12 @@ struct PracticeStoryView: View {
     @State private var localMisses: [String: Int] = [:]
     @State private var selectedID: String?
     @State private var triedPages: Set<String> = []
-    @State private var gearMiss = false
     @State private var didStart = false
     @State private var speaker = StorySpeaker()
     @State private var speakTask: Task<Void, Never>?
 
     private var page: StoryPage? {
-        pages.indices.contains(index) ? pages[index] : nil
+        pages.indices.contains(index) ? pages[index].adapted(for: store.childAgeYears) : nil
     }
 
     var body: some View {
@@ -1581,13 +1630,18 @@ struct PracticeStoryView: View {
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 8)
                     Button {
-                        scheduleSpeech(force: true)
+                        if speaker.isSpeaking {
+                            speakTask?.cancel()
+                            speaker.stop()
+                        } else {
+                            scheduleSpeech(force: true)
+                        }
                     } label: {
-                        Label(speaker.isSpeaking ? "Reading" : "Listen", systemImage: "speaker.wave.2.fill")
+                        Label(speaker.isSpeaking ? "Stop" : "Listen", systemImage: speaker.isSpeaking ? "stop.fill" : "speaker.wave.2.fill")
                             .font(jakarta(20, .bold))
                             .foregroundStyle(Theme.teal)
                             .padding(.horizontal, 12)
-                            .frame(height: 40)
+                            .frame(height: 48)
                             .background(Color.white, in: Capsule())
                             .overlay(Capsule().stroke(Theme.teal.opacity(0.35), lineWidth: 1.5))
                     }
@@ -1604,6 +1658,10 @@ struct PracticeStoryView: View {
                             .foregroundStyle(Theme.text)
                             .lineSpacing(5)
                             .fixedSize(horizontal: false, vertical: true)
+                        Text(page.more)
+                            .font(jakarta(20, .medium))
+                            .foregroundStyle(Theme.muted)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -1617,34 +1675,60 @@ struct PracticeStoryView: View {
                     }
                 } else if phase == .trying, let gear = page.gear {
                     let tried = triedPages.contains(page.id)
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(gear.needQuestion(bear: store.companionName))
-                            .font(jakarta(32, .extraBold))
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label(page.tryTitle ?? "Try it together", systemImage: page.symbol)
+                            .font(jakarta(28, .extraBold))
+                            .foregroundStyle(Theme.teal)
+                        Text(page.tryDetail ?? "Explore this together with your grown-up.")
+                            .font(jakarta(24, .semibold))
                             .foregroundStyle(Theme.text)
                             .fixedSize(horizontal: false, vertical: true)
-                        ForEach(gear.needChoices) { choice in
-                            gearChoiceButton(choice, tried: tried)
-                        }
                         if tried {
                             feedback(gear.doneLine(bear: store.companionName), tone: .good)
-                        } else if gearMiss {
-                            feedback("Not quite. Think about what \(store.companionName) needs.", tone: .retry)
+                        } else {
+                            Button { applyGear(page) } label: {
+                                Label("We tried it", systemImage: "sparkles")
+                                    .font(jakarta(24, .bold))
+                                    .foregroundStyle(.white)
+                                    .padding(18)
+                                    .frame(maxWidth: .infinity, minHeight: 68)
+                                    .background(Theme.teal, in: RoundedRectangle(cornerRadius: 18))
+                            }
+                            .buttonStyle(KidButtonStyle())
+                            Button("Go to the question") {
+                                speaker.stop()
+                                selectedID = nil
+                                phase = .question
+                            }
+                            .font(jakarta(18, .bold))
+                            .foregroundStyle(Theme.teal)
+                            .frame(minHeight: 48)
                         }
                     }
                 } else {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Concept check")
+                        Text("Your turn")
                             .font(jakarta(22, .bold))
                             .foregroundStyle(Theme.teal)
                         Text(page.question)
                             .font(jakarta(32, .extraBold))
                             .foregroundStyle(Theme.text)
                             .fixedSize(horizontal: false, vertical: true)
-                        ForEach(page.choices) { choice in
-                            choiceButton(choice, page: page)
+                        if page.isTalkActivity {
+                            talkActivity(page) {
+                                if recordsProgress { store.clearStory(page.id, needsTalk: false) }
+                                phase = .correct
+                            }
+                        } else {
+                            Text("Tap one answer. You can listen again any time.")
+                                .font(jakarta(16, .medium))
+                                .foregroundStyle(Theme.muted)
+                            ForEach(page.choices) { choice in
+                                choiceButton(choice, page: page)
+                            }
                         }
                         if phase == .correct {
-                            feedback(StoryLibrary.correctFeedback(bear: store.companionName), tone: .good)
+                            feedback("\(page.isTalkActivity ? "You practised together!" : "You got it!") \(page.reveal)", tone: .good)
                         } else if phase == .revealed {
                             feedback(page.reveal, tone: .talk)
                         }
@@ -1671,7 +1755,7 @@ struct PracticeStoryView: View {
                     .foregroundStyle(Theme.muted)
                     .multilineTextAlignment(.center)
                 Button(action: replayChecks) {
-                    Text("Play the checks again")
+                    Text("Explore again")
                         .font(jakarta(17, .bold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
@@ -1692,6 +1776,30 @@ struct PracticeStoryView: View {
             .readableColumn(compact: 520)
         }
         .scrollIndicators(.hidden)
+    }
+
+    private func talkActivity(_ page: StoryPage, onPracticed: @escaping () -> Void) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Practise with your grown-up", systemImage: "bubble.left.and.bubble.right.fill")
+                .font(jakarta(18, .bold))
+                .foregroundStyle(Theme.teal)
+            Text("You can talk, point, or show. Ask for help with any words you do not know.")
+                .font(jakarta(20, .medium))
+                .foregroundStyle(Theme.text)
+            if phase == .question {
+                Button(action: onPracticed) {
+                    Label("We talked it through", systemImage: "checkmark.circle.fill")
+                        .font(jakarta(22, .bold))
+                        .foregroundStyle(.white)
+                        .padding(16)
+                        .frame(maxWidth: .infinity, minHeight: 64)
+                        .background(Theme.teal, in: RoundedRectangle(cornerRadius: 18))
+                }
+                .buttonStyle(KidButtonStyle())
+            }
+        }
+        .padding(16)
+        .card(fill: Theme.tealSoft, border: Theme.tealBorder)
     }
 
     private func choiceButton(_ choice: StoryChoice, page: StoryPage) -> some View {
@@ -1744,15 +1852,15 @@ struct PracticeStoryView: View {
     private var forwardTitle: String {
         switch phase {
         case .reading:
-            page?.gear == nil ? "Check" : "Choose"
+            page?.isTalkActivity == true ? "Try it together" : (page?.gear == nil ? "Your turn" : "Try it")
         case .trying:
-            "Check"
+            "Your turn"
         case .tryAgain:
-            "Look again"
+            "Try another answer"
         case .correct, .revealed:
             index + 1 < pages.count ? "Next" : "Finish"
         default:
-            "Check"
+            "Choose one"
         }
     }
 
@@ -1860,11 +1968,11 @@ struct PracticeStoryView: View {
         guard !pages.isEmpty else { return }
         if !force, UIAccessibility.isVoiceOverRunning { return }
         if phase == .done {
-            speaker.speak("\(doneTitle). I am so proud of you.", ageYears: store.childAgeYears, force: force)
+            speaker.speak("\(doneTitle). You can come back and practice any time.", ageYears: store.childAgeYears, force: force)
             return
         }
         guard let page else { return }
-        speaker.speak(StoryVoice.script(page: page, phase: phase, index: index, bear: store.companionName), ageYears: store.childAgeYears, force: force)
+        speaker.speak(StoryVoice.script(page: page, phase: phase), ageYears: store.childAgeYears, force: force)
     }
 
     private func applyGear(_ page: StoryPage) {
@@ -1872,56 +1980,6 @@ struct PracticeStoryView: View {
         triedPages.insert(page.id)
         speaker.stop()
         speaker.speak(page.gear?.doneLine(bear: store.companionName) ?? "", ageYears: store.childAgeYears)
-    }
-
-    private func chooseGear(_ choice: GearNeedChoice, page: StoryPage) {
-        guard phase == .trying, page.gear != nil, !triedPages.contains(page.id) else { return }
-        selectedID = choice.id
-        if choice.isCorrect {
-            gearMiss = false
-            applyGear(page)
-            return
-        }
-        gearMiss = true
-        speaker.stop()
-        speaker.speak("Not quite. Think about what \(store.companionName) needs.", ageYears: store.childAgeYears)
-    }
-
-    private func gearChoiceButton(_ choice: GearNeedChoice, tried: Bool) -> some View {
-        let showCorrect = tried && choice.isCorrect
-        let selected = selectedID == choice.id
-        return Button {
-            guard let page else { return }
-            chooseGear(choice, page: page)
-        } label: {
-            HStack(spacing: 12) {
-                Image(systemName: choice.symbol)
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(showCorrect ? .white : Theme.teal)
-                    .frame(width: 44, height: 44)
-                    .background(showCorrect ? Theme.teal : Theme.tealSoft, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                Text(choice.label)
-                    .font(jakarta(26, .bold))
-                    .foregroundStyle(Theme.text)
-                    .multilineTextAlignment(.leading)
-                Spacer(minLength: 4)
-                if showCorrect {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(Theme.teal)
-                }
-            }
-            .padding(14)
-            .frame(maxWidth: .infinity, minHeight: 84, alignment: .leading)
-            .card(
-                fill: showCorrect ? Theme.tealSoft : .white,
-                border: showCorrect ? Theme.teal : (selected ? Theme.terra : Theme.border),
-                radius: 18,
-                lineWidth: showCorrect || selected ? 2 : 1
-            )
-        }
-        .buttonStyle(KidButtonStyle())
-        .disabled(tried)
-        .accessibilityLabel(choice.label)
     }
 
     private func leave() {
@@ -1937,7 +1995,6 @@ struct PracticeStoryView: View {
         case .question, .tryAgain, .correct, .revealed, .trying:
             phase = .reading
             selectedID = nil
-            gearMiss = false
         case .reading:
             guard index > 0 else { return }
             index -= 1
@@ -1957,7 +2014,6 @@ struct PracticeStoryView: View {
         switch phase {
         case .reading:
             if pages[index].gear != nil, !triedPages.contains(pages[index].id) {
-                gearMiss = false
                 selectedID = nil
                 phase = .trying
             } else {
@@ -1966,11 +2022,10 @@ struct PracticeStoryView: View {
             }
         case .trying:
             guard triedPages.contains(pages[index].id) else { return }
-            gearMiss = false
             phase = .question
             selectedID = nil
         case .tryAgain:
-            phase = .reading
+            phase = .question
             selectedID = nil
         case .correct, .revealed:
             advance()
@@ -1985,7 +2040,6 @@ struct PracticeStoryView: View {
         index = 0
         phase = .reading
         selectedID = nil
-        gearMiss = false
         triedPages = []
     }
 
@@ -2027,22 +2081,46 @@ struct RememberGameView: View {
     @Environment(CareStore.self) private var store
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var index = 0
-    @State private var message = "Tap the care step the bear means."
+    @State private var selectedID: String?
+    @State private var answered = false
     @State private var solved: Set<String> = []
+    @State private var speaker = StorySpeaker()
+
+    private var note: ParentInstruction? {
+        store.parentInstructions.indices.contains(index) ? store.parentInstructions[index] : nil
+    }
+
+    private var choices: [StoryChoice] {
+        guard let note else { return [] }
+        func key(_ text: String) -> String {
+            text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        }
+        var titles: Set<String> = [key(note.title)]
+        var result = [StoryChoice(id: note.id.uuidString, label: note.title, isCorrect: true, symbol: "list.clipboard.fill")]
+        for other in store.parentInstructions where other.id != note.id {
+            guard key(other.detail) != key(note.detail), titles.insert(key(other.title)).inserted else { continue }
+            result.append(StoryChoice(id: other.id.uuidString, label: other.title, isCorrect: false, symbol: "list.clipboard.fill"))
+            if result.count == (store.childAgeYears <= 6 ? 2 : 3) { break }
+        }
+        let offset = index % result.count
+        return Array(result[offset...]) + Array(result[..<offset])
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Button(action: onHome) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 14, weight: .bold))
+                Button {
+                    speaker.stop()
+                    onHome()
+                } label: {
+                    Label("Back", systemImage: "chevron.left")
+                        .font(jakarta(14, .bold))
                         .foregroundStyle(Theme.teal)
-                        .frame(width: 40, height: 40)
-                        .background(Color.white, in: Circle())
-                        .overlay(Circle().stroke(Theme.border, lineWidth: 1))
+                        .padding(.horizontal, 12)
+                        .frame(height: 44)
+                        .background(Color.white, in: Capsule())
                 }
                 .buttonStyle(KidButtonStyle())
-                .accessibilityLabel("Back")
                 Spacer()
                 Text("Remember game")
                     .font(jakarta(14, .bold))
@@ -2051,7 +2129,7 @@ struct RememberGameView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
             GeometryReader { geo in
-                let stage = min(geo.size.height * 0.5, sizeClass == .regular ? 520 : 360)
+                let stage = min(geo.size.height * 0.35, sizeClass == .regular ? 400 : 240)
                 VStack(spacing: 0) {
                     BearBadge(size: stage * 0.86, mood: store.bearMood, showsStatus: true)
                         .frame(maxWidth: .infinity)
@@ -2067,59 +2145,152 @@ struct RememberGameView: View {
             }
         }
         .kidCanvas()
+        .onDisappear { speaker.stop() }
     }
 
     private var rememberWords: some View {
-        VStack(alignment: .leading, spacing: 12) {
-                    if store.parentInstructions.isEmpty {
-                        Text("No care steps yet")
-                            .font(jakarta(26, .extraBold))
-                            .foregroundStyle(Theme.teal)
-                        Text("A grown-up can add them. Then this game asks you to remember each one.")
-                            .font(jakarta(15, .medium))
-                            .foregroundStyle(Theme.muted)
-                    } else {
-                        let note = store.parentInstructions[index % store.parentInstructions.count]
-                        Text("\(store.companionName) says")
+        VStack(alignment: .leading, spacing: 16) {
+            if store.parentInstructions.isEmpty {
+                Text("No care steps yet")
+                    .font(jakarta(26, .extraBold))
+                    .foregroundStyle(Theme.teal)
+                Text("A grown-up can add your care steps. Then you can practise together.")
+                    .font(jakarta(18, .medium))
+                    .foregroundStyle(Theme.muted)
+            } else if let note {
+                let guided = choices.count < 2
+                HStack {
+                    Text("Step \(index + 1) of \(store.parentInstructions.count)")
+                        .font(jakarta(16, .bold))
+                        .foregroundStyle(Theme.muted)
+                    Spacer()
+                    Button {
+                        if speaker.isSpeaking {
+                            speaker.stop()
+                        } else {
+                            let prompt = guided ? "Practise this step with your grown-up." : "Which care step matches this reminder?"
+                            let answers = choices.map(\.label).joined(separator: ". ")
+                            speaker.speak(answered ? "You practised this step. \(note.detail)" : "\(prompt) \(note.detail) \(guided ? "You can tell, point, or show." : answers)", ageYears: store.childAgeYears, force: true)
+                        }
+                    } label: {
+                        Label(speaker.isSpeaking ? "Stop" : "Listen", systemImage: speaker.isSpeaking ? "stop.fill" : "speaker.wave.2.fill")
                             .font(jakarta(16, .bold))
                             .foregroundStyle(Theme.teal)
-                        Text(note.detail)
-                            .font(jakarta(17, .bold))
-                            .foregroundStyle(Theme.teal)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Text(message)
-                            .font(jakarta(14, .medium))
-                            .foregroundStyle(Theme.muted)
-                        choice("This one: \(note.title)", correct: true, id: note.id.uuidString)
-                        choice("Skip this step", correct: false, id: note.id.uuidString)
-                        choice("Do it without a grown-up", correct: false, id: note.id.uuidString)
+                            .padding(.horizontal, 12)
+                            .frame(height: 44)
+                            .background(Color.white, in: Capsule())
                     }
+                    .buttonStyle(KidButtonStyle())
+                }
+                Text(guided ? "Practise this step together" : "Which care step matches?")
+                    .font(jakarta(28, .extraBold))
+                    .foregroundStyle(Theme.teal)
+                Text(note.detail)
+                    .font(jakarta(22, .semibold))
+                    .foregroundStyle(Theme.text)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(16)
+                    .card(fill: Theme.tealSoft, border: Theme.tealBorder)
+                if guided {
+                    Text("Show or tell your grown-up how you will do this step together. Ask about any part you are unsure of.")
+                        .font(jakarta(18, .medium))
+                        .foregroundStyle(Theme.muted)
+                    if !answered {
+                        Button { finishRound(note.id.uuidString) } label: {
+                            Label("We practised this step", systemImage: "checkmark.circle.fill")
+                                .font(jakarta(20, .bold))
+                                .foregroundStyle(Theme.teal)
+                                .padding(18)
+                                .frame(maxWidth: .infinity, minHeight: 64)
+                                .card(border: Theme.tealBorder)
+                        }
+                        .buttonStyle(KidButtonStyle())
+                    }
+                } else {
+                    Text("Tap the matching step.")
+                        .font(jakarta(18, .medium))
+                        .foregroundStyle(Theme.muted)
+                    ForEach(choices) { option in
+                        rememberChoice(option, noteID: note.id.uuidString)
+                    }
+                }
+                if answered {
+                    Label(guided ? "You practised together!" : "You found the matching step!", systemImage: "checkmark.circle.fill")
+                        .font(jakarta(20, .bold))
+                        .foregroundStyle(Theme.teal)
+                    Button {
+                        speaker.stop()
+                        index += 1
+                        selectedID = nil
+                        answered = false
+                    } label: {
+                        Label(index + 1 < store.parentInstructions.count ? "Next step" : "Finish", systemImage: "arrow.right")
+                            .font(jakarta(20, .bold))
+                            .foregroundStyle(.white)
+                            .padding(18)
+                            .frame(maxWidth: .infinity, minHeight: 64)
+                            .background(Theme.teal, in: RoundedRectangle(cornerRadius: 18))
+                    }
+                    .buttonStyle(KidButtonStyle())
+                } else if selectedID != nil {
+                    Text("Look for the step that matches these words. You can listen again or ask your grown-up.")
+                        .font(jakarta(18, .medium))
+                        .foregroundStyle(Theme.text)
+                        .padding(16)
+                        .card(fill: Theme.terraSoft, border: Theme.terraBorder)
+                }
+            } else {
+                Text("You practised every step!")
+                    .font(jakarta(28, .extraBold))
+                    .foregroundStyle(Theme.teal)
+                Text("Ask your grown-up about any step you want to try again.")
+                    .font(jakarta(18, .medium))
+                    .foregroundStyle(Theme.muted)
+                Button("Back to Play", action: onHome)
+                    .font(jakarta(20, .bold))
+                    .foregroundStyle(Theme.teal)
+                    .frame(minHeight: 48)
+                Button("Practise again") {
+                    index = 0
+                    selectedID = nil
+                    answered = false
+                }
+                .font(jakarta(18, .bold))
+                .foregroundStyle(Theme.teal)
+                .frame(minHeight: 48)
+            }
         }
     }
 
-    private func choice(_ title: String, correct: Bool, id: String) -> some View {
-        Button {
-            if correct {
-                message = solved.contains(id) ? "You already remembered this one." : "Yes! \(store.companionName) feels proud. +1 star"
-                if !solved.contains(id) {
-                    solved.insert(id)
-                    store.awardRemembered()
-                }
-                if store.parentInstructions.count > 1 {
-                    index = (index + 1) % store.parentInstructions.count
-                }
-            } else {
-                message = "Not quite. Listen to \(store.companionName)'s words again."
-            }
+    private func finishRound(_ id: String) {
+        speaker.stop()
+        answered = true
+        if solved.insert(id).inserted { store.awardRemembered() }
+    }
+
+    private func rememberChoice(_ option: StoryChoice, noteID: String) -> some View {
+        let correct = answered && option.isCorrect
+        return Button {
+            speaker.stop()
+            selectedID = option.id
+            if option.isCorrect { finishRound(noteID) }
         } label: {
-            Text(title)
-                .font(jakarta(16, .bold))
-                .foregroundStyle(Theme.teal)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(14)
-                .card(border: Theme.tealBorder)
+            HStack(spacing: 12) {
+                Image(systemName: correct ? "checkmark.circle.fill" : "list.clipboard.fill")
+                    .font(.system(size: 22, weight: .bold))
+                    .accessibilityHidden(true)
+                Text(option.label)
+                    .font(jakarta(22, .bold))
+                    .multilineTextAlignment(.leading)
+            }
+            .foregroundStyle(Theme.teal)
+            .padding(18)
+            .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
+            .card(fill: correct ? Theme.tealSoft : .white, border: correct ? Theme.teal : Theme.tealBorder)
         }
         .buttonStyle(KidButtonStyle())
+        .disabled(answered || selectedID == option.id)
+        .accessibilityLabel(option.label)
     }
 }
 
@@ -2130,32 +2301,25 @@ private enum FeedbackTone {
 }
 
 private enum StoryVoice {
-    static let cheers = [
-        "You are doing a wonderful job.",
-        "I am proud of you.",
-        "We can learn this together.",
-        "You are a great listener."
-    ]
-
-    static func script(page: StoryPage, phase: StoryPhase, index: Int, bear: String) -> String {
+    static func script(page: StoryPage, phase: StoryPhase) -> String {
         switch phase {
         case .reading:
-            return "\(page.speech) \(cheers[index % cheers.count])"
+            return "\(page.speech) \(page.more)"
         case .trying:
-            if let gear = page.gear {
-                return "\(gear.needQuestion(bear: bear)) Is it \(choiceList(gear.needChoices.map(\.label)))?"
-            }
-            return page.speech
+            return "\(page.tryTitle ?? "Try it together"). \(page.tryDetail ?? "Explore this together with your grown-up.") You can try it or go to the question."
         case .tryAgain:
-            return "\(StoryLibrary.firstMiss) \(page.speech)"
+            return "\(StoryLibrary.firstMiss) \(page.speech) \(page.more)"
         case .question:
-            return "\(page.question) Is it \(choiceList(page.choices.map(\.label)))? You can do this."
+            if page.isTalkActivity {
+                return "\(page.question) You can talk, point, or show. Then tap: We talked it through."
+            }
+            return "\(page.question) Choose one: \(choiceList(page.choices.map(\.label)))."
         case .correct:
-            return StoryLibrary.correctFeedback(bear: bear)
+            return "\(page.isTalkActivity ? "You practised together!" : "You got it!") \(page.reveal)"
         case .revealed:
-            return "\(page.reveal) I am still proud of you."
+            return "Let's work it out together. \(page.reveal)"
         case .done:
-            return "You finished the story. I am so proud of you."
+            return "You finished the story. You can come back and practice any time."
         }
     }
 

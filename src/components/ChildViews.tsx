@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useId } from 'react';
 import { useCareStore } from '../context/CareStoreContext.tsx';
 import { StoryPage, StoryChoice, Dose } from '../utils/careStoreLogic.ts';
 import { BearBadge, NameBearButton } from './BearArt.tsx';
@@ -19,9 +19,70 @@ import {
   Heart,
   RotateCcw,
   MessageCircleHeart,
+  Shirt,
+  Droplets,
+  Moon,
+  Stethoscope,
+  Thermometer,
+  Ruler,
+  Clock,
+  Hand,
+  Footprints,
+  CupSoda,
+  Utensils,
+  Wind,
+  Activity,
+  ClipboardList,
+  ShieldCheck,
+  ArrowLeftRight,
+  Pencil,
+  Users,
+  UserRound,
+  IdCard,
+  Puzzle,
+  Snowflake,
+  Scale,
+  Backpack,
+  Pill,
 } from 'lucide-react';
 
 type StoryPhase = 'reading' | 'question' | 'tryAgain' | 'correct' | 'revealed' | 'done';
+
+// The story bank shares SF Symbol names with iOS. Pictures support the words;
+// they never replace a readable answer or signal which answer is right.
+function ChoicePicture({ symbol }: { symbol: string }) {
+  const Icon = /thermometer/.test(symbol) ? Thermometer
+    : /stethoscope/.test(symbol) ? Stethoscope
+    : /ruler/.test(symbol) ? Ruler
+    : /scalemass/.test(symbol) ? Scale
+    : /pencil/.test(symbol) ? Pencil
+    : /puzzlepiece/.test(symbol) ? Puzzle
+    : /person.crop.rectangle/.test(symbol) ? IdCard
+    : /person.2/.test(symbol) ? Users
+    : /person/.test(symbol) ? UserRound
+    : /tshirt/.test(symbol) ? Shirt
+    : /drop/.test(symbol) ? Droplets
+    : /cup|mug/.test(symbol) ? CupSoda
+    : /snowflake/.test(symbol) ? Snowflake
+    : /fork|cake/.test(symbol) ? Utensils
+    : /speaker/.test(symbol) ? Volume2
+    : /moon|bed/.test(symbol) ? Moon
+    : /clock/.test(symbol) ? Clock
+    : /figure|shoe/.test(symbol) ? Footprints
+    : /hand/.test(symbol) ? Hand
+    : /wind|facemask/.test(symbol) ? Wind
+    : /waveform|heart/.test(symbol) ? Heart
+    : /arrow.left.and.right/.test(symbol) ? ArrowLeftRight
+    : /list|clipboard/.test(symbol) ? ClipboardList
+    : /shield/.test(symbol) ? ShieldCheck
+    : /book/.test(symbol) ? BookOpen
+    : /pills/.test(symbol) ? Pill
+    : /bag/.test(symbol) ? Backpack
+    : /cross/.test(symbol) ? BriefcaseMedical
+    : /chart/.test(symbol) ? Activity
+    : MessageCircleHeart;
+  return <Icon className="h-6 w-6" aria-hidden="true" />;
+}
 
 interface PracticeStoryViewProps {
   pages: StoryPage[];
@@ -55,8 +116,12 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
   const [localMisses, setLocalMisses] = useState<Record<string, number>>({});
   const [speaking, setSpeaking] = useState(false);
   const [triedOnPage, setTriedOnPage] = useState(false);
+  const answerLocked = useRef(false);
+  const questionID = useId();
+  const feedbackID = useId();
 
   const page = pages[Math.min(index, Math.max(0, pages.length - 1))];
+  const youngerReader = Number(store.childAge) >= 1 && Number(store.childAge) <= 6;
 
   useEffect(() => {
     return () => {
@@ -77,8 +142,8 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.94;
-    utterance.pitch = 1.05;
+    utterance.rate = youngerReader ? 0.85 : 0.94;
+    utterance.pitch = 1;
     utterance.onstart = () => setSpeaking(true);
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);
@@ -91,15 +156,21 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
       return;
     }
     if (!page) return;
-    const textToRead =
-      phase === 'reading'
-        ? `${page.title}. ${page.speech} ${page.more}`
-        : `${page.question} ${page.choices.map((c) => c.label).join('. ')}`;
+    const textToRead = phase === 'reading'
+      ? `${page.title}. ${page.speech} ${page.more}`
+      : phase === 'correct' || phase === 'revealed'
+        ? `${phase === 'correct' ? (page.interaction === 'talk' ? 'Thanks for talking it through.' : 'You got it!') : 'Let’s work it out together.'} ${page.reveal}`
+        : phase === 'tryAgain'
+          ? `Here is a clue. ${page.speech} ${page.more} You can listen again, then try another answer.`
+          : page.interaction === 'talk'
+            ? `${page.question} Tell or show your grown-up. Ask them about anything you are unsure of.`
+            : `${page.question} Choose one. ${page.choices.map((c, i) => `Choice ${i + 1}. ${c.label}`).join('. ')}`;
     speakText(textToRead);
   };
 
   const handlePickChoice = (choice: StoryChoice) => {
-    if (!page) return;
+    if (!page || phase !== 'question' || answerLocked.current) return;
+    answerLocked.current = true;
     stopSpeech();
     setSelectedID(choice.id);
 
@@ -124,6 +195,7 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
   const handleNextPage = () => {
     stopSpeech();
     setSelectedID(null);
+    answerLocked.current = false;
     setTriedOnPage(false);
     if (index + 1 < pages.length) {
       setIndex(index + 1);
@@ -136,6 +208,7 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
   const handlePrevPage = () => {
     stopSpeech();
     setSelectedID(null);
+    answerLocked.current = false;
     setTriedOnPage(false);
     if (phase !== 'reading' && phase !== 'done') {
       setPhase('reading');
@@ -151,6 +224,7 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
     stopSpeech();
     setIndex(0);
     setSelectedID(null);
+    answerLocked.current = false;
     setTriedOnPage(false);
     setPhase('reading');
   };
@@ -162,7 +236,7 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
   return (
     <div className="flex flex-col min-h-full bg-[#FAF6F0]">
       {/* Story Top Bar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#E8E2D8] bg-[#FAF6F0]">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-[#E8E2D8] bg-[#FAF6F0]">
         <div className="flex items-center gap-2.5">
           <span className="text-lg font-extrabold text-[#0E5A54]">
             Kare<span className="text-[#E06D38]">BEAR</span>
@@ -174,7 +248,7 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
                 stopSpeech();
                 onLeave();
               }}
-              className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-[#0E5A54] border border-[#E8E2D8] hover:bg-[#E6F4F1] transition cursor-pointer"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-bold text-[#0E5A54] border border-[#E8E2D8] hover:bg-[#E6F4F1] transition cursor-pointer"
             >
               <Home className="w-3.5 h-3.5" />
               <span>Home</span>
@@ -190,7 +264,7 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
             <button
               type="button"
               onClick={handleToggleSpeech}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold border transition cursor-pointer ${
+              className={`inline-flex min-h-11 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-bold border transition cursor-pointer ${
                 speaking
                   ? 'bg-[#0E5A54] text-white border-[#0E5A54]'
                   : 'bg-white text-[#0E5A54] border-[#E8E2D8] hover:bg-[#E6F4F1]'
@@ -203,6 +277,12 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
           )}
         </div>
       </div>
+
+      {phase !== 'done' && (
+        <div className="h-1.5 bg-[#E8E2D8]" aria-hidden="true">
+          <div className="h-full rounded-r-full bg-[#0E5A54] transition-all" style={{ width: `${((index + 1) / pages.length) * 100}%` }} />
+        </div>
+      )}
 
       {/* Main Content */}
       {phase === 'done' ? (
@@ -265,20 +345,22 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
       ) : (
         <div className="flex-1 max-w-4xl w-full mx-auto px-4 py-5 grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
           {/* Left / Top Bear Stage */}
-          <div className="md:col-span-5 rounded-3xl bg-white p-5 border border-[#E8E2D8] shadow-2xs flex flex-col items-center text-center space-y-3">
+          <div className={`md:col-span-5 rounded-3xl bg-white p-5 border border-[#E8E2D8] shadow-2xs flex items-center text-center gap-3 ${phase === 'reading' ? 'flex-col' : 'flex-row md:flex-col'}`}>
             <span className="text-xs font-extrabold uppercase tracking-wider text-[#556B68]">
               {heading}
             </span>
             <BearBadge
-              size={148}
+              size={phase === 'reading' ? 148 : 80}
               showsStatus
               speaking={speaking}
               variant={page.id.startsWith('prep-') ? 'doctor' : 'sit'}
             />
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E6F4F1] px-3 py-1 text-xs font-bold text-[#0E5A54]">
-              {store.companionName} is {page.expression.toLowerCase()}
-            </span>
-            <p className="text-xs font-semibold text-[#556B68]">{page.scene}</p>
+            <div className="space-y-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E6F4F1] px-3 py-1 text-xs font-bold text-[#0E5A54]">
+                {phase === 'reading' ? `${store.companionName} is ${page.expression.toLowerCase()}` : page.interaction === 'talk' ? 'Try it together' : `Help ${store.companionName} choose`}
+              </span>
+              {phase === 'reading' && <p className="text-sm font-semibold text-[#556B68]">{page.scene}</p>}
+            </div>
           </div>
 
           {/* Right / Bottom Story & Question Block */}
@@ -313,7 +395,7 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
                         <button
                           type="button"
                           onClick={() => setTriedOnPage((t) => !t)}
-                          className="rounded-full bg-[#0E5A54] px-3 py-1 text-xs font-bold text-white hover:bg-[#0B4742] transition cursor-pointer"
+                          className="min-h-11 rounded-full bg-[#0E5A54] px-3 py-1 text-sm font-bold text-white hover:bg-[#0B4742] transition cursor-pointer"
                         >
                           {triedOnPage ? 'Practiced ✓' : 'Practice now'}
                         </button>
@@ -336,33 +418,49 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
                       type="button"
                       onClick={() => {
                         stopSpeech();
+                        answerLocked.current = false;
+                        setSelectedID(null);
                         setPhase('question');
                       }}
                       className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0E5A54] px-5 py-3.5 text-base font-bold text-white hover:bg-[#0B4742] transition cursor-pointer"
                     >
-                      <span>Answer question</span>
+                      <span>{page.interaction === 'talk' ? 'Try it together' : `Help ${store.companionName} choose`}</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="rounded-2xl bg-[#FAF6F0] p-3.5 border border-[#E8E2D8] flex items-center justify-between gap-2">
-                    <p className="text-xs font-semibold text-[#556B68] line-clamp-2">
-                      “{page.speech}”
-                    </p>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-[#556B68]">{page.interaction === 'talk' ? 'A moment with your grown-up.' : 'Choose one answer. Take your time.'}</p>
                     <button
                       type="button"
-                      onClick={() => setPhase('reading')}
-                      className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-bold text-[#0E5A54] border border-[#E8E2D8] cursor-pointer"
+                      onClick={() => {
+                        stopSpeech();
+                        setPhase('reading');
+                      }}
+                      className="shrink-0 min-h-11 rounded-full bg-white px-3 py-1 text-sm font-bold text-[#0E5A54] border border-[#E8E2D8] cursor-pointer"
                     >
-                      Read again
+                      See the story
                     </button>
                   </div>
 
-                  <h3 className="text-lg font-extrabold text-[#163835]">{page.question}</h3>
+                  <h3 id={questionID} className="text-xl sm:text-2xl leading-snug font-extrabold text-[#163835]">{page.question}</h3>
 
-                  <div className="space-y-2.5">
+                  {page.interaction === 'talk' && phase === 'question' && (
+                    <div className="rounded-2xl bg-[#E6F4F1] border border-[#BCE3DC] p-4 space-y-4">
+                      <p className="text-base font-medium text-[#163835]">Tell or show your grown-up. Ask them about anything you are unsure of.</p>
+                      <button type="button" onClick={() => {
+                        if (answerLocked.current) return;
+                        answerLocked.current = true;
+                        stopSpeech();
+                        if (recordsProgress) store.markStoryCleared(page.id);
+                        setPhase('correct');
+                      }} className="w-full min-h-14 rounded-2xl bg-[#0E5A54] px-4 py-3 text-lg font-bold text-white cursor-pointer">We talked it through</button>
+                    </div>
+                  )}
+
+                  <div className="space-y-3" role="group" aria-labelledby={questionID}>
                     {page.choices.map((choice) => {
                       const isSelected = selectedID === choice.id;
                       const showCorrect =
@@ -384,11 +482,16 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
                         <button
                           key={choice.id}
                           type="button"
-                          disabled={phase === 'correct' || phase === 'revealed'}
+                          disabled={phase !== 'question'}
+                          aria-pressed={isSelected}
+                          aria-describedby={phase !== 'question' ? feedbackID : undefined}
                           onClick={() => handlePickChoice(choice)}
-                          className={`w-full text-left rounded-2xl p-4 border-2 font-bold text-base transition flex items-center justify-between gap-3 cursor-pointer ${btnStyle}`}
+                          className={`w-full min-h-20 text-left rounded-2xl p-4 border-2 font-bold text-lg leading-snug transition flex items-center gap-4 cursor-pointer disabled:cursor-default focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0E5A54] ${btnStyle}`}
                         >
-                          <span>{choice.label}</span>
+                          <span className="shrink-0 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F5EADF] text-[#0E5A54]">
+                            <ChoicePicture symbol={choice.symbol} />
+                          </span>
+                          <span className="flex-1">{choice.label}</span>
                           {showCorrect && <CheckCircle2 className="w-5 h-5 text-[#0E5A54] shrink-0" />}
                         </button>
                       );
@@ -396,26 +499,33 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
                   </div>
 
                   {phase === 'tryAgain' && (
-                    <div className="rounded-2xl bg-[#FDF0E6] border border-[#F4D2BA] p-4 space-y-1">
+                    <div id={feedbackID} role="status" className="rounded-2xl bg-[#FDF0E6] border border-[#F4D2BA] p-4 space-y-3">
                       <p className="text-sm font-extrabold text-[#E06D38]">
-                        Look again with {store.companionName}
+                        Let’s use a clue
                       </p>
-                      <p className="text-sm font-medium text-[#163835]">
-                        That choice does not match what {store.companionName} said. Try one more time!
-                      </p>
+                      <p className="text-base font-medium text-[#163835]">{page.speech} {page.more}</p>
+                      <div className="flex flex-wrap gap-2">
+                        <button type="button" onClick={() => speakText(`${page.speech} ${page.more}`)} className="min-h-11 rounded-xl border border-[#F4D2BA] bg-white px-4 py-2 text-sm font-bold text-[#0E5A54] cursor-pointer">Hear the clue</button>
+                        <button type="button" onClick={() => {
+                          stopSpeech();
+                          answerLocked.current = false;
+                          setSelectedID(null);
+                          setPhase('question');
+                        }} className="min-h-11 rounded-xl bg-[#0E5A54] px-4 py-2 text-sm font-bold text-white cursor-pointer">Try another answer</button>
+                      </div>
                     </div>
                   )}
 
                   {phase === 'correct' && (
-                    <div className="rounded-2xl bg-[#E6F4F1] border border-[#BCE3DC] p-4 flex items-center justify-between gap-3">
+                    <div id={feedbackID} role="status" className="rounded-2xl bg-[#E6F4F1] border border-[#BCE3DC] p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <div>
-                        <p className="text-sm font-extrabold text-[#0E5A54]">You got it!</p>
-                        <p className="text-xs font-medium text-[#556B68]">{page.reveal}</p>
+                        <p className="text-sm font-extrabold text-[#0E5A54]">{page.interaction === 'talk' ? 'Thanks for talking it through' : 'You got it!'}</p>
+                        <p className="text-base font-medium text-[#163835] mt-1">{page.reveal}</p>
                       </div>
                       <button
                         type="button"
                         onClick={handleNextPage}
-                        className="shrink-0 inline-flex items-center gap-1.5 rounded-2xl bg-[#0E5A54] px-4 py-2.5 text-sm font-bold text-white cursor-pointer"
+                        className="min-h-12 shrink-0 inline-flex items-center gap-1.5 rounded-2xl bg-[#0E5A54] px-4 py-2.5 text-base font-bold text-white cursor-pointer"
                       >
                         <span>{index + 1 < pages.length ? 'Next page' : 'Finish'}</span>
                         <ArrowRight className="w-4 h-4" />
@@ -424,12 +534,13 @@ export const PracticeStoryView: React.FC<PracticeStoryViewProps> = ({
                   )}
 
                   {phase === 'revealed' && (
-                    <div className="rounded-2xl bg-[#FDF0E6] border border-[#F4D2BA] p-4 space-y-3">
+                    <div id={feedbackID} role="status" className="rounded-2xl bg-[#FDF0E6] border border-[#F4D2BA] p-4 space-y-3">
                       <div>
                         <p className="text-sm font-extrabold text-[#E06D38]">
-                          Let’s talk about this with a grown-up
+                          Let’s work it out together
                         </p>
-                        <p className="text-sm font-medium text-[#163835] mt-0.5">{page.reveal}</p>
+                        <p className="text-base font-medium text-[#163835] mt-1">{page.reveal}</p>
+                        <p className="text-sm font-medium text-[#556B68] mt-2">You can practise this one with a grown-up.</p>
                       </div>
                       <button
                         type="button"
@@ -481,13 +592,39 @@ export const RememberGameView: React.FC<{ onHome: () => void }> = ({ onHome }) =
   const [status, setStatus] = useState<'prompt' | 'correct' | 'tryAgain' | 'finished'>('prompt');
 
   const target = instructions[round % Math.max(1, instructions.length)];
+  const youngerReader = Number(store.childAge) >= 1 && Number(store.childAge) <= 6;
+  const choiceLimit = youngerReader ? 2 : 3;
+  const seenTitles = new Set(target ? [target.title.trim().toLowerCase()] : []);
+  const otherSteps = instructions.filter((item) => {
+    const title = item.title.trim().toLowerCase();
+    if (seenTitles.has(title) || item.detail.trim().toLowerCase() === target?.detail.trim().toLowerCase()) return false;
+    seenTitles.add(title);
+    return true;
+  });
+  const matchChoices = target ? [target, ...otherSteps.slice(0, choiceLimit - 1)] : [];
+  const answerPosition = round % Math.max(1, matchChoices.length);
+  const displayedChoices = [...matchChoices.slice(answerPosition), ...matchChoices.slice(0, answerPosition)];
+  const guidedReview = displayedChoices.length === 1;
+
+  useEffect(() => () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+  }, []);
 
   const speakClue = (text: string) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.rate = 0.94;
+    u.rate = youngerReader ? 0.85 : 0.94;
     window.speechSynthesis.speak(u);
+  };
+
+  const stopClue = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+  };
+
+  const leaveGame = () => {
+    stopClue();
+    onHome();
   };
 
   if (instructions.length === 0) {
@@ -495,7 +632,7 @@ export const RememberGameView: React.FC<{ onHome: () => void }> = ({ onHome }) =
       <div className="min-h-full bg-[#FAF6F0] p-6 max-w-xl mx-auto space-y-4">
         <button
           type="button"
-          onClick={onHome}
+          onClick={leaveGame}
           className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-xs font-bold text-[#0E5A54] border border-[#E8E2D8] cursor-pointer"
         >
           <Home className="w-3.5 h-3.5" />
@@ -513,6 +650,8 @@ export const RememberGameView: React.FC<{ onHome: () => void }> = ({ onHome }) =
   }
 
   const handleSelect = (id: string) => {
+    if (status === 'correct' || status === 'finished') return;
+    stopClue();
     setPickedId(id);
     if (id === target.id) {
       setStatus('correct');
@@ -522,6 +661,7 @@ export const RememberGameView: React.FC<{ onHome: () => void }> = ({ onHome }) =
   };
 
   const handleNext = () => {
+    stopClue();
     setPickedId(null);
     if (round + 1 < instructions.length) {
       setRound(round + 1);
@@ -540,7 +680,7 @@ export const RememberGameView: React.FC<{ onHome: () => void }> = ({ onHome }) =
           </span>
           <button
             type="button"
-            onClick={onHome}
+            onClick={leaveGame}
             className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-[#0E5A54] border border-[#E8E2D8] cursor-pointer"
           >
             <Home className="w-3.5 h-3.5" />
@@ -557,15 +697,15 @@ export const RememberGameView: React.FC<{ onHome: () => void }> = ({ onHome }) =
           <div className="rounded-3xl bg-white p-6 border border-[#E8E2D8] text-center space-y-4">
             <BearBadge size={120} showsStatus />
             <h2 className="text-2xl font-extrabold text-[#0E5A54]">
-              You remembered every care step!
+              You practised every care step!
             </h2>
             <p className="text-sm font-medium text-[#556B68]">
-              {store.companionName} is proud of how carefully you listened.
+              You and {store.companionName} can look at these steps again whenever you need to.
             </p>
             <div className="flex gap-3 justify-center pt-2">
               <button
                 type="button"
-                onClick={onHome}
+                onClick={leaveGame}
                 className="rounded-2xl bg-[#0E5A54] px-6 py-3 text-sm font-bold text-white cursor-pointer"
               >
                 Back to Play
@@ -573,6 +713,7 @@ export const RememberGameView: React.FC<{ onHome: () => void }> = ({ onHome }) =
               <button
                 type="button"
                 onClick={() => {
+                  stopClue();
                   setRound(0);
                   setPickedId(null);
                   setStatus('prompt');
@@ -594,8 +735,10 @@ export const RememberGameView: React.FC<{ onHome: () => void }> = ({ onHome }) =
                   </span>
                   <button
                     type="button"
-                    onClick={() => speakClue(target.detail)}
-                    className="inline-flex items-center gap-1 rounded-full bg-[#E6F4F1] px-2.5 py-1 text-xs font-bold text-[#0E5A54] cursor-pointer"
+                    onClick={() => speakClue(guidedReview
+                      ? `${target.title}. ${target.detail}. Tell or show your grown-up how you will do this together.`
+                      : `${target.detail}. Which care step matches? ${displayedChoices.map((item, i) => `Choice ${i + 1}. ${item.title}`).join('. ')}`)}
+                    className="inline-flex min-h-11 items-center gap-1 rounded-full bg-[#E6F4F1] px-3 py-1 text-sm font-bold text-[#0E5A54] cursor-pointer"
                   >
                     <Volume2 className="w-3.5 h-3.5" />
                     Listen
@@ -604,14 +747,22 @@ export const RememberGameView: React.FC<{ onHome: () => void }> = ({ onHome }) =
                 <p className="text-base font-bold text-[#163835]">
                   “{target.detail}”
                 </p>
-                <p className="text-xs font-medium text-[#556B68]">
-                  Tap the care step card that matches what {store.companionName} just said.
+                <p className="text-sm font-medium text-[#556B68]">
+                  {guidedReview ? 'Tell or show your grown-up how you will do this step together.' : 'Which care step matches? Choose one card.'}
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {instructions.map((item) => {
+            {guidedReview ? (
+              <div className="rounded-2xl bg-white border border-[#E8E2D8] p-5 space-y-4">
+                <h3 className="text-xl font-extrabold text-[#0E5A54]">{target.title}</h3>
+                <p className="text-base font-medium text-[#556B68]">Ask your grown-up about anything you are unsure of.</p>
+                {status !== 'correct' && (
+                  <button type="button" onClick={() => handleSelect(target.id)} className="w-full min-h-14 rounded-2xl bg-[#0E5A54] p-4 text-lg font-bold text-white cursor-pointer">We practised this step</button>
+                )}
+              </div>
+            ) : <div className="grid grid-cols-1 gap-3" role="group" aria-label="Choose the matching care step">
+              {displayedChoices.map((item) => {
                 const isSelected = pickedId === item.id;
                 const isRight = status === 'correct' && item.id === target.id;
                 const isWrong = status === 'tryAgain' && isSelected && item.id !== target.id;
@@ -620,9 +771,10 @@ export const RememberGameView: React.FC<{ onHome: () => void }> = ({ onHome }) =
                   <button
                     key={item.id}
                     type="button"
-                    disabled={status === 'correct'}
+                    disabled={status === 'correct' || isWrong}
+                    aria-pressed={isSelected}
                     onClick={() => handleSelect(item.id)}
-                    className={`rounded-2xl p-4 text-left border-2 transition cursor-pointer ${
+                    className={`min-h-20 rounded-2xl p-5 text-left border-2 transition cursor-pointer disabled:cursor-default focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0E5A54] ${
                       isRight
                         ? 'bg-[#E6F4F1] border-[#0E5A54]'
                         : isWrong
@@ -630,30 +782,28 @@ export const RememberGameView: React.FC<{ onHome: () => void }> = ({ onHome }) =
                         : 'bg-white border-[#E8E2D8] hover:border-[#0E5A54]'
                     }`}
                   >
-                    <p className="text-base font-extrabold text-[#0E5A54]">{item.title}</p>
-                    <p className="text-xs font-medium text-[#556B68] mt-1 line-clamp-2">
-                      {item.detail}
-                    </p>
+                    <p className="flex items-center gap-3 text-lg font-extrabold text-[#0E5A54]"><ClipboardList className="h-6 w-6 shrink-0" aria-hidden="true" />{item.title}{isRight && <CheckCircle2 className="h-6 w-6 shrink-0 ml-auto" aria-hidden="true" />}</p>
                   </button>
                 );
               })}
-            </div>
+            </div>}
 
             {status === 'tryAgain' && (
-              <div className="rounded-2xl bg-[#FDF0E6] border border-[#F4D2BA] p-4 text-sm font-bold text-[#E06D38]">
-                Not that one — listen to the clue and try another card!
+              <div role="status" className="rounded-2xl bg-[#FDF0E6] border border-[#F4D2BA] p-4 text-base font-bold text-[#163835]">
+                Listen to the care step again, then try another card. A grown-up can help.
               </div>
             )}
 
             {status === 'correct' && (
-              <div className="rounded-2xl bg-[#E6F4F1] border border-[#BCE3DC] p-4 flex items-center justify-between">
-                <span className="text-sm font-extrabold text-[#0E5A54]">
-                  That matches “{target.title}”!
-                </span>
+              <div role="status" className="rounded-2xl bg-[#E6F4F1] border border-[#BCE3DC] p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                  <p className="text-base font-extrabold text-[#0E5A54]">{guidedReview ? 'Thanks for practising together.' : `That matches “${target.title}”!`}</p>
+                  <p className="text-base font-medium text-[#163835] mt-1">{target.detail}</p>
+                </div>
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="inline-flex items-center gap-1.5 rounded-2xl bg-[#0E5A54] px-4 py-2.5 text-xs font-bold text-white cursor-pointer"
+                  className="inline-flex min-h-12 shrink-0 items-center gap-1.5 rounded-2xl bg-[#0E5A54] px-4 py-2.5 text-base font-bold text-white cursor-pointer"
                 >
                   <span>Next</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -795,7 +945,7 @@ export const QuestHubView: React.FC<{
               <p className="text-xs font-medium text-[#556B68]">
                 {store.parentInstructions.length === 0
                   ? 'A short hello while care steps are on the way.'
-                  : 'Read your home care steps and answer a question on every page.'}
+                  : 'Explore your care steps, make choices, and practise with a grown-up.'}
               </p>
               <span className="text-[11px] font-bold text-[#7E908D]">
                 {store.storyFinished ? 'Finished' : `${store.storyPages.length} pages`}
@@ -817,7 +967,7 @@ export const QuestHubView: React.FC<{
             <div className="flex-1 min-w-0">
               <h4 className="text-base font-extrabold text-[#0E5A54]">Remember game</h4>
               <p className="text-xs font-medium text-[#556B68]">
-                Listen to {store.companionName}, then tap the matching care step.
+                Read or listen, then match and practise your care steps.
               </p>
               <span className="text-[11px] font-bold text-[#7E908D]">
                 {store.parentInstructions.length === 0

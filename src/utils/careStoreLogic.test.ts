@@ -8,6 +8,9 @@ import {
   buildStoryPagesForInstructions,
   buildPrepPages,
   getBearMood,
+  adaptStoryPageForAge,
+  CORE_STORY_PAGES,
+  TUTORIAL_STORY_PAGE,
   SAMPLE_VISIT_TRANSCRIPT,
 } from './careStoreLogic.ts';
 
@@ -90,5 +93,55 @@ describe('KareBEAR careStoreLogic', () => {
     assert.equal(getBearMood(2, 'Mochi').key, 'steady');
     assert.equal(getBearMood(1, 'Mochi').key, 'tired');
     assert.equal(getBearMood(0, 'Mochi').key, 'sick');
+  });
+});
+
+
+describe('Questions for ages 5–8', () => {
+  const bank = [...CORE_STORY_PAGES, TUTORIAL_STORY_PAGE, ...buildPrepPages('Emma')];
+
+  it('keeps one correct answer, stable identities, and two or three distinct choices at the age boundary', () => {
+    for (const age of [5, 6, 7, 8]) {
+      for (const page of bank) {
+        const adapted = adaptStoryPageForAge(page, age);
+        assert.equal(adapted.id, page.id);
+        assert.equal(adapted.choices.length, age <= 6 ? 2 : 3);
+        assert.equal(adapted.choices.filter(choice => choice.isCorrect).length, 1);
+        assert.equal(new Set(adapted.choices.map(choice => choice.label)).size, adapted.choices.length);
+        assert.ok(adapted.choices.every(choice => page.choices.some(original => original.id === choice.id)));
+        assert.deepEqual(adaptStoryPageForAge(page, age), adapted, 'choices must not move during a retry');
+      }
+    }
+  });
+
+  it('uses every answer position across the tour without mutating the source bank', () => {
+    const before = JSON.stringify(CORE_STORY_PAGES);
+    for (const age of [5, 8]) {
+      const positions = new Set(buildPrepPages('Emma', 'Sunny', age).map(page => page.choices.findIndex(choice => choice.isCorrect)));
+      assert.equal(positions.size, age <= 6 ? 2 : 3);
+    }
+    for (const age of ['', 'not-an-age', 0, NaN]) {
+      assert.equal(adaptStoryPageForAge(TUTORIAL_STORY_PAGE, age).choices.length, 3);
+    }
+    assert.equal(JSON.stringify(CORE_STORY_PAGES), before);
+  });
+
+  it('preserves a parent’s exact instruction in a conversation without inventing medical answers', () => {
+    const detail = 'Do not drink until the nurse says it is safe. Ask Kare’s nurse about the 9:00 AM check.';
+    const pages = buildStoryPagesForInstructions([{ id: 'special', title: 'Ask the nurse', detail, fromRecording: false }], 'Sunny', 5);
+    const activity = pages[0];
+    assert.equal(activity.id, 'parent-special');
+    assert.equal(activity.interaction, 'talk');
+    assert.deepEqual(activity.choices, []);
+    assert.ok(activity.speech.includes(detail));
+    assert.ok(activity.reveal.includes(detail));
+    assert.deepEqual(adaptStoryPageForAge(activity, 5), activity);
+  });
+
+  it('offers a conversation instead of a pretend quiz when no care plan exists', () => {
+    const [page] = buildStoryPagesForInstructions([], 'Sunny', 6);
+    assert.equal(page.interaction, 'talk');
+    assert.deepEqual(page.choices, []);
+    assert.ok(page.question.length > 0);
   });
 });
