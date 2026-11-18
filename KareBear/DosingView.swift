@@ -40,10 +40,10 @@ struct DosingView: View {
                         } label: {
                             Label("Mark next dose as taken", systemImage: "checkmark.circle.fill")
                                 .font(jakarta(16, .bold))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Theme.onPrimary)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 52)
-                                .background(Theme.teal, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .background(Theme.brandPrimary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                         }
                         .buttonStyle(KidButtonStyle())
                         .padding(.top, 4)
@@ -147,7 +147,7 @@ struct KareHeader: View {
                     .foregroundStyle(Theme.teal)
                     .accessibilityLabel("KareBEAR")
                     HStack(spacing: 5) {
-                        Circle().fill(Theme.teal).frame(width: 6, height: 6)
+                        Circle().fill(Theme.brandPrimary).frame(width: 6, height: 6)
                         Text(store.childSummary)
                             .font(jakarta(11, .semibold))
                             .lineLimit(1)

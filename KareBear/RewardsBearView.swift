@@ -16,7 +16,7 @@ struct RewardsBearView: View {
                 phoneBody
             }
         }
-        .background(Theme.bg)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var phoneBody: some View {
@@ -110,10 +110,10 @@ struct RewardsBearView: View {
                     } label: {
                         Label("We did this step", systemImage: "checkmark.circle.fill")
                             .font(jakarta(16, .bold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.onPrimary)
                             .frame(maxWidth: .infinity)
                             .frame(height: 52)
-                            .background(Theme.teal, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .background(Theme.brandPrimary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
                     .buttonStyle(KidButtonStyle())
                 }

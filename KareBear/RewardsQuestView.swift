@@ -60,7 +60,7 @@ struct RewardsQuestView: View {
                     .frame(width: 1, height: 16)
                 HStack(spacing: 5) {
                     Circle()
-                        .fill(Theme.teal)
+                        .fill(Theme.brandPrimary)
                         .frame(width: 6, height: 6)
                         .opacity(reduceMotion ? 1 : (pulse ? 1 : 0.35))
                     Text(store.childName)
@@ -168,7 +168,7 @@ struct RewardsQuestView: View {
                     Text("⭐")
                         .font(.system(size: 18))
                         .frame(width: 40, height: 40)
-                        .background(Theme.teal, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .background(Theme.brandPrimary, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                     VStack(alignment: .leading, spacing: 0) {
                         Text("CURRENT PROGRESS")
                             .font(jakarta(11, .bold))
@@ -207,7 +207,7 @@ struct RewardsQuestView: View {
             ZStack(alignment: .leading) {
                 Capsule().fill(Color.white.opacity(0.85))
                 Capsule()
-                    .fill(Theme.teal)
+                    .fill(Theme.brandPrimary)
                     .frame(width: max(8, geo.size.width * store.progress))
             }
         }
@@ -350,7 +350,7 @@ struct RewardsQuestView: View {
                         .font(.system(size: 15, weight: .bold))
                 }
                 .font(jakarta(13, .bold))
-                .foregroundStyle(done ? Theme.teal : .white)
+                .foregroundStyle(done ? Theme.teal : Theme.onPrimary)
                 .padding(.horizontal, 12)
                 .frame(minHeight: 40)
                 .background(done ? Theme.tealSoft : button, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -464,7 +464,7 @@ struct RewardsQuestView: View {
                     if !unlocked {
                         Image(systemName: "lock.fill")
                             .font(.system(size: 8, weight: .bold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.onPrimary)
                             .padding(3)
                             .background(Theme.muted, in: Circle())
                             .offset(x: 2, y: 2)

@@ -253,10 +253,10 @@ struct ProfileSheet: View {
             Button(action: save) {
                 Text("Save profile")
                     .font(jakarta(16, .bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.onPrimary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 54)
-                    .background(Theme.teal, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(Theme.brandPrimary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .buttonStyle(KidButtonStyle())
             .disabled(!canSave)
@@ -380,10 +380,10 @@ struct ProfileSheet: View {
         } label: {
             Text(title)
                 .font(jakarta(13, .bold))
-                .foregroundStyle(recovery == title ? .white : Theme.teal)
+                .foregroundStyle(recovery == title ? Theme.onPrimary : Theme.teal)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .background(recovery == title ? Theme.teal : Theme.tealSoft, in: Capsule())
+                .background(recovery == title ? Theme.brandPrimary : Theme.tealSoft, in: Capsule())
         }
         .buttonStyle(KidButtonStyle())
     }
@@ -472,10 +472,10 @@ struct LoginView: View {
                     Button(action: submit) {
                         Text("Sign in")
                             .font(jakarta(16, .bold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.onPrimary)
                             .frame(maxWidth: .infinity)
                             .frame(height: 54)
-                            .background(Theme.teal, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .background(Theme.brandPrimary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
                     .buttonStyle(KidButtonStyle())
                     .disabled(!canSubmit)

@@ -91,10 +91,10 @@ struct MainTabView: View {
             Button(action: savePasswordAndEnter) {
                 Text("Save and open child's view")
                     .font(jakarta(16, .bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.onPrimary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(Theme.teal, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(Theme.brandPrimary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .buttonStyle(KidButtonStyle())
             .disabled(!passwordReady)
@@ -162,7 +162,8 @@ struct MainTabView: View {
 
     private func shell<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         ZStack(alignment: .top) {
-            Theme.bg.ignoresSafeArea()
+            CozyRoomBackground(variant: store.isChildMode ? RoomVariant(scene: store.appScene) : .caregiver)
+                .ignoresSafeArea()
             content()
             if let toast = store.toast {
                 ToastBanner(text: toast) {

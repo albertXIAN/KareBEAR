@@ -156,7 +156,7 @@ struct OnboardingView: View {
         HStack(spacing: 8) {
             ForEach(0..<4, id: \.self) { item in
                 Capsule()
-                    .fill(item <= phaseIndex ? Theme.teal : Theme.border)
+                    .fill(item <= phaseIndex ? Theme.brandPrimary : Theme.border)
                     .frame(height: 6)
             }
         }
@@ -338,9 +338,9 @@ struct OnboardingView: View {
             HStack(spacing: 12) {
                 Image(systemName: "cross.case.fill")
                     .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.onPrimary)
                     .frame(width: 56, height: 56)
-                    .background(Theme.teal, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(Theme.brandPrimary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 Text("Each page shows one hospital moment, lets you try it, then asks a question.")
                     .font(jakarta(15, .semibold))
                     .foregroundStyle(Theme.text)
@@ -399,7 +399,7 @@ struct OnboardingView: View {
                 HStack(spacing: 12) {
                     Image(systemName: "mic.fill")
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.onPrimary)
                         .frame(width: 52, height: 52)
                         .background(Theme.terra, in: Circle())
                     VStack(alignment: .leading, spacing: 2) {
@@ -598,10 +598,10 @@ struct OnboardingView: View {
         } label: {
             Text(title)
                 .font(jakarta(13, .bold))
-                .foregroundStyle(recovery == title ? .white : Theme.teal)
+                .foregroundStyle(recovery == title ? Theme.onPrimary : Theme.teal)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .background(recovery == title ? Theme.teal : Theme.tealSoft, in: Capsule())
+                .background(recovery == title ? Theme.brandPrimary : Theme.tealSoft, in: Capsule())
         }
         .buttonStyle(KidButtonStyle())
     }
@@ -612,10 +612,10 @@ struct OnboardingView: View {
         } label: {
             Text(title)
                 .font(jakarta(13, .bold))
-                .foregroundStyle(bearDraft == title ? .white : Theme.teal)
+                .foregroundStyle(bearDraft == title ? Theme.onPrimary : Theme.teal)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .background(bearDraft == title ? Theme.teal : Theme.tealSoft, in: Capsule())
+                .background(bearDraft == title ? Theme.brandPrimary : Theme.tealSoft, in: Capsule())
         }
         .buttonStyle(KidButtonStyle())
     }
@@ -625,9 +625,9 @@ struct OnboardingView: View {
             HStack(spacing: 12) {
                 Image(systemName: symbol)
                     .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.onPrimary)
                     .frame(width: 48, height: 48)
-                    .background(Theme.teal, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .background(Theme.brandPrimary, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title)
                         .font(jakarta(17, .extraBold))
@@ -643,7 +643,7 @@ struct OnboardingView: View {
                     .foregroundStyle(Theme.teal)
             }
             .padding(14)
-            .card(border: selected ? Theme.teal : Theme.border, lineWidth: selected ? 2 : 1)
+            .card(border: selected ? Theme.brandPrimary : Theme.border, lineWidth: selected ? 2 : 1)
         }
         .buttonStyle(KidButtonStyle())
     }
@@ -652,10 +652,10 @@ struct OnboardingView: View {
         Button(action: action) {
             Text(title)
                 .font(jakarta(16, .bold))
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.onPrimary)
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
-                .background(Theme.teal, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .background(Theme.brandPrimary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(KidButtonStyle())
     }

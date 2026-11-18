@@ -547,18 +547,8 @@ struct QuestHomeView: View {
                     Button {
                         tab = item
                         screen = item == .rewards ? .rewards : .hub
-                    } label: {
-                        VStack(spacing: 3) {
-                            Image(systemName: item.symbol)
-                                .font(.system(size: 20, weight: selected ? .bold : .regular))
-                            Text(item.title)
-                                .font(jakarta(11, selected ? .bold : .semibold))
-                        }
-                        .foregroundStyle(selected ? Theme.teal : Theme.muted)
-                        .frame(maxWidth: .infinity)
-                        .frame(minHeight: 48)
-                        .padding(.top, 8)
-                        .padding(.bottom, 6)
+                    }                     label: {
+                        LabeledTabItem(title: item.title, systemImage: item.symbol, isSelected: selected)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(item.title)
@@ -595,10 +585,10 @@ struct QuestHomeView: View {
             Button(action: submitPassword) {
                 Text("Open parent view")
                     .font(jakarta(16, .bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.onPrimary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(Theme.teal, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(Theme.brandPrimary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .buttonStyle(KidButtonStyle())
             Button {
@@ -641,6 +631,7 @@ struct QuestHomeView: View {
 struct QuestHubView: View {
     @Environment(CareStore.self) private var store
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dynamicTypeSize) private var typeSize
     var openStory: () -> Void
     var openGame: () -> Void
     var openPrep: () -> Void
@@ -660,90 +651,126 @@ struct QuestHubView: View {
         .kidCanvas()
     }
 
-    private var phoneHub: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 14) {
-                VStack(spacing: 8) {
-                    BearBadge(size: 132, mood: store.bearMood, showsStatus: true)
-                    Text(store.bearMood.title(called: store.companionName))
-                        .font(jakarta(15, .bold))
-                        .foregroundStyle(store.bearMood.color)
-                    NameBearButton()
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
-                activities
-            }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 24)
-            .readableColumn()
+    private var leadsWithPrep: Bool { showPrepGame }
+
+    private var primaryTitle: String {
+        leadsWithPrep ? "Let's get ready" : "Let's read together"
+    }
+
+    private var primaryAction: () -> Void {
+        leadsWithPrep ? openPrep : openStory
+    }
+
+    private var activityColumns: [GridItem] {
+        if typeSize.isAccessibilitySize {
+            return [GridItem(.flexible())]
         }
-        .scrollIndicators(.hidden)
+        return [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
+    }
+
+    private var phoneHub: some View {
+        GeometryReader { geo in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    homeStage(bear: min(geo.size.height * 0.42, 320))
+                    activityGrid
+                    todoList
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 24)
+                .readableColumn()
+            }
+            .scrollIndicators(.hidden)
+        }
     }
 
     private var padHub: some View {
         GeometryReader { geo in
-            let column = (geo.size.width - 76) / 2
-            let bear = min(column * 0.92, geo.size.height * 0.58)
-            HStack(alignment: .center, spacing: 24) {
-                VStack(spacing: 14) {
-                    BearBadge(size: bear, mood: store.bearMood, showsStatus: true)
-                    Text(store.bearMood.title(called: store.companionName))
-                        .font(jakarta(32, .extraBold))
-                        .foregroundStyle(store.bearMood.color)
-                        .multilineTextAlignment(.center)
-                    Text(store.bearMood.detail(called: store.companionName))
-                        .font(jakarta(18, .medium))
-                        .foregroundStyle(Theme.muted)
-                        .multilineTextAlignment(.center)
-                    NameBearButton()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-
+            let bear = min(geo.size.height * 0.5, 360)
+            HStack(alignment: .center, spacing: 28) {
+                homeStage(bear: bear)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 ScrollView {
-                    activities.frame(maxWidth: .infinity, alignment: .top)
+                    VStack(alignment: .leading, spacing: 16) {
+                        activityGrid
+                        todoList
+                    }
+                    .padding(.bottom, 8)
                 }
                 .scrollIndicators(.hidden)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .padding(24)
+            .padding(.horizontal, 28)
+            .padding(.vertical, 8)
         }
     }
 
-    private var activities: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            todoList
-            games
+    private func homeStage(bear: CGFloat) -> some View {
+        VStack(spacing: 12) {
+            BearSpeechBubble(
+                speaker: store.companionName,
+                text: "Hi! Ready to play and learn?",
+                compact: true
+            )
+            .frame(maxWidth: bear * 1.05)
+            BearStage(size: bear, mood: store.bearMood, showsStatus: true)
+            VStack(spacing: 4) {
+                Text(store.bearMood.title(called: store.companionName))
+                    .font(AppType.section)
+                    .foregroundStyle(Theme.textPrimary)
+                    .multilineTextAlignment(.center)
+                Text(store.bearMood.detail(called: store.companionName))
+                    .font(AppType.supporting)
+                    .foregroundStyle(Theme.textPrimary)
+                    .multilineTextAlignment(.center)
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .frame(maxWidth: bear * 1.2)
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(Theme.brandPrimary.opacity(0.35), lineWidth: 1)
+            )
+            NameBearButton()
+            PrimaryButton(title: primaryTitle, systemImage: "sparkles", action: primaryAction)
         }
+        .frame(maxWidth: .infinity)
     }
 
-    private var games: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            if showPrepGame {
-                let pages = StoryLibrary.prepPages(childName: store.childName).map { $0.speaking(as: store.companionName) }
-                let done = pages.filter { store.isStoryCleared($0.id) }.count
-                hubCard(
+    private var activityGrid: some View {
+        let prepPages = StoryLibrary.prepPages(childName: store.childName).map { $0.speaking(as: store.companionName) }
+        let prepDone = prepPages.filter { store.isStoryCleared($0.id) }.count
+        return LazyVGrid(columns: activityColumns, spacing: 12) {
+            if showPrepGame && !leadsWithPrep {
+                ActivityCard(
                     symbol: "cross.case.fill",
                     title: "Preparing for my operation",
                     detail: "Meet scrubs, vitals, the cuff, the IV, and the mask.",
-                    meta: done == pages.count ? "Finished" : "\(pages.count) pages",
+                    meta: prepDone == prepPages.count ? "Finished" : "\(prepPages.count) pages",
+                    tint: Theme.brandSecondary,
                     action: openPrep
                 )
             }
-            hubCard(
-                symbol: "book.fill",
-                title: "\(store.companionName)'s story",
-                detail: store.parentInstructions.isEmpty
-                    ? "A short hello while care steps are on the way."
-                    : "A question on every page.",
-                meta: store.storyFinished ? "Finished" : "\(store.storyPages.count) pages",
-                action: openStory
-            )
-            hubCard(
+            if leadsWithPrep {
+                ActivityCard(
+                    symbol: "book.fill",
+                    title: "\(store.companionName)'s story",
+                    detail: store.parentInstructions.isEmpty
+                        ? "A short hello while care steps are on the way."
+                        : "A question on every page.",
+                    meta: store.storyFinished ? "Finished" : "\(store.storyPages.count) pages",
+                    tint: Theme.brandPrimary,
+                    action: openStory
+                )
+            }
+            ActivityCard(
                 symbol: "gamecontroller.fill",
                 title: "Remember game",
                 detail: "Listen, then tap the care step.",
                 meta: store.parentInstructions.isEmpty ? "Waiting" : "\(store.parentInstructions.count) steps",
+                tint: Theme.brandSecondary,
                 action: openGame
             )
         }
@@ -808,9 +835,9 @@ struct QuestHubView: View {
             HStack(spacing: 12) {
                 Image(systemName: symbol)
                     .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.onPrimary)
                     .frame(width: 48, height: 48)
-                    .background(Theme.teal, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .background(Theme.brandPrimary, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title)
                         .font(jakarta(17, .extraBold))
@@ -1137,9 +1164,9 @@ struct StoryGameView: View {
             HStack(spacing: 12) {
                 Image(systemName: choice.symbol)
                     .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(showCorrect ? .white : Theme.teal)
+                    .foregroundStyle(showCorrect ? Theme.onPrimary : Theme.teal)
                     .frame(width: 44, height: 44)
-                    .background(showCorrect ? Theme.teal : Theme.tealSoft, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .background(showCorrect ? Theme.brandPrimary : Theme.tealSoft, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 Text(choice.label)
                     .font(jakarta(26, .bold))
                     .foregroundStyle(Theme.text)
@@ -1180,7 +1207,7 @@ struct StoryGameView: View {
             Button(action: goBack) {
                 Text("Back")
                     .font(jakarta(16, .bold))
-                    .foregroundStyle(canGoBack ? Theme.teal : Theme.teal.opacity(0.35))
+                    .foregroundStyle(canGoBack ? Theme.brandPrimary : Theme.brandPrimary.opacity(0.35))
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
                     .background(Color.white, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -1196,10 +1223,10 @@ struct StoryGameView: View {
                 Button(action: goForward) {
                     Text(forwardTitle)
                         .font(jakarta(16, .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.onPrimary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 52)
-                        .background(canGoForward ? Theme.teal : Theme.teal.opacity(0.35), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .background(canGoForward ? Theme.brandPrimary : Theme.brandPrimary.opacity(0.35), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .buttonStyle(KidButtonStyle())
                 .disabled(!canGoForward)
@@ -1293,10 +1320,10 @@ struct StoryGameView: View {
                 Button(action: onGame) {
                     Text("Play the remember game")
                         .font(jakarta(17, .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.onPrimary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 54)
-                        .background(Theme.teal, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .background(Theme.brandPrimary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .buttonStyle(KidButtonStyle())
                 Button(action: goHome) {
@@ -1673,10 +1700,10 @@ struct PracticeStoryView: View {
                 Button(action: replayChecks) {
                     Text("Play the checks again")
                         .font(jakarta(17, .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.onPrimary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 54)
-                        .background(Theme.teal, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .background(Theme.brandPrimary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .buttonStyle(KidButtonStyle())
                 Button(action: onDone) {
@@ -1704,9 +1731,9 @@ struct PracticeStoryView: View {
             HStack(spacing: 12) {
                 Image(systemName: choice.symbol)
                     .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(showCorrect ? .white : Theme.teal)
+                    .foregroundStyle(showCorrect ? Theme.onPrimary : Theme.teal)
                     .frame(width: 44, height: 44)
-                    .background(showCorrect ? Theme.teal : Theme.tealSoft, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .background(showCorrect ? Theme.brandPrimary : Theme.tealSoft, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 Text(choice.label)
                     .font(jakarta(26, .bold))
                     .foregroundStyle(Theme.text)
@@ -1761,7 +1788,7 @@ struct PracticeStoryView: View {
             Button(action: goBack) {
                 Text("Back")
                     .font(jakarta(16, .bold))
-                    .foregroundStyle(canGoBack ? Theme.teal : Theme.teal.opacity(0.35))
+                    .foregroundStyle(canGoBack ? Theme.brandPrimary : Theme.brandPrimary.opacity(0.35))
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
                     .background(Color.white, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -1777,10 +1804,10 @@ struct PracticeStoryView: View {
                 Button(action: goForward) {
                     Text(forwardTitle)
                         .font(jakarta(16, .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.onPrimary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 52)
-                        .background(canGoForward ? Theme.teal : Theme.teal.opacity(0.35), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .background(canGoForward ? Theme.brandPrimary : Theme.brandPrimary.opacity(0.35), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .buttonStyle(KidButtonStyle())
                 .disabled(!canGoForward)
@@ -1897,9 +1924,9 @@ struct PracticeStoryView: View {
             HStack(spacing: 12) {
                 Image(systemName: choice.symbol)
                     .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(showCorrect ? .white : Theme.teal)
+                    .foregroundStyle(showCorrect ? Theme.onPrimary : Theme.teal)
                     .frame(width: 44, height: 44)
-                    .background(showCorrect ? Theme.teal : Theme.tealSoft, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .background(showCorrect ? Theme.brandPrimary : Theme.tealSoft, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 Text(choice.label)
                     .font(jakarta(26, .bold))
                     .foregroundStyle(Theme.text)

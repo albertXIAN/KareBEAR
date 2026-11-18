@@ -178,12 +178,12 @@ private struct EquipmentOnBear: View {
             mark.offset(y: size * 0.18)
         case .cuff:
             Capsule()
-                .fill(Theme.terra.opacity(applied ? 0.9 : 0))
+                .fill(Theme.swatchCoral.opacity(applied ? 0.95 : 0))
                 .frame(width: size * (hug ? 0.34 : 0.28), height: size * 0.12)
                 .overlay(
                     Image(systemName: "heart.fill")
                         .font(.system(size: size * 0.06, weight: .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.onPrimary)
                         .opacity(applied ? 1 : 0)
                 )
                 .offset(x: -size * 0.22, y: size * 0.08)

@@ -710,7 +710,7 @@ struct ParentCareView: View {
                 reviewScreen
             }
         }
-        .background(Theme.bg)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onChange(of: scenePhase) { _, phase in
             if phase != .active {
                 recorder.cancel()
@@ -749,18 +749,23 @@ struct ParentCareView: View {
     private var list: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Care instructions")
-                    .font(jakarta(28, .extraBold))
-                    .foregroundStyle(Theme.teal)
-                Text("These steps become \(store.careChildName)'s story, remember game, and to-do list. A saved step can be changed.")
-                    .font(jakarta(15, .medium))
-                    .foregroundStyle(Theme.muted)
-                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Care instructions")
+                        .font(jakarta(28, .extraBold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("These steps become \(store.careChildName)'s story, remember game, and to-do list. A saved step can be changed.")
+                        .font(jakarta(15, .medium))
+                        .foregroundStyle(Theme.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .readableSurface()
+
+                TranscriptGroundingNote()
 
                 Button {
                     route = .write
                 } label: {
-                    actionLabel("Write a step", symbol: "square.and.pencil", fill: Theme.teal)
+                    actionLabel("Write a step", symbol: "square.and.pencil", fill: Theme.brandPrimary)
                 }
                 .buttonStyle(KidButtonStyle())
 
@@ -781,7 +786,8 @@ struct ParentCareView: View {
                 } else {
                     Text("Saved steps")
                         .font(jakarta(18, .extraBold))
-                        .foregroundStyle(Theme.teal)
+                        .foregroundStyle(Theme.textPrimary)
+                        .readableSurface()
                         .padding(.top, 6)
                     ForEach(store.parentInstructions) { note in
                         HStack(alignment: .top, spacing: 10) {
@@ -833,29 +839,31 @@ struct ParentCareView: View {
     private var recorderScreen: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Record the conversation")
-                    .font(jakarta(28, .extraBold))
-                    .foregroundStyle(Theme.teal)
-                Text(recorder.status)
-                    .font(jakarta(15, .medium))
-                    .foregroundStyle(Theme.muted)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                HStack(spacing: 8) {
-                    Circle()
-                        .fill(recorder.isRecording ? Theme.terra : Theme.border)
-                        .frame(width: 12, height: 12)
-                    Text(recorder.isRecording ? "Recording" : "Not recording")
-                        .font(jakarta(14, .bold))
-                        .foregroundStyle(recorder.isRecording ? Theme.terra : Theme.muted)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Record the conversation")
+                        .font(jakarta(28, .extraBold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Text(recorder.status)
+                        .font(jakarta(15, .medium))
+                        .foregroundStyle(Theme.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(recorder.isRecording ? Theme.terra : Theme.border)
+                            .frame(width: 12, height: 12)
+                        Text(recorder.isRecording ? "Recording" : "Not recording")
+                            .font(jakarta(14, .bold))
+                            .foregroundStyle(recorder.isRecording ? Theme.coralInk : Theme.textPrimary)
+                    }
+                    Text(recorder.isRecording
+                         ? "Speak the care steps. The words appear as they are heard."
+                         : "Speak the care steps, then stop. Each step waits for your approval.")
+                        .font(jakarta(15, .medium))
+                        .foregroundStyle(Theme.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-
-                Text(recorder.isRecording
-                     ? "Speak the care steps. The words appear as they are heard."
-                     : "Speak the care steps, then stop. Each step waits for your approval.")
-                    .font(jakarta(15, .medium))
-                    .foregroundStyle(Theme.muted)
-                    .fixedSize(horizontal: false, vertical: true)
+                .readableSurface()
+                TranscriptGroundingNote()
                 VStack(alignment: .leading, spacing: 6) {
                     Text("What is being heard")
                         .font(jakarta(13, .bold))
@@ -878,12 +886,12 @@ struct ParentCareView: View {
                     }
                     .buttonStyle(KidButtonStyle())
                 } else if recorder.isTranscribing || isExtracting {
-                    actionLabel("Finding care steps...", symbol: "waveform", fill: Theme.teal.opacity(0.45))
+                    actionLabel("Finding care steps...", symbol: "waveform", fill: Theme.brandPrimary.opacity(0.45))
                 } else {
                     Button {
                         Task { await recorder.start() }
                     } label: {
-                        actionLabel("Start recording", symbol: "mic.fill", fill: Theme.teal)
+                        actionLabel("Start recording", symbol: "mic.fill", fill: Theme.brandPrimary)
                     }
                     .buttonStyle(KidButtonStyle())
                 }
@@ -897,13 +905,17 @@ struct ParentCareView: View {
     private var reviewScreen: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Check the steps")
-                    .font(jakarta(28, .extraBold))
-                    .foregroundStyle(Theme.teal)
-                Text(reviewNote)
-                    .font(jakarta(15, .medium))
-                    .foregroundStyle(Theme.muted)
-                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Check the steps")
+                        .font(jakarta(28, .extraBold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Text(reviewNote)
+                        .font(jakarta(15, .medium))
+                        .foregroundStyle(Theme.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .readableSurface()
+                TranscriptGroundingNote()
                 if !recorder.transcript.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("What was said")
@@ -921,8 +933,9 @@ struct ParentCareView: View {
                 if drafts.isEmpty {
                     Text("No care steps stood out. You can add one from the words above.")
                         .font(jakarta(15, .medium))
-                        .foregroundStyle(Theme.muted)
+                        .foregroundStyle(Theme.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)
+                        .readableSurface()
                 }
                 ForEach($drafts) { $draft in
                     VStack(alignment: .leading, spacing: 8) {
@@ -964,10 +977,10 @@ struct ParentCareView: View {
                         } label: {
                             Text(draft.keep ? "Approved" : "Approve this step")
                                 .font(jakarta(15, .bold))
-                                .foregroundStyle(draft.keep ? Theme.teal : .white)
+                                .foregroundStyle(draft.keep ? Theme.teal : Theme.onPrimary)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 46)
-                                .background(draft.keep ? Theme.tealSoft : Theme.teal, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                .background(draft.keep ? Theme.tealSoft : Theme.brandPrimary, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                         }
                         .buttonStyle(KidButtonStyle())
                     }
@@ -999,7 +1012,7 @@ struct ParentCareView: View {
                     store.addParentInstructions(saved)
                     route = .list
                 } label: {
-                    actionLabel("Save approved steps", symbol: "checkmark.circle.fill", fill: canSaveApproved ? Theme.teal : Theme.teal.opacity(0.35))
+                    actionLabel("Save approved steps", symbol: "checkmark.circle.fill", fill: canSaveApproved ? Theme.brandPrimary : Theme.brandPrimary.opacity(0.35))
                 }
                 .buttonStyle(KidButtonStyle())
                 .disabled(!canSaveApproved)
@@ -1013,7 +1026,7 @@ struct ParentCareView: View {
     private func actionLabel(_ title: String, symbol: String, fill: Color) -> some View {
         Label(title, systemImage: symbol)
             .font(jakarta(16, .bold))
-            .foregroundStyle(.white)
+            .foregroundStyle(Theme.onPrimary)
             .frame(maxWidth: .infinity)
             .frame(height: 54)
             .background(fill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -1076,15 +1089,20 @@ struct ManualInstructionForm: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                Text(existing == nil ? "Write a step" : "Edit this step")
-                    .font(jakarta(28, .extraBold))
-                    .foregroundStyle(Theme.teal)
-                Text("Use the words you want \(store.careChildName) and \(store.companionName) to follow.")
-                    .font(jakarta(15, .medium))
-                    .foregroundStyle(Theme.muted)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(existing == nil ? "Write a step" : "Edit this step")
+                        .font(jakarta(28, .extraBold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("Use the words you want \(store.careChildName) and \(store.companionName) to follow.")
+                        .font(jakarta(15, .medium))
+                        .foregroundStyle(Theme.textPrimary)
+                }
+                .readableSurface()
+                TranscriptGroundingNote()
                 Text("Title")
                     .font(jakarta(13, .bold))
-                    .foregroundStyle(Theme.teal)
+                    .foregroundStyle(Theme.textPrimary)
+                    .readableSurface()
                 TextField("Cold sips", text: $title)
                     .font(jakarta(16, .semibold))
                     .padding(14)
@@ -1095,7 +1113,8 @@ struct ManualInstructionForm: View {
                     )
                 Text("What to do")
                     .font(jakarta(13, .bold))
-                    .foregroundStyle(Theme.teal)
+                    .foregroundStyle(Theme.textPrimary)
+                    .readableSurface()
                 TextField("Offer a small sip of cold water after medicine.", text: $detail, axis: .vertical)
                     .font(jakarta(16, .medium))
                     .lineLimit(4...8)
@@ -1123,10 +1142,10 @@ struct ManualInstructionForm: View {
                 } label: {
                     Text(existing == nil ? "Save step" : "Save changes")
                         .font(jakarta(16, .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.onPrimary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 54)
-                        .background(canSave ? Theme.teal : Theme.teal.opacity(0.35), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .background(canSave ? Theme.brandPrimary : Theme.brandPrimary.opacity(0.35), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .buttonStyle(KidButtonStyle())
                 .disabled(!canSave)

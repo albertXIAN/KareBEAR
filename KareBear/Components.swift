@@ -70,20 +70,8 @@ struct BottomTabBar: View {
                     let selected = selection == tab
                     Button {
                         selection = tab
-                    } label: {
-                        VStack(spacing: 3) {
-                            Image(systemName: tab.symbol)
-                                .font(.system(size: 20, weight: selected ? .bold : .regular))
-                            Text(tab.title)
-                                .font(jakarta(11, selected ? .bold : .semibold))
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.7)
-                        }
-                        .foregroundStyle(selected ? Theme.teal : Theme.muted)
-                        .frame(maxWidth: .infinity)
-                        .frame(minHeight: 48)
-                        .padding(.top, 8)
-                        .padding(.bottom, 6)
+                    }                     label: {
+                        LabeledTabItem(title: tab.title, systemImage: tab.symbol, isSelected: selected)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(tab.title)
@@ -106,7 +94,7 @@ struct ToastBanner: View {
                 .font(.system(size: 18))
             Text(text)
                 .font(jakarta(14, .bold))
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.onPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
             Button(action: onClose) {
@@ -121,7 +109,7 @@ struct ToastBanner: View {
         .padding(.leading, 14)
         .padding(.trailing, 6)
         .padding(.vertical, 8)
-        .background(Theme.teal, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(Theme.brandPrimary, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .stroke(Theme.tealDark, lineWidth: 1)
@@ -153,10 +141,10 @@ struct PuppyCelebration: View {
                 Button(action: onClose) {
                     Text("Yay!")
                         .font(jakarta(17, .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.onPrimary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 52)
-                        .background(Theme.teal, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .background(Theme.brandPrimary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .buttonStyle(KidButtonStyle())
                 .padding(.top, 8)
@@ -198,10 +186,10 @@ struct HelpSheet: View {
             } label: {
                 Text("Okay")
                     .font(jakarta(17, .bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.onPrimary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(Theme.teal, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(Theme.brandPrimary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .buttonStyle(KidButtonStyle())
             .padding(.top, 6)
@@ -221,25 +209,23 @@ struct TranscriptGroundingNote: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 18, weight: .bold))
-                .foregroundStyle(Theme.teal)
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: compact ? 16 : 18, weight: .bold))
+                .foregroundStyle(Theme.terra)
                 .padding(.top, 2)
             VStack(alignment: .leading, spacing: 4) {
-                Text("From the transcript only")
-                    .font(jakarta(15, .extraBold))
-                    .foregroundStyle(Theme.teal)
-                Text(compact
-                     ? "Post-op steps come from the recording or words a grown-up typed. Nothing is added from other websites or outside advice."
-                     : "Every post-op care step comes from the conversation transcript or the words a grown-up typed. KareBEAR does not add outside medical information.")
-                    .font(jakarta(13, .medium))
+                Text("Follow a doctor's advice")
+                    .font(jakarta(compact ? 14 : 15, .extraBold))
+                    .foregroundStyle(Theme.terra)
+                Text("Every post-op care step comes from the conversation transcript or the words a grown-up types. KareBEAR does not add its own care instructions. Please only follow advice provided by a doctor.")
+                    .font(jakarta(compact ? 13 : 14, .medium))
                     .foregroundStyle(Theme.text)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .card(fill: Theme.tealSoft, border: Theme.tealBorder)
+        .card(fill: Theme.terraSoft, border: Theme.terraBorder)
         .accessibilityElement(children: .combine)
     }
 }
@@ -274,7 +260,7 @@ struct RoomPicker: View {
                     .background(option.canvas, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(scene == option ? Theme.teal : Theme.border, lineWidth: scene == option ? 2 : 1)
+                            .stroke(scene == option ? Theme.brandPrimary : Theme.border, lineWidth: scene == option ? 2 : 1)
                     )
                 }
                 .buttonStyle(KidButtonStyle())
@@ -368,10 +354,10 @@ struct NameBearButton: View {
                 Button(action: save) {
                     Text("Save look")
                         .font(jakarta(16, .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.onPrimary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 52)
-                        .background(Theme.teal, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .background(Theme.brandPrimary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .buttonStyle(KidButtonStyle())
                 Button {

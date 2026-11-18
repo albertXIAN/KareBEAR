@@ -35,7 +35,7 @@ struct ScheduleView: View {
                 phoneBody
             }
         }
-        .background(Theme.bg)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var phoneBody: some View {
@@ -56,14 +56,19 @@ struct ScheduleView: View {
             HStack(alignment: .center, spacing: 24) {
                 VStack(spacing: 12) {
                     BearBadge(size: bear, mood: store.bearMood, showsStatus: true)
-                    Text(store.bearMood.title(called: store.companionName))
-                        .font(jakarta(28, .extraBold))
-                        .foregroundStyle(store.bearMood.color)
-                        .multilineTextAlignment(.center)
-                    Text(store.bearMood.detail(called: store.companionName))
-                        .font(jakarta(17, .medium))
-                        .foregroundStyle(Theme.muted)
-                        .multilineTextAlignment(.center)
+                    VStack(spacing: 6) {
+                        Text(store.bearMood.title(called: store.companionName))
+                            .font(jakarta(28, .extraBold))
+                            .foregroundStyle(store.bearMood.color)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                        Text(store.bearMood.detail(called: store.companionName))
+                            .font(jakarta(17, .medium))
+                            .foregroundStyle(Theme.textPrimary)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .readableSurface(alignment: .center)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -100,11 +105,12 @@ struct ScheduleView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(store.childName)'s Recovery")
                     .font(jakarta(26, .extraBold))
-                    .foregroundStyle(Theme.teal)
+                    .foregroundStyle(Theme.textPrimary)
                 Text(store.recoveryFocus.isEmpty ? "Recovery" : store.recoveryFocus)
                     .font(jakarta(14, .semibold))
-                    .foregroundStyle(Theme.muted)
+                    .foregroundStyle(Theme.textPrimary)
             }
+            .readableSurface()
             Spacer(minLength: 0)
         }
     }
@@ -119,19 +125,19 @@ struct ScheduleView: View {
                     VStack(spacing: 2) {
                         Text(day.letter)
                             .font(jakarta(11, .bold))
-                            .foregroundStyle(selected ? Color.white.opacity(0.85) : Theme.subtle)
+                            .foregroundStyle(selected ? Theme.onPrimary.opacity(0.85) : Theme.subtle)
                         Text("\(day.id)")
                             .font(jakarta(15, .extraBold))
-                            .foregroundStyle(selected ? Color.white : Theme.text)
+                            .foregroundStyle(selected ? Theme.onPrimary : Theme.text)
                         dayMarker(day, selected: selected)
                             .frame(height: 16)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
-                    .background(selected ? Theme.teal : Color.white, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(selected ? Theme.brandPrimary : Color.white, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(selected ? Theme.teal : Theme.border, lineWidth: 1)
+                            .stroke(selected ? Theme.brandPrimary : Theme.border, lineWidth: 1)
                     )
                 }
                 .buttonStyle(KidButtonStyle())
@@ -147,10 +153,10 @@ struct ScheduleView: View {
         case .past:
             Image(systemName: "checkmark")
                 .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(selected ? Color.white : Theme.teal)
+                .foregroundStyle(selected ? Theme.onPrimary : Theme.teal)
         case .today:
             Circle()
-                .fill(selected ? Color.white : Theme.teal)
+                .fill(selected ? Theme.onPrimary : Theme.teal)
                 .frame(width: 6, height: 6)
         case .future:
             Circle()
@@ -202,10 +208,10 @@ struct ScheduleView: View {
                 } label: {
                     Label("Mark as Taken", systemImage: "checkmark.circle.fill")
                         .font(jakarta(16, .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.onPrimary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 52)
-                        .background(Theme.teal, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .background(Theme.brandPrimary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .buttonStyle(KidButtonStyle())
                 .padding(.top, 16)
@@ -245,7 +251,8 @@ struct ScheduleView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Today's Schedule")
                 .font(jakarta(18, .extraBold))
-                .foregroundStyle(Theme.teal)
+                .foregroundStyle(Theme.textPrimary)
+                .readableSurface()
             if store.doses.isEmpty {
                 Text("Nothing is scheduled until a grown-up adds care steps.")
                     .font(jakarta(14, .medium))

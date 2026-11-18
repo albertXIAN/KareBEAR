@@ -12,7 +12,7 @@ enum AppScene: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .cozy: "Cozy cream"
+        case .cozy: "Cozy sky"
         case .clinic: "Hospital room"
         case .garden: "Sunny garden"
         case .night: "Starry rest"
@@ -21,7 +21,7 @@ enum AppScene: String, CaseIterable, Identifiable {
 
     var detail: String {
         switch self {
-        case .cozy: "The quiet cream room."
+        case .cozy: "A bright, quiet room."
         case .clinic: "A soft hospital window."
         case .garden: "Grass and a bright sky."
         case .night: "A dark sky with stars."
@@ -39,24 +39,19 @@ enum AppScene: String, CaseIterable, Identifiable {
 
     var canvas: Color {
         switch self {
-        case .cozy: Theme.bg
-        case .clinic: Color(hex: 0xE8F3F1)
-        case .garden: Color(hex: 0xEAF6E6)
-        case .night: Color(hex: 0x1C3340)
+        case .cozy: Theme.liftedBlue
+        case .clinic: Theme.liftedMint
+        case .garden: Theme.liftedMint
+        case .night: Theme.liftedLilac
         }
     }
 
     var skyTop: Color {
-        switch self {
-        case .cozy: Color(hex: 0xFAF6F0)
-        case .clinic: Color(hex: 0xD5EEE9)
-        case .garden: Color(hex: 0xCDEBFA)
-        case .night: Color(hex: 0x122230)
-        }
+        Theme.swatchBlue
     }
 
     var onCanvas: Color {
-        self == .night ? Color(hex: 0xE8F2F4) : Theme.teal
+        Theme.textPrimary
     }
 }
 
@@ -64,93 +59,68 @@ struct SceneBackdrop: View {
     var scene: AppScene
 
     var body: some View {
-        ZStack {
-            scene.canvas
-            LinearGradient(
-                colors: [scene.skyTop.opacity(0.95), scene.canvas],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            switch scene {
-            case .cozy:
-                EmptyView()
-            case .clinic:
-                clinicDecor
-            case .garden:
-                gardenDecor
-            case .night:
-                nightDecor
-            }
-        }
-        .ignoresSafeArea()
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
-    }
-
-    private var clinicDecor: some View {
-        VStack {
-            HStack {
-                Spacer()
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.white.opacity(0.72))
-                    .frame(width: 88, height: 64)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .stroke(Theme.teal.opacity(0.18), lineWidth: 2)
-                    )
-                    .padding(.trailing, 28)
-                    .padding(.top, 18)
-            }
-            Spacer()
-        }
-    }
-
-    private var gardenDecor: some View {
-        VStack {
-            Spacer()
-            Ellipse()
-                .fill(Color(hex: 0x8FCB7A).opacity(0.45))
-                .frame(height: 160)
-                .offset(y: 70)
-        }
-    }
-
-    private var nightDecor: some View {
-        GeometryReader { geo in
-            ForEach(0..<12, id: \.self) { index in
-                Circle()
-                    .fill(Color.white.opacity(index.isMultiple(of: 3) ? 0.9 : 0.45))
-                    .frame(width: index.isMultiple(of: 4) ? 5 : 3)
-                    .position(
-                        x: CGFloat((index * 47 + 18) % max(Int(geo.size.width), 1)),
-                        y: CGFloat((index * 29 + 24) % max(Int(geo.size.height * 0.45), 1))
-                    )
-            }
-        }
+        CozyRoomBackground(variant: RoomVariant(scene: scene))
     }
 }
 
 enum Theme {
-    static let bg = Color(hex: 0xFAF6F0)
-    static let teal = Color(hex: 0x0E5A54)
-    static let tealDark = Color(hex: 0x0B4742)
-    static let tealSoft = Color(hex: 0xE6F4F1)
-    static let tealBorder = Color(hex: 0xBCE3DC)
-    static let terra = Color(hex: 0xE06D38)
-    static let terraSoft = Color(hex: 0xFDF0E6)
-    static let terraBorder = Color(hex: 0xF4D2BA)
-    static let pinkSoft = Color(hex: 0xFAF0F3)
-    static let pinkBorder = Color(hex: 0xF4D0DC)
-    static let text = Color(hex: 0x163835)
-    static let muted = Color(hex: 0x556B68)
-    static let subtle = Color(hex: 0x7E908D)
-    static let border = Color(hex: 0xE8E2D8)
-    static let borderSoft = Color(hex: 0xE2DACF)
-    static let cream = Color(hex: 0xF5EADF)
+    /// Sampled from the centre of each swatch in Design/References/palette.png.
+    static let swatchLilac = Color(hex: 0xF5CCFF)
+    static let swatchMint = Color(hex: 0xC9FDD9)
+    static let swatchBlue = Color(hex: 0xABCAFF)
+    static let swatchCoral = Color(hex: 0xFFB3B1)
+    static let swatchButter = Color(hex: 0xFFE4AE)
+
+    /// Darkened periwinkle so body text stays clear on the light backgrounds.
+    static let ink = Color(hex: 0x2B3340)
+    /// Softer than ink, still dark enough for descriptions.
+    static let mutedInk = Color(hex: 0x3D4960)
+    /// Darkened from swatchMint (× 0.32).
+    static let mintInk = Color(hex: 0x405145)
+    /// Darkened from swatchCoral (× 0.38).
+    static let coralInk = Color(hex: 0x614443)
+    /// Darkened from swatchButter (× 0.82) for the floor.
+    static let floor = Color(hex: 0xD1BB8F)
+
+    /// Same hues as the palette, mixed 58% toward white so large areas stay light behind the text.
+    static let liftedLilac = Color(hex: 0xFBEAFF)
+    static let liftedMint = Color(hex: 0xE8FEEF)
+    static let liftedBlue = Color(hex: 0xDCE9FF)
+    static let liftedCoral = Color(hex: 0xFFDFDE)
+    static let liftedButter = Color(hex: 0xFFF4DD)
+
+    static let bg = liftedBlue
+    static let teal = ink
+    static let tealDark = ink
+    static let tealSoft = liftedMint
+    static let tealBorder = swatchBlue
+    static let terra = coralInk
+    static let terraSoft = liftedCoral
+    static let terraBorder = swatchCoral
+    static let pinkSoft = liftedLilac
+    static let pinkBorder = swatchLilac
+    static let text = ink
+    static let muted = mutedInk
+    static let subtle = mutedInk
+    static let border = swatchBlue
+    static let borderSoft = swatchBlue
+    static let cream = liftedLilac
     static let bearFur = Color(hex: 0xC4956A)
     static let bearInner = Color(hex: 0xE7C9A4)
     static let muzzle = Color(hex: 0xF6E6D0)
-    static let ink = Color(hex: 0x3E2C24)
+
+    static let brandPrimary = swatchBlue
+    static let brandSecondary = swatchCoral
+    static let brandAccent = swatchLilac
+    static let wallBackground = liftedBlue
+    static let surface = Color.white
+    static let surfaceTint = liftedBlue
+    static let textPrimary = ink
+    static let textSecondary = mutedInk
+    static let onPrimary = ink
+    static let success = mintInk
+    static let warning = coralInk
+    static let error = coralInk
 }
 
 enum Jakarta {
@@ -176,8 +146,18 @@ enum Jakarta {
 }
 
 func jakarta(_ size: CGFloat, _ weight: Jakarta = .bold) -> Font {
+    let style: Font.TextStyle
+    switch size {
+    case 32...: style = .largeTitle
+    case 26..<32: style = .title
+    case 21..<26: style = .title2
+    case 18..<21: style = .title3
+    case 16..<18: style = .body
+    case 14..<16: style = .subheadline
+    default: style = .caption
+    }
     if UIFont(name: weight.name, size: size) != nil {
-        return .custom(weight.name, size: size)
+        return .custom(weight.name, size: size, relativeTo: style)
     }
     return .system(size: size, weight: weight.fallback, design: .rounded)
 }
@@ -212,11 +192,13 @@ extension Color {
 }
 
 struct KidButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .scaleEffect(reduceMotion || !configuration.isPressed ? 1 : 0.97)
             .opacity(configuration.isPressed ? 0.92 : 1)
-            .animation(.spring(duration: 0.18), value: configuration.isPressed)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.14), value: configuration.isPressed)
     }
 }
 
@@ -233,7 +215,7 @@ struct CardStyle: ViewModifier {
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
                     .stroke(border, lineWidth: lineWidth)
             )
-            .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
+            .shadow(color: Theme.ink.opacity(0.08), radius: 12, y: 4)
     }
 }
 
@@ -274,15 +256,7 @@ extension View {
 }
 
 private struct KidCanvas: ViewModifier {
-    @Environment(CareStore.self) private var store
-
     func body(content: Content) -> some View {
-        content.background {
-            if store.isChildMode {
-                SceneBackdrop(scene: store.appScene)
-            } else {
-                Theme.bg.ignoresSafeArea()
-            }
-        }
+        content
     }
 }

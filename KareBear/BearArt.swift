@@ -26,19 +26,19 @@ enum BearMood: Int {
 
     var color: Color {
         switch self {
-        case .bright: Color(hex: 0x1B8A4A)
-        case .steady: Theme.teal
-        case .tired: Color(hex: 0xC47B12)
-        case .sick: Color(hex: 0xC4483A)
+        case .bright: Theme.mintInk
+        case .steady: Theme.textPrimary
+        case .tired: Theme.coralInk
+        case .sick: Theme.coralInk
         }
     }
 
     var soft: Color {
         switch self {
-        case .bright: Color(hex: 0xE7F6EC)
-        case .steady: Theme.tealSoft
-        case .tired: Color(hex: 0xFBF3E0)
-        case .sick: Color(hex: 0xFDECEA)
+        case .bright: Theme.swatchMint
+        case .steady: Theme.swatchBlue
+        case .tired: Theme.swatchButter
+        case .sick: Theme.swatchCoral
         }
     }
 }
@@ -61,8 +61,8 @@ struct BearBadge: View {
             }
         }
         .frame(width: size, height: size)
-        .overlay(Circle().stroke(showsStatus ? mood.color : Color.white, lineWidth: max(3, size * 0.045)))
-        .shadow(color: showsStatus ? mood.color.opacity(0.18) : .black.opacity(0.05), radius: 6, y: 2)
+        .overlay(Circle().stroke(Color.white.opacity(0.95), lineWidth: max(3, size * 0.028)))
+        .shadow(color: Theme.swatchLilac.opacity(0.9), radius: 16, y: 6)
         .accessibilityLabel(speaking ? "\(mood.title(called: store.companionName)). \(store.companionName) is speaking." : mood.title(called: store.companionName))
     }
 
@@ -170,7 +170,7 @@ struct EmmaAvatar: View {
                 .frame(width: size * 0.7, height: size * 0.6)
                 .offset(y: size * 0.08)
             Capsule()
-                .fill(Theme.teal)
+                .fill(Theme.brandPrimary)
                 .frame(width: size * 0.9, height: size * 0.34)
                 .offset(y: size * 0.4)
             HStack(spacing: size * 0.16) {
